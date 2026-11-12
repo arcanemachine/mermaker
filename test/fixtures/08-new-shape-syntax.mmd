@@ -1,3 +1,11 @@
 flowchart TD
   A@{ shape: rect, label: "New syntax" } --> B@{ shape: circle }
   B --> C[Old syntax]
+  p:::hot@{ shape: circle } --> q:::hot@{ shape: rect, label: "Q" }
+  q --> r:::hot@{ shape: diamond } --> s:::hot@{ shape: stadium }
+  p & t:::hot@{ shape: hex } --> u:::hot@{ shape: circle } & v
+  v:::hot@{ shape: doc }
+  subgraph box [Box]
+    w:::hot@{ shape: circle } --> x:::hot@{ shape: doc } --> y
+  end
+  classDef hot fill:#fdd

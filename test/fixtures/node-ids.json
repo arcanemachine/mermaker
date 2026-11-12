@@ -52,7 +52,17 @@
  "08-new-shape-syntax.mmd": [
   "A",
   "B",
-  "C"
+  "C",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y"
  ],
  "09-no-trailing-newline.mmd": [
   "A",

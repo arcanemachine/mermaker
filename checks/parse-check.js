@@ -36,7 +36,6 @@
     for (const c of cases) {
       try {
         await mermaid.parse(c.out);
-        if (c.kind === 'relabel') continue;
         const before = await db(c.src), after = await db(c.out);
         const { out: was, name } = membership(before, c.renamed ? { [c.renamed.from]: c.renamed.to } : {});
         const { out: now, name: nameNow } = membership(after);
@@ -64,6 +63,21 @@
           const { svg } = await mermaid.render('parse-check-' + k++, c.out);
           const got = new DOMParser().parseFromString(svg, 'text/html').querySelector('.flowchartTitleText')?.textContent ?? null;
           if (got !== c.diagramTitle) fails.push(`${c.name}: title drawn as ${JSON.stringify(got)}`);
+          continue;
+        }
+        if (c.kind === 'relabel') {
+          /* The node is drawn with the new label, its shape and classes kept; every other node is as it was. */
+          const want = (await db(c.relabel.ref)).getVertices().get('X')?.text;
+          const now = after.getVertices();
+          for (const [id, v] of before.getVertices()) {
+            const w = now.get(id);
+            const text = id === c.relabel.id ? want : v.text;
+            // A bare node is given brackets, which Mermaid draws as the same box.
+            const types = id === c.relabel.id && v.type === undefined ? [undefined, 'square'] : [v.type];
+            if (!types.includes(w?.type) || w?.text !== text || String(w?.classes) !== String(v.classes)) {
+              fails.push(`${c.name}: ${id} is ${w?.type} ${JSON.stringify(w?.text)} ${w?.classes}, expected ${types} ${JSON.stringify(text)} ${v.classes}`);
+            }
+          }
           continue;
         }
         if (c.kind === 'shape') {

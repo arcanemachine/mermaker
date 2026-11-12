@@ -142,6 +142,12 @@ test('relabel with the @{ } syntax changes or adds the label key', () => {
   assert.ok(relabel(src, 'B', 'Added').text.includes('B@{ label: "Added", shape: circle }'));
 });
 
+test('relabel steps over a class written before the @{ }', () => {
+  const src = fixture('08-new-shape-syntax.mmd');
+  assert.ok(relabel(src, 'q', 'New').text.includes('q:::hot@{ shape: rect, label: "New" }'));
+  assert.ok(relabel(src, 'p', 'New').text.includes('p:::hot@{ label: "New", shape: circle } --> q'));
+});
+
 test('relabel escapes characters that would break the label', () => {
   assert.equal(quoteLabel('Say "hi" #1 <b> & [x]; |p|'), '"Say #quot;hi#quot; #35;1 #lt;b#gt; #amp; [x]; |p|"');
   assert.equal(quoteLabel('two\nlines'), '"two<br>lines"');

@@ -21,7 +21,8 @@ edges are the same ones, those ends moved, each with its type, label and style; 
 and Mermaid draws as many edges as merma reads; for a move into or out of a subgraph (moveNode, moveSubgraph), that
 it is where it was sent and the edges are the same, each with its style; that blockOf reads where Mermaid draws every
 node of every fixture; for a shape, that the node has it, with its label and classes, and that
-no other node changed.
+no other node changed; for a label, that Mermaid reads the new one, with the node's shape and classes, and that no
+other node changed.
 
 1. Start merma with a root you can write to, and open any diagram in that root in a browser.
 2. Write the cases next to it, as a `.mmd` file so the server will hand it to the page:

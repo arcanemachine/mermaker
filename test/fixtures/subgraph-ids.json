@@ -9,7 +9,9 @@
   "tail"
  ],
  "07-tricky-labels.mmd": [],
- "08-new-shape-syntax.mmd": [],
+ "08-new-shape-syntax.mmd": [
+  "box"
+ ],
  "09-no-trailing-newline.mmd": [],
  "10-linkstyle-subgraph.mmd": [
   "box"

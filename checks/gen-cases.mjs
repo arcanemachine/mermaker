@@ -70,7 +70,8 @@ for (const [name, list, src] of sources) {
     const other = list.find((x) => x !== id);
     cases.push({ name: `${name} add ${id}`, kind: 'add', src, out: addConnected(src, id).text });
     cases.push({ name: `${name} connect ${id}->${other}`, kind: 'connect', src, out: connect(src, id, other).text });
-    cases.push({ name: `${name} relabel ${id}`, kind: 'relabel', src, out: relabel(src, id, 'Say "hi" #1 <b> & [x]; 東京 🚀').text });
+    const label = 'Say "hi" #1 <b> & [x]; 東京 🚀';
+    cases.push({ name: `${name} relabel ${id}`, kind: 'relabel', src, out: relabel(src, id, label).text, relabel: { id, ref: relabel('flowchart TD\n  X\n', 'X', label).text } });
     for (const { key } of NODE_SHAPES) {
       const b = BRACKETS[key];
       const refs = [`flowchart TD\n  X@{ shape: ${key} }\n`, ...(b ? [`flowchart TD\n  X${b[0]}x${b[1]}\n`] : [])];

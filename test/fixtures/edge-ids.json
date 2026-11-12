@@ -46,7 +46,16 @@
  ],
  "08-new-shape-syntax.mmd": [
   "L_A_B_0",
-  "L_B_C_0"
+  "L_B_C_0",
+  "L_p_q_0",
+  "L_q_r_0",
+  "L_r_s_0",
+  "L_p_u_0",
+  "L_p_v_0",
+  "L_t_u_0",
+  "L_t_v_0",
+  "L_w_x_0",
+  "L_x_y_0"
  ],
  "09-no-trailing-newline.mmd": [
   "L_A_B_0"

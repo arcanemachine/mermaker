@@ -467,14 +467,15 @@ export function relabel(/** @type {string} */ text, /** @type {string} */ id, /*
   for (const { line, col } of found) {
     const s = ls[line];
     const after = col + id.length;
-    if (s.startsWith('@{', after)) {
-      const end = s.indexOf('}', after);
-      const block = s.slice(after, end + 1);
+    const open = after + (CLASS_AT.exec(s.slice(after))?.[0].length ?? 0);
+    if (s.startsWith('@{', open)) {
+      const end = s.indexOf('}', open);
+      const block = s.slice(open, end + 1);
       const labelRe = /(label\s*:\s*)("(?:[^"\\]|\\.)*"|[^,}]*)/;
       const next = labelRe.test(block)
         ? block.replace(labelRe, (_, /** @type {string} */ key) => key + quoted)
-        : block.replace(/^@\{\s*/, (open) => open + `label: ${quoted}, `);
-      ls[line] = s.slice(0, after) + next + s.slice(end + 1);
+        : block.replace(/^@\{\s*/, (start) => start + `label: ${quoted}, `);
+      ls[line] = s.slice(0, open) + next + s.slice(end + 1);
       return { text: ls.join('') };
     }
     const span = SHAPES.some(([open]) => s.startsWith(open, after)) ? shapeSpan(s, after) : null;
