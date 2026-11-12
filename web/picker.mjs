@@ -1,27 +1,20 @@
 // A grid of choices (arrow types, shapes) under a text field, each drawn as a small icon with its digit in the corner.
-// The line under it names the entry under the pointer, else the one with keyboard focus, else the current one. It
-// reports a pick; what a pick does is up to its host (the label box keeps it until Enter). Keys while focus is in it: a
-// digit picks, the arrow keys move, wrapping within their row or column (grid.mjs). Keys it does not use (Enter,
-// Escape, Up from the top row) go on to its host.
+// The line under it names the focused entry, else the current one. It reports a pick; what a pick does is up to its
+// host (the label box keeps it until Enter). Keys while focus is in it: a digit picks, the arrow keys move, wrapping
+// within their row or column (grid.mjs). Keys it does not use (Enter, Escape, Up from the top row) go on to its host.
 //
-// Its buttons take focus only when its host gives it (`focus`), not under the pointer; the host keeps a click from
-// moving focus. It remembers where the arrows were when focus went back to its field, and `focus` returns there; a
-// pick moves that place to the picked entry.
+// Mouse and keyboard share one focus: the outline. Its buttons take real focus only when its host gives it (`focus`);
+// once focus is in the grid, the pointer moving over an entry focuses it, as in a menu. While focus is in its field,
+// the pointer moves only the outline, never the caret, and the outline goes back when the pointer leaves, so a pointer
+// passing over does not change where `focus` goes. It acts on pointer moves, not on the pointer entering, since a
+// picker opened under a resting pointer would otherwise take the entry under it. The host keeps a click from moving
+// focus. It remembers where the arrows were when focus went back to its field, and `focus` returns there; a pick moves
+// that place to the picked entry.
+//
+// While Shift is held the root has `data-shift` (set by the editor), and the digits Shift picks show dark and the plain
+// ones gray, the other way round when it is not (style.css).
 
 import { move } from './grid.mjs';
-
-// While Shift is held, the digits Shift picks show dark and the plain ones gray, and the other way round when it is not:
-// the page marks the root, which every picker's digits read (style.css).
-// Listened for from the first picker made, not on import, so a test can import this module without a page.
-let watchingShift = false;
-function watchShift() {
-  if (watchingShift) return;
-  watchingShift = true;
-  const shiftHeld = (/** @type {boolean} */ on) => document.documentElement.toggleAttribute('data-shift', on);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Shift') shiftHeld(true); });
-  document.addEventListener('keyup', (e) => { if (e.key === 'Shift') shiftHeld(false); });
-  window.addEventListener('blur', () => shiftHeld(false));
-}
 
 /**
  * One choice. Lists of them (arrow-types.mjs, shapes.mjs) keep a fixed order, so a digit always picks the same one.
@@ -47,7 +40,6 @@ const label = (/** @type {PickerEntry} */ entry) => entry.name
  * @param {string} [options.className] a class of its own, for CSS that is this picker's alone
  */
 export function createPicker({ title, entries, onPick, columns = 5, className = '' }) {
-  watchShift();
   const el = document.createElement('div');
   el.className = `picker ${className}`.trim();
   el.setAttribute('role', 'group');
@@ -68,18 +60,23 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     b.dataset.key = entry.key;
     // The digit shown is part of the name, so a voice user can say what they see (WCAG 2.5.3).
     b.setAttribute('aria-label', (entry.digit ? `${entry.shift ? 'Shift ' : ''}${entry.digit} ` : '') + label(entry));
-    b.innerHTML = entry.icon() + (entry.digit ? `<span class="digit${entry.shift ? ' shift' : ''}">${entry.shift ? '⇧' : ''}${entry.digit}</span>` : '');
+    b.innerHTML = entry.icon() + (entry.digit
+      ? `<span class="digit${entry.shift ? ' shift' : ''}">${entry.shift ? '<span class="shift-mark">⇧</span>' : ''}${entry.digit}</span>` : '');
     b.addEventListener('click', () => {
       // A click moves keyboard focus only when it is in the grid already: else its field keeps it.
       if (grid.contains(document.activeElement)) b.focus();
       onPick(entry.key);
     });
-    b.addEventListener('pointerenter', (e) => {
+    b.addEventListener('pointermove', (e) => {
       // Touch has no hover: a tap names the current one (docs/ux.md).
-      if (e.pointerType !== 'touch') hovered = entry;
+      if (e.pointerType === 'touch') return;
+      if (grid.contains(document.activeElement)) { if (document.activeElement !== b) b.focus(); return; }
+      if (b.hasAttribute('data-start')) return;
+      if (before === undefined) before = buttons.find((x) => x.hasAttribute('data-start')) ?? null;
+      markStart(b);
       showName();
     });
-    b.addEventListener('focus', () => { markStart(b); showName(); });
+    b.addEventListener('focus', () => { before = undefined; markStart(b); showName(); });
     b.tabIndex = -1;
     grid.append(b);
     return b;
@@ -90,9 +87,15 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
   /** @type {string | null} */
   let current = null;
   let other = '';
-  /** @type {PickerEntry | null} the entry under the pointer */
-  let hovered = null;
-  grid.addEventListener('pointerleave', () => { hovered = null; showName(); });
+  /** @type {HTMLButtonElement | null | undefined} where the outline was before the pointer moved it, focus being in the
+   * field; undefined while the pointer has not moved it */
+  let before;
+  grid.addEventListener('pointerleave', () => {
+    if (before === undefined || grid.contains(document.activeElement)) return;
+    markStart(before);
+    before = undefined;
+    showName();
+  });
   grid.addEventListener('focusout', (e) => showName(/** @type {Element | null} */ (e.relatedTarget)));
 
   /** Mark `start` as where the arrows start from (`focus`), outlined while focus is elsewhere; null marks none. */
@@ -100,14 +103,12 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     for (const b of buttons) b.toggleAttribute('data-start', b === start);
   }
 
-  /** Name the entry under the pointer, else the focused one (`focused`, while focus moves), else the current one. */
+  /** Name the focused entry (`focused`, while focus moves; the outline the pointer moved), else the current one. */
   function showName(focused = document.activeElement) {
-    const at = buttons.findIndex((b) => b === focused);
+    const outlined = before === undefined ? -1 : buttons.findIndex((b) => b.hasAttribute('data-start'));
+    const at = Math.max(buttons.findIndex((b) => b === focused), outlined);
     const entry = entries.find((e) => e.key === current);
-    // A picker hidden under the pointer gets no pointerleave: what it last had under it is stale when it shows again.
-    const under = hovered && grid.matches(':hover') ? hovered : null;
-    name.textContent = under ? label(under) : at >= 0 ? label(entries[at])
-      : entry ? `Current: ${label(entry)}` : other ? `Current: ${other}` : '';
+    name.textContent = at >= 0 ? label(entries[at]) : entry ? `Current: ${label(entry)}` : other ? `Current: ${other}` : '';
   }
 
   /**
@@ -118,6 +119,7 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
   function setCurrent(key, otherName = '') {
     current = entries.find((e) => e.key === key) ? key : null;
     other = otherName;
+    before = undefined;
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.key === current));
     markStart(buttons.find((b) => b.dataset.key === current));
     showName();

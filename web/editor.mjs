@@ -458,8 +458,16 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** The glows that Shift and the focused menu item change: the cut's, and what deleting with contents would take. */
   const glows = () => { glowCut(); glowDoomed(); };
-  /** Shift held or let go, read from every key and pointer event, since one pressed elsewhere sends no keydown here. */
-  const holdShift = (/** @type {boolean} */ on) => { if (on !== shiftHeld) { shiftHeld = on; glows(); } };
+  /**
+   * Shift held or let go, read from every key and pointer event, since one pressed elsewhere sends no keydown here. The
+   * root's `data-shift` tells the pickers' digits (style.css).
+   */
+  const holdShift = (/** @type {boolean} */ on) => {
+    if (on === shiftHeld) return;
+    shiftHeld = on;
+    document.documentElement.toggleAttribute('data-shift', on);
+    glows();
+  };
   window.addEventListener('keydown', (e) => holdShift(e.shiftKey || e.key === 'Shift'), true);
   window.addEventListener('keyup', (e) => holdShift(e.key === 'Shift' ? false : e.shiftKey), true);
   for (const type of ['pointerdown', 'pointermove']) {

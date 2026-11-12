@@ -161,9 +161,8 @@ Mermaid's theme is the file's to set.
 - No hidden affordances. A shortcut is shown where its item is: a menu item's key at its right, as most apps show
   them (the user: one system, no underlined letters), and a digit in a picker. A key is a letter of its label where
   one fits, for the memory, but need not be (Center in window, F: F is the view key everywhere; Find…, /). Names
-  show as text: a picker's line names the entry under the pointer, else the one with keyboard focus, else the current
-  one. On touch, which
-  has no hover, that is the current one only (a known trade: the picker stays open after a pick, so a tap shows it).
+  show as text: a picker's line names the focused entry (the outline), else the current one. On touch, which has no
+  hover, that is the current one only (a known trade: the picker stays open after a pick, so a tap shows it).
 - Not every key needs a hint on the page (the user). A hint goes on the page only where it fits and is worth its
   space; the guide holds the rest. A little friction while learning is fine when what the page shows leads the way:
   a picker's digits say there is a way in, and Down from the label box is it.
@@ -224,6 +223,11 @@ Mermaid's theme is the file's to set.
   focused, and Down returns there; a pick moves it to the picked entry. Enter in the grid selects and goes back to the
   label; only Enter in the label saves, so each Enter has one meaning. Escape in the grid keeps what was selected
   there.
+- Mouse and keyboard share one focus in a picker (the user: they cooperate, as in a menu): whichever moved last, a key
+  or the pointer, has the outline, and the line names it. With focus in the grid, the pointer moving onto an entry
+  focuses it. With focus in the label box, it moves only the outline (where Down goes), never the caret, and the
+  outline goes back when the pointer leaves the grid, so passing over it changes nothing. Only a real move counts: a
+  picker opened under a resting pointer (a double-click) keeps the outline where it was.
 - Outside a field, a menu and a dialog, the arrows are the diagram's, even with a footer button focused: the page has
   nothing else for them. The code panel is the exception: there they scroll the code (below). While Help is open, every key is its own (arrows scroll it, Escape closes it), and the page
   answers none.
