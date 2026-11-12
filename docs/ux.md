@@ -212,6 +212,12 @@ Mermaid's theme is the file's to set.
 - Arrow keys in a picker wrap within their row or column, never on into the next: Right at a row's end goes to its
   start, Down at the bottom to the top of the same column. So a key always moves along one line of the grid. The one
   exception: Up from its top row goes back to the label box above it.
+- A picker's short last row is centered under the rest (the user: the arrow type picker's last two, under the dotted
+  and thick columns). Its keys take it as starting at column floor((columns − its length) / 2): exact at ten columns,
+  half a column left of where it is drawn at five, where the drawing stays centered (mostly used by touch). Down from a
+  column over one of its entries goes there, and Up goes back; a column it lacks wraps from one row higher.
+- A picker has ten columns, so a digit and its Shift form sit one above the other, and five on a narrow screen: below
+  480px for the shape picker, and 600px for the arrow type picker, whose icons are wider.
 - In a picker, selected and focused are apart (the user): the fill is the selected entry, moved only by a click, a
   digit, Space or Enter; the outline is keyboard focus, moved by the arrows. While focus is not in the grid, the
   outline stays where the arrows go on from (the user): Up or Escape back to the label leaves it on the entry last

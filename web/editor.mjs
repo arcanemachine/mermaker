@@ -1881,6 +1881,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   const arrowPicker = createPicker({
     title: 'Arrow type',
     entries: ARROW_TYPES,
+    columns: 10,
+    className: 'arrow-picker',
     onPick: (at) => choose(at),
   });
   /** Each kind's picker, what it picks from, and the hint the label box gives for it. */
@@ -1959,7 +1961,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       boxPicker = boxPickers.edge;
       const arrow = shownEdge(target.id)?.arrow ?? '';
       boxPickerFrom = arrowType(arrow);
-      // An arrow not in the list (`o--o`) is named as written, with none pressed.
+      // An arrow not in the list (`<--o`) is named as written, with none pressed.
       boxPicker.picker.current(boxPickerFrom, arrow);
     } else return;
     boxPickerHint.textContent = boxPicker.hint;

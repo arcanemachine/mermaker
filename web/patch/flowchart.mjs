@@ -778,9 +778,21 @@ export const ARROWS = {
   '--x': (n) => '--' + '-'.repeat(n) + 'x',
   '<-->': (n) => '<--' + '-'.repeat(n) + '>',
   '~~~': (n) => '~~~' + '~'.repeat(n),
+  '-.-o': (n) => '-.' + '.'.repeat(n) + '-o',
+  '-.-x': (n) => '-.' + '.'.repeat(n) + '-x',
+  '==o': (n) => '==' + '='.repeat(n) + 'o',
+  '==x': (n) => '==' + '='.repeat(n) + 'x',
+  '<-.->': (n) => '<-.' + '.'.repeat(n) + '->',
+  '<==>': (n) => '<==' + '='.repeat(n) + '>',
+  'o--o': (n) => 'o--' + '-'.repeat(n) + 'o',
+  'o-.-o': (n) => 'o-.' + '.'.repeat(n) + '-o',
+  'o==o': (n) => 'o==' + '='.repeat(n) + 'o',
+  'x--x': (n) => 'x--' + '-'.repeat(n) + 'x',
+  'x-.-x': (n) => 'x-.' + '.'.repeat(n) + '-x',
+  'x==x': (n) => 'x==' + '='.repeat(n) + 'x',
 };
 
-/** The ARROWS key an arrow is, at any length (`---->` is `-->`), or null for one not offered there (`o--o`). */
+/** The ARROWS key an arrow is, at any length (`---->` is `-->`), or null for one not offered (`<--o`). */
 export function arrowType(/** @type {string} */ arrow) {
   const n = extraLength(arrow);
   return Object.keys(ARROWS).find((k) => ARROWS[k](n) === arrow) ?? null;
@@ -877,7 +889,9 @@ function reconnect(/** @type {string} */ text, /** @type {string} */ svgId, /** 
   const expect = (/** @type {Edge} */ x) => (x.index === e.index ? { ...x, arrow, label: label ? { text: label } : null } : x);
   if (s.groups[e.step].length === 1 && s.groups[e.step + 1].length === 1) {
     const id = s.links[e.step].userId;
-    const out = text.slice(0, e.link.start) + (id ? id + '@' : '') + body + text.slice(e.link.end);
+    // An `o` or `x` start marker written against the node before it is read as part of its id (`Ao--oB` is node Ao).
+    const gap = /^[ox]/.test(arrow) && /\S/.test(text[e.link.start - 1]) ? ' ' : '';
+    const out = text.slice(0, e.link.start) + gap + (id ? id + '@' : '') + body + text.slice(e.link.end);
     check(text, out, expect);
     return out;
   }

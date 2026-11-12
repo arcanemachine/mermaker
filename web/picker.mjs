@@ -44,11 +44,12 @@ const label = (/** @type {PickerEntry} */ entry) => entry.name
  * @param {PickerEntry[]} options.entries
  * @param {(key: string) => void} options.onPick
  * @param {number} [options.columns]
+ * @param {string} [options.className] a class of its own, for CSS that is this picker's alone
  */
-export function createPicker({ title, entries, onPick, columns = 5 }) {
+export function createPicker({ title, entries, onPick, columns = 5, className = '' }) {
   watchShift();
   const el = document.createElement('div');
-  el.className = 'picker';
+  el.className = `picker ${className}`.trim();
   el.setAttribute('role', 'group');
   el.setAttribute('aria-label', title);
   const heading = document.createElement('div');
@@ -83,6 +84,8 @@ export function createPicker({ title, entries, onPick, columns = 5 }) {
     grid.append(b);
     return b;
   });
+  // Every cell is as wide as the icons (one width per list), so a short last row can be centered under the rest.
+  grid.style.setProperty('--icon', `${buttons[0]?.querySelector('svg')?.getAttribute('width') ?? 0}px`);
 
   /** @type {string | null} */
   let current = null;
@@ -108,7 +111,7 @@ export function createPicker({ title, entries, onPick, columns = 5 }) {
   }
 
   /**
-   * Mark `key` as current; for one not in the list, `otherName` names it instead ("o--o").
+   * Mark `key` as current; for one not in the list, `otherName` names it instead ("<--o").
    * @param {string | null} key
    * @param {string} [otherName]
    */

@@ -28,7 +28,7 @@ Mermaid syntax.
 | **start**, **end** | Of an edge: the node or subgraph it is written from, and the one it goes to (Mermaid's words in its edge data; "source" and "target" mean the same). Reassign end… and Reassign start… move them. |
 | **heading** | Of an edge at one of its ends: up, down, left or right, the way it goes as it leaves that end (`docs/ux.md` says how it is measured). merma's own: Mermaid has no word for it, and the arrow keys need one. |
 | **arrow** | An edge's connector syntax without its label: `-->`, `---`, `-.->`, `==>`, `--o`, `--x`, `<-->`, `~~~`… |
-| **arrow type** | Which of those an arrow is, at any length (`---->` is a long `-->`): Arrow, Line, Dotted arrow, Dotted line, Thick arrow, Thick line, Circle, Cross, Two-way arrow (Mermaid: "multi directional"), Invisible. |
+| **arrow type** | Which of those an arrow is, at any length (`---->` is a long `-->`): Arrow, Dotted line, Two-way arrow (Mermaid: "multi directional"), Thick two-way circle and the rest, named in `docs/guide.md`, "The edge panel". |
 | **length** | How much longer than its shortest form an arrow is; it asks Mermaid for a longer edge. |
 | **edge label** | An edge's text, as `-->|label|` (pipe form) or `-- label -->` (text form). merma writes the pipe form. |
 | **edge id** | A name given to an edge in the file: `A e1@--> B`. Its settings go in an `e1@{ … }` statement. |

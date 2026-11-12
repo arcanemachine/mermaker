@@ -491,6 +491,20 @@ test('setEdgeArrow keeps the label and the length', () => {
   assert.equal(setEdgeArrow('flowchart LR\n  A -->|yes| B\n', 'L_A_B_0', '==>').text, 'flowchart LR\n  A ==>|yes| B\n');
   assert.equal(setEdgeArrow('flowchart LR\n  A e1@--> B\n', 'e1', '--x').text, 'flowchart LR\n  A e1@--x B\n');
   assert.throws(() => setEdgeArrow('flowchart LR\n  A --> B\n', 'L_A_B_0', '-->>'), /is not an arrow type/);
+  assert.equal(setEdgeArrow('flowchart LR\n  A o---o B\n', 'L_A_B_0', '==>').text, 'flowchart LR\n  A ===> B\n');
+});
+
+test('setEdgeArrow parts an o or x start marker from the node before it', () => {
+  const set = (/** @type {string} */ src, /** @type {string} */ svgId, /** @type {string} */ arrow) => setEdgeArrow(src, svgId, arrow).text;
+  // Written against A, `o--o` would make the node Ao.
+  assert.equal(set('flowchart LR\n  A-->B\n', 'L_A_B_0', 'o--o'), 'flowchart LR\n  A o--oB\n');
+  assert.equal(set('flowchart LR\n  A[Start]-->B\n', 'L_A_B_0', 'x==x'), 'flowchart LR\n  A[Start] x==xB\n');
+  assert.equal(set('flowchart LR\n  A-->B-->C\n', 'L_B_C_0', 'o-.-o'), 'flowchart LR\n  A-->B o-.-oC\n');
+  assert.equal(set('flowchart LR\n  A-->|hi|B\n', 'L_A_B_0', 'x--x'), 'flowchart LR\n  A x--x|hi|B\n');
+  // A space already there, or a one-sided marker, needs none; an edge id keeps its place.
+  assert.equal(set('flowchart LR\n  A --> B\n', 'L_A_B_0', 'o--o'), 'flowchart LR\n  A o--o B\n');
+  assert.equal(set('flowchart LR\n  A-->B\n', 'L_A_B_0', '-.-o'), 'flowchart LR\n  A-.-oB\n');
+  assert.equal(set('flowchart LR\n  A e1@-->B\n', 'e1', 'o--o'), 'flowchart LR\n  A e1@o--oB\n');
 });
 
 test('editEdge writes the label and the arrow type as one change, even on a shared statement', () => {
@@ -512,7 +526,10 @@ test('arrowType names an arrow at any length, and ARROWS gives each back', () =>
     assert.equal(arrowType(make(2)), type);
   }
   assert.equal(arrowType('---->'), '-->');
-  assert.equal(arrowType('o--o'), null);
+  assert.equal(arrowType('x-..-x'), 'x-.-x');
+  // Start and end markers that differ: Mermaid draws only the end, so it is not one of ours.
+  assert.equal(arrowType('<--o'), null);
+  assert.equal(arrowType('o-->'), null);
 });
 
 test('reverseEdge turns a lone edge around, keeping each node\'s shape', () => {

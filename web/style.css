@@ -356,8 +356,12 @@ main:has(#find:not([hidden])) #notice { display: none; }
 /* A picker: a grid of small drawings, each with its digit; the current one is marked, its name below. */
 .picker { padding: 2px; }
 .picker-title { font-size: 12px; color: var(--text-muted); padding: 2px 4px 4px; }
-.picker-grid { display: grid; grid-template-columns: repeat(var(--columns), auto); gap: 2px; }
-.menu .picker-grid button { position: relative; padding: 8px 6px 6px; justify-content: center; color: var(--text); }
+/* Rows of equal cells that wrap, so a short last row is centered under the rest (docs/ux.md): as wide as `--columns`
+   cells, each an icon (`--icon`, set by the picker) and its padding. */
+.picker-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;
+               width: calc(var(--columns) * (var(--icon) + 12px) + (var(--columns) - 1) * 2px); }
+.menu .picker-grid button { position: relative; box-sizing: border-box; width: calc(var(--icon) + 12px);
+                            padding: 8px 6px 6px; justify-content: center; color: var(--text); }
 .picker-grid .digit { position: absolute; top: 1px; right: 3px; font-size: 9px; color: var(--text); }
 /* The digits Shift does not pick are gray, still readable (at least 4.5:1 on the pressed fill); holding Shift swaps. */
 .picker-grid .digit.shift, :root[data-shift] .picker-grid .digit { color: var(--text-muted); }
@@ -377,8 +381,11 @@ main:has(#find:not([hidden])) #notice { display: none; }
           background: var(--canvas); color: var(--canvas-text); color-scheme: light; resize: none; overflow: hidden; user-select: text; cursor: text; }
 /* The picker under the label box: a menu's look, placed by the editor. */
 .menu.box-picker { padding: 4px 6px 6px; }
-/* On a narrow screen the shape picker's ten columns would not fit: five, in four rows. The picker's arrow keys follow
-   the grid as drawn. */
+/* On a narrow screen a picker's ten columns would not fit: five. The picker's arrow keys follow the grid as drawn. The
+   arrow type picker's icons are wider, so its ten need more room than the shape picker's. */
+@media (max-width: 600px) {
+  .box-picker .arrow-picker .picker-grid { --columns: 5 !important; }
+}
 @media (max-width: 480px) {
   /* The find bar's buttons go on a second row together; the keys' hint, for a keyboard, goes. */
   #find { flex-wrap: wrap; }

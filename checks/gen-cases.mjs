@@ -31,6 +31,11 @@ const DRAWN = {
   '-.-': ['arrow_open', 'dotted'], '==>': ['arrow_point', 'thick'], '===': ['arrow_open', 'thick'],
   '--o': ['arrow_circle', 'normal'], '--x': ['arrow_cross', 'normal'], '<-->': ['double_arrow_point', 'normal'],
   '~~~': ['arrow_open', 'invisible'],
+  '-.-o': ['arrow_circle', 'dotted'], '-.-x': ['arrow_cross', 'dotted'], '==o': ['arrow_circle', 'thick'],
+  '==x': ['arrow_cross', 'thick'], '<-.->': ['double_arrow_point', 'dotted'], '<==>': ['double_arrow_point', 'thick'],
+  'o--o': ['double_arrow_circle', 'normal'], 'o-.-o': ['double_arrow_circle', 'dotted'],
+  'o==o': ['double_arrow_circle', 'thick'], 'x--x': ['double_arrow_cross', 'normal'],
+  'x-.-x': ['double_arrow_cross', 'dotted'], 'x==x': ['double_arrow_cross', 'thick'],
 };
 const F = join(import.meta.dirname, '..', 'test', 'fixtures');
 const ids = JSON.parse(readFileSync(join(F, 'node-ids.json'), 'utf8'));

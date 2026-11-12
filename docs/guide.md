@@ -337,21 +337,36 @@ with no label, the picker can cover the arrowhead; the picker shows the current 
 - **The arrow types:** click one to select it, or press Down (from the label's last line) to go into them; the keys are
   the shapes' (above): the arrows move, a digit or Space selects, Enter selects and goes back to the label, Up from the
   top row or Escape goes back. The arrow changes and keeps its label and its length (`---->` asks for a longer edge,
-  and stays longer). An arrow merma does not offer (`o--o`) is named on the line as written, with none selected, and
-  stays as it is unless another is selected.
+  and stays longer). In each row the columns go normal, dotted, thick, and Shift swaps the arrowhead for a circle or a
+  cross; the last two, with no digit, are centered under the dotted and thick columns. A two-way circle or cross is
+  written with a space before it (`A o--o B`), or Mermaid would read the `o` as part of the node's id. An arrow merma
+  does not offer (`<--o`, which Mermaid draws as a circle only) is named on the line as written, with none selected,
+  and stays as it is unless another is selected.
 
 | Digit | Arrow type | Syntax |
 |---|---|---|
 | 1 | Arrow | `-->` |
-| 2 | Line | `---` |
-| 3 | Dotted arrow | `-.->` |
-| 4 | Dotted line | `-.-` |
-| 5 | Thick arrow | `==>` |
+| 2 | Dotted arrow | `-.->` |
+| 3 | Thick arrow | `==>` |
+| 4 | Line | `---` |
+| 5 | Dotted line | `-.-` |
 | 6 | Thick line | `===` |
-| 7 | Circle | `--o` |
-| 8 | Cross | `--x` |
-| 9 | Two-way arrow | `<-->` |
+| 7 | Two-way arrow | `<-->` |
+| 8 | Dotted two-way arrow | `<-.->` |
+| 9 | Thick two-way arrow | `<==>` |
 | 0 | Invisible | `~~~` |
+| Shift+1 | Circle | `--o` |
+| Shift+2 | Dotted circle | `-.-o` |
+| Shift+3 | Thick circle | `==o` |
+| Shift+4 | Cross | `--x` |
+| Shift+5 | Dotted cross | `-.-x` |
+| Shift+6 | Thick cross | `==x` |
+| Shift+7 | Two-way circle | `o--o` |
+| Shift+8 | Dotted two-way circle | `o-.-o` |
+| Shift+9 | Thick two-way circle | `o==o` |
+| Shift+0 | Two-way cross | `x--x` |
+|  | Dotted two-way cross | `x-.-x` |
+|  | Thick two-way cross | `x==x` |
 
 ## Keys
 

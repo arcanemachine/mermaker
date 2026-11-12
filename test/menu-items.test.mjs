@@ -104,9 +104,11 @@ test('an item that can be grayed says why', () => {
   }
 });
 
-test('arrow types: digits unique, every one is an arrow type merma can write, and every one of those is listed', () => {
-  const digits = ARROW_TYPES.map((a) => a.digit);
-  assert.deepEqual(digits, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']);
+test('arrow types: 1–9, 0, then the same with Shift, then none; every one is an arrow type merma can write, and every one of those is listed', () => {
+  const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  assert.deepEqual(ARROW_TYPES.slice(0, 10).map((a) => [a.digit, Boolean(a.shift)]), digits.map((d) => [d, false]));
+  assert.deepEqual(ARROW_TYPES.slice(10, 20).map((a) => [a.digit, a.shift]), digits.map((d) => [d, true]));
+  assert.ok(ARROW_TYPES.slice(20).every((a) => a.digit === undefined));
   for (const a of ARROW_TYPES) {
     assert.ok(ARROWS[a.key], a.key);
     assert.equal(arrowType(a.key), a.key);
@@ -129,7 +131,10 @@ test('the guide lists every shape with its digit, meaning and syntax', () => {
 
 test('the guide lists every arrow type with its digit and syntax', () => {
   const guide = readFileSync(join(import.meta.dirname, '..', 'docs', 'guide.md'), 'utf8');
-  for (const a of ARROW_TYPES) assert.ok(guide.includes(`| ${a.digit} | ${a.name} | \`${a.key}\` |`), `${a.name} ${a.key}`);
+  for (const a of ARROW_TYPES) {
+    const key = a.digit ? `${a.shift ? 'Shift+' : ''}${a.digit}` : '';
+    assert.ok(guide.includes(`| ${key} | ${a.name} | \`${a.key}\` |`), `${a.name} ${a.key}`);
+  }
 });
 
 test('shapes: the first ten have the digits 1–9, 0, the next ten the same with Shift, and the rest none; keys and names unique; every bracket shape listed', () => {
