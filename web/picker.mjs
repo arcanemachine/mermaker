@@ -5,8 +5,8 @@
 //
 // Mouse and keyboard share one focus: the outline. Its buttons take real focus only when its host gives it (`focus`);
 // once focus is in the grid, the pointer moving over an entry focuses it, as in a menu. While focus is in its field,
-// the pointer moves only the outline, never the caret, and the outline goes back when the pointer leaves, so a pointer
-// passing over does not change where `focus` goes. It acts on pointer moves, not on the pointer entering, since a
+// the pointer moves only the outline, never the caret. Either way the pointer previews: when it leaves, the outline
+// (and focus, in the grid) goes back to where it was, unless a key or a click on its entry made it stick. It acts on pointer moves, not on the pointer entering, since a
 // picker opened under a resting pointer would otherwise take the entry under it. The host keeps a click from moving
 // focus. It remembers where the arrows were when focus went back to its field, and `focus` returns there; a pick moves
 // that place to the picked entry.
@@ -70,13 +70,18 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     b.addEventListener('pointermove', (e) => {
       // Touch has no hover: a tap names the current one (docs/ux.md).
       if (e.pointerType === 'touch') return;
-      if (grid.contains(document.activeElement)) { if (document.activeElement !== b) b.focus(); return; }
-      if (b.hasAttribute('data-start')) return;
-      if (before === undefined) before = buttons.find((x) => x.hasAttribute('data-start')) ?? null;
-      markStart(b);
-      showName();
+      const inGrid = grid.contains(document.activeElement);
+      if (before === undefined) {
+        before = inGrid ? /** @type {HTMLButtonElement} */ (document.activeElement) : buttons.find((x) => x.hasAttribute('data-start')) ?? null;
+      }
+      if (!inGrid) { markStart(b); showName(); return; }
+      if (document.activeElement === b) return;
+      pointerFocus = true;
+      b.focus();
+      pointerFocus = false;
     });
-    b.addEventListener('focus', () => { before = undefined; markStart(b); showName(); });
+    // A focus from the keys (or the host) makes it stick; one the pointer made is still a preview.
+    b.addEventListener('focus', () => { if (!pointerFocus) before = undefined; markStart(b); showName(); });
     b.tabIndex = -1;
     grid.append(b);
     return b;
@@ -90,10 +95,14 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
   /** @type {HTMLButtonElement | null | undefined} where the outline was before the pointer moved it, focus being in the
    * field; undefined while the pointer has not moved it */
   let before;
+  let pointerFocus = false;
+  // A pointer that only passed over changes nothing: the outline goes back, and focus with it when it is in the grid.
   grid.addEventListener('pointerleave', () => {
-    if (before === undefined || grid.contains(document.activeElement)) return;
-    markStart(before);
+    if (before === undefined) return;
+    const back = before;
     before = undefined;
+    if (grid.contains(document.activeElement) && back) back.focus();
+    else markStart(back);
     showName();
   });
   grid.addEventListener('focusout', (e) => showName(/** @type {Element | null} */ (e.relatedTarget)));
@@ -126,6 +135,8 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
   }
 
   el.addEventListener('keydown', (e) => {
+    // Any key on the entry the pointer is on makes it stick (Up and Escape back to the field too); Shift alone does not.
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) before = undefined;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const at = buttons.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement));
     // The columns as drawn: CSS may lay the grid out with fewer than it was made with (the shape picker on a narrow screen).

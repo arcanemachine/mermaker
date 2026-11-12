@@ -225,8 +225,9 @@ Mermaid's theme is the file's to set.
   there.
 - Mouse and keyboard share one focus in a picker (the user: they cooperate, as in a menu): whichever moved last, a key
   or the pointer, has the outline, and the line names it. With focus in the grid, the pointer moving onto an entry
-  focuses it. With focus in the label box, it moves only the outline (where Down goes), never the caret, and the
-  outline goes back when the pointer leaves the grid, so passing over it changes nothing. Only a real move counts: a
+  focuses it. With focus in the label box, it moves only the outline (where Down goes), never the caret. Either
+  way the pointer previews: when it leaves the grid, the outline (and focus, in the grid) goes back to where it was,
+  so passing over changes nothing; a click, or any key pressed on its entry, makes it stick. Only a real move counts: a
   picker opened under a resting pointer (a double-click) keeps the outline where it was.
 - Outside a field, a menu and a dialog, the arrows are the diagram's, even with a footer button focused: the page has
   nothing else for them. The code panel is the exception: there they scroll the code (below). While Help is open, every key is its own (arrows scroll it, Escape closes it), and the page
