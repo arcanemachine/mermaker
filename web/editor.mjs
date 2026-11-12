@@ -11,13 +11,13 @@ import { turnable } from './turn.mjs';
 import { createHistory } from './history.mjs';
 import { find, firstShown, countText } from './find.mjs';
 import { createChoices, createMenu } from './menu.mjs';
-import { applies, GLOBAL_KEYS, INSERT_COLLAPSED, LOCKED, MENUS, NO_EDGE_MATCH, NO_SUBGRAPH_MATCH, PART_UNNAMED, whyNot } from './menu-items.mjs';
+import { ANIMATED_BY_STYLE, applies, GLOBAL_KEYS, INSERT_COLLAPSED, LOCKED, MENUS, NO_EDGE_MATCH, NO_SUBGRAPH_MATCH, PART_UNNAMED, whyNot } from './menu-items.mjs';
 import { createKeys } from './keys.mjs';
 import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink,
+  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation,
 } from './patch/flowchart.mjs';
 import { linkEdit, linkTarget, linkTone } from './links.mjs';
 import { limitOf, limitSentence } from './limits.mjs';
@@ -594,6 +594,14 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'paste-node': () => paste(true),
     'paste-node-bare': () => paste(false),
     'reverse-edge': () => { const id = selection().id; editDrawn((text) => reverseEdge(text, id), { after: sameEdge(id) }); },
+    'toggle-edge-animation': () => {
+      const { id } = selection();
+      const on = !edgeAnimated(shownText, id);
+      editDrawn((text) => setEdgeAnimation(text, id, on), {
+        after: (result) => ({ item: { kind: 'edge', id: result.svgId } }),
+        afterSave: () => ui.announce(`Edge animation ${on ? 'enabled' : 'disabled'}`),
+      });
+    },
     'add-node': () => {
       const subgraph = selectedSubgraph();
       addAndName((text) => addNode(text, { subgraph }), subgraph);
@@ -676,6 +684,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       turn: ui.turned(selectedSubgraph()),
       turnWhy: selected?.kind === 'subgraph' ? turnWhy(selected.id) : null,
       insertWhy: selected?.kind === 'edge' ? insertWhy(selected.id) : null,
+      ...(selected?.kind === 'edge' ? animation(selected.id) : {}),
       locked,
       copied: copied?.kind ?? null,
       cut: cut?.kind ?? null,
@@ -732,6 +741,21 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }
     if (blockAround(item) !== to) return null;
     return to === null ? 'It is already at the top level.' : 'It is already in this subgraph.';
+  }
+
+  /**
+   * Whether the file animates edge `id`, and why its animation cannot be turned on or off here. The file decides; what
+   * is drawn only grays it: a class, a `linkStyle` or a `style` can animate an edge, and merma does not edit those.
+   */
+  function animation(/** @type {string} */ id) {
+    try {
+      const animated = edgeAnimated(shownText, id);
+      const path = edgeEls(id).find((x) => x.matches('path:not([data-page-only])'));
+      const styled = !animated && path !== undefined && getComputedStyle(path).animationName !== 'none';
+      return { animated: animated || styled, animateWhy: animationRefusal(shownText, id) ?? (styled ? ANIMATED_BY_STYLE : null) };
+    } catch {
+      return { animated: false, animateWhy: NO_EDGE_MATCH };
+    }
   }
 
   /** Why a node cannot be inserted into edge `id`: its line is in a collapsed subgraph, where N would be hidden. */

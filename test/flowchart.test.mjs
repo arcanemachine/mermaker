@@ -11,6 +11,7 @@ import {
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
   moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink,
+  setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
 
@@ -518,6 +519,98 @@ test('editEdge writes the label and the arrow type as one change, even on a shar
 test('editEdge leaves what it is not given as written: an arrow type not in the list, or the label', () => {
   assert.equal(editEdge('flowchart LR\n  A o--o B\n', 'L_A_B_0', { label: 'x' }).text, 'flowchart LR\n  A o--o|"x"| B\n');
   assert.equal(editEdge('flowchart LR\n  A -- yes --> B\n', 'L_A_B_0', { arrow: '==>' }).text, 'flowchart LR\n  A ==>|"yes"| B\n');
+});
+
+const animate = (/** @type {string} */ body, /** @type {string} */ svgId, /** @type {boolean} */ on) =>
+  setEdgeAnimation(`flowchart LR\n${body}`, svgId, on);
+
+test('setEdgeAnimation gives an edge with no id the first free one, and its settings on the line after', () => {
+  assert.deepEqual(animate('  A --> B\n', 'L_A_B_0', true), { text: 'flowchart LR\n  A e1@--> B\n  e1@{ animate: true }\n', svgId: 'e1' });
+  // Written against the node before it, the id would be read as part of the node's.
+  assert.equal(animate('  A-->B\n', 'L_A_B_0', true).text, 'flowchart LR\n  A e1@-->B\n  e1@{ animate: true }\n');
+  // e1 is a node's id, so not free.
+  assert.equal(animate('  A --> B\n  e1[x] --> A\n', 'L_A_B_0', true).text, 'flowchart LR\n  A e2@--> B\n  e2@{ animate: true }\n  e1[x] --> A\n');
+  // In a subgraph, the settings stay in its block, after the edge.
+  assert.equal(animate('  subgraph S\n    A --> B\n  end\n', 'L_A_B_0', true).text,
+    'flowchart LR\n  subgraph S\n    A e1@--> B\n    e1@{ animate: true }\n  end\n');
+});
+
+test('setEdgeAnimation names one edge of a chain in place, and splits a shared connector', () => {
+  assert.equal(animate('  A --> B --> C\n', 'L_B_C_0', true).text, 'flowchart LR\n  A --> B e1@--> C\n  e1@{ animate: true }\n');
+  assert.equal(animate('  A --> B & C\n', 'L_A_C_0', true).text, 'flowchart LR\n  A --> B\n  A e1@--> C\n  e1@{ animate: true }\n');
+});
+
+test('setEdgeAnimation starts an edge from a node written with @{ … } on a line of its own, which Mermaid needs', () => {
+  assert.equal(animate('  A@{ shape: rect } --> B\n', 'L_A_B_0', true).text,
+    'flowchart LR\n  A@{ shape: rect }\n  A e1@--> B\n  e1@{ animate: true }\n');
+  assert.equal(animate('  X --> A@{ shape: rect } --> B\n', 'L_A_B_0', true).text,
+    'flowchart LR\n  X --> A@{ shape: rect }\n  A e1@--> B\n  e1@{ animate: true }\n');
+});
+
+test('an edge id is never written right after a node\'s @{ … }, which Mermaid does not parse', () => {
+  // A class before the block is part of the node's reference.
+  assert.equal(animate('  A:::hot@{ shape: rect } --> B\n', 'L_A_B_0', true).text,
+    'flowchart LR\n  A:::hot@{ shape: rect }\n  A e1@--> B\n  e1@{ animate: true }\n');
+  // Reversed, the end becomes the start.
+  assert.equal(reverseEdge('flowchart LR\n  A e1@--> B@{ shape: rect }\n', 'e1').text, 'flowchart LR\n  B@{ shape: rect }\n  B e1@--> A\n');
+  assert.equal(reverseEdge('flowchart LR\n  A e1@--> B:::hot@{ shape: rect }\n', 'e1').text, 'flowchart LR\n  B:::hot@{ shape: rect }\n  B e1@--> A\n');
+  // A start node of an `&` group, the edge written apart.
+  assert.equal(animate('  P & A@{ shape: rect } --> B\n', 'L_A_B_0', true).text,
+    'flowchart LR\n  P --> B\n  A@{ shape: rect }\n  A e1@--> B\n  e1@{ animate: true }\n');
+  // In a chain, the statement breaks where the id is.
+  assert.equal(animate('  X --> A@{ shape: rect } & C --> B\n', 'L_C_B_0', true).text,
+    'flowchart LR\n  X --> A@{ shape: rect } & C\n  A --> B\n  C e1@--> B\n  e1@{ animate: true }\n');
+});
+
+test('setEdgeAnimation changes only the animation in the settings, the rest as written', () => {
+  assert.equal(animate('  A e1@--> B\n  e1@{ label: "a,b" }\n', 'e1', true).text, 'flowchart LR\n  A e1@--> B\n  e1@{ label: "a,b", animate: true }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{curve: linear}\n', 'e1', true).text, 'flowchart LR\n  A e1@--> B\n  e1@{curve: linear, animate: true}\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{curve: linear,animate: true}\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n  e1@{curve: linear}\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ animate: true, curve: linear }\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n  e1@{ curve: linear }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ }\n', 'e1', true).text, 'flowchart LR\n  A e1@--> B\n  e1@{ animate: true }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ label: "a,b", animate: false }\n', 'e1', true).text,
+    'flowchart LR\n  A e1@--> B\n  e1@{ label: "a,b", animate: true }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ label: "a,b", animate: true }\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n  e1@{ label: "a,b" }\n');
+  // Inside quotes, a comma and a word that reads like a setting are the value's.
+  assert.equal(animate('  A e1@--> B\n  e1@{ label: "x, animate: no" }\n', 'e1', true).text,
+    'flowchart LR\n  A e1@--> B\n  e1@{ label: "x, animate: no", animate: true }\n');
+  assert.equal(edgeAnimated('flowchart LR\n  A e1@--> B\n  e1@{ label: "x, animation: y" }\n', 'e1'), false);
+  assert.equal(animate('  A e1@--> B\n  e1@{ label: "x, animate: no", animate: true }\n', 'e1', false).text,
+    'flowchart LR\n  A e1@--> B\n  e1@{ label: "x, animate: no" }\n');
+});
+
+test('setEdgeAnimation adds to the settings an edge has, and sets animate where it is written last', () => {
+  assert.equal(animate('  A e1@--> B\n  e1@{ curve: linear }\n', 'e1', true).text, 'flowchart LR\n  A e1@--> B\n  e1@{ curve: linear, animate: true }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ animate: false }\n  e1@{ curve: linear }\n', 'e1', true).text,
+    'flowchart LR\n  A e1@--> B\n  e1@{ animate: true }\n  e1@{ curve: linear }\n');
+});
+
+test('setEdgeAnimation off takes animate and animation from every settings line, the emptied ones with it, and keeps the id', () => {
+  assert.deepEqual(animate('  A e1@--> B\n  e1@{ animate: true }\n', 'e1', false), { text: 'flowchart LR\n  A e1@--> B\n', svgId: 'e1' });
+  assert.equal(animate('  A e1@--> B\n  e1@{ curve: linear, animate: true }\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n  e1@{ curve: linear }\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ animation: fast }; C --> D\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n  C --> D\n');
+  assert.equal(animate('  A e1@--> B\n  e1@{ animate: true }\n  e1@{ animation: slow }\n', 'e1', false).text, 'flowchart LR\n  A e1@--> B\n');
+  assert.equal(animate('  A --> B\n', 'L_A_B_0', false).text, 'flowchart LR\n  A --> B\n');
+});
+
+test('edgeAnimated reads the settings as Mermaid merges them: the last animate wins, and any animation animates', () => {
+  const on = (/** @type {string} */ body, svgId = 'e1') => edgeAnimated(`flowchart LR\n  A e1@--> B\n${body}`, svgId);
+  assert.equal(on('  e1@{ animate: true }\n'), true);
+  assert.equal(on('  e1@{ animate: true }\n  e1@{ animate: false }\n'), false);
+  assert.equal(on('  e1@{ animate: true }\n  e1@{ curve: linear }\n'), true);
+  assert.equal(on('  e1@{ animation: fast }\n'), true);
+  assert.equal(on('  e1@{ animate: false, animation: slow }\n'), true);
+  assert.equal(on(''), false);
+  assert.equal(edgeAnimated('flowchart LR\n  A --> B\n', 'L_A_B_0'), false);
+});
+
+test('animationRefusal: settings over several lines, and an id another edge has', () => {
+  assert.match(String(animationRefusal('flowchart LR\n  A e1@--> B\n  e1@{\n    animate: true\n  }\n', 'e1')), /several lines/);
+  assert.match(String(animationRefusal('flowchart LR\n  A e1@--> B\n  C e1@--> D\n', 'L_C_D_0')), /shares its id/);
+  assert.match(String(animationRefusal('flowchart LR\n  A e1@--> B & C\n', 'L_A_C_0')), /shares its id/);
+  assert.equal(animationRefusal('flowchart LR\n  A e1@--> B & C\n', 'e1'), null);
+  assert.equal(animationRefusal('flowchart LR\n  A e1@--> B\n  e1@{ animate: true }\n', 'e1'), null);
+  assert.throws(() => animate('  A e1@--> B\n  C e1@--> D\n', 'L_C_D_0', true), /shares its id/);
 });
 
 test('arrowType names an arrow at any length, and ARROWS gives each back', () => {

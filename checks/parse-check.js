@@ -180,6 +180,10 @@
             if (!b || b.start !== from || b.end !== to || !same || JSON.stringify(a.style) !== JSON.stringify(b.style)) {
               fails.push(`${c.name}: edge ${n} is ${b?.start}->${b?.end}, expected ${from}->${to} as before`);
             }
+            /* Animated as asked, the changed edge; every other as it was. `animation` animates it, even beside `animate: false`. */
+            const animated = (x) => Boolean(x?.animate || x?.animation);
+            const wantAnimated = n === c.at && w.animate !== undefined ? w.animate : animated(a);
+            if (animated(b) !== wantAnimated) fails.push(`${c.name}: edge ${n} ${animated(b) ? 'animated' : 'not animated'}, expected ${wantAnimated ? 'animated' : 'not'}`);
           });
           /* The changed edge's label as drawn: the one asked for (drawn alone for reference), none, or the one it had. */
           const w = c.want ?? {};

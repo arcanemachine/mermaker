@@ -605,6 +605,8 @@ const LINK = /^[xo<]?(?:-{2,}[-xo>]|={2,}[=xo>]|-?\.+-[xo>]?|~{3,})/;
 const OPENER = /^[xo<]?(?:--|==|-\.)/;
 const CLOSERS = { '-': /\s*-{2,}[-xo>]/y, '=': /\s*={2,}[=xo>]/y, '.': /\s*\.+-[xo>]?/y };
 const ID_AT = new RegExp(`^${ID}`, 'u');
+/** A connector that starts with an edge id (`e1@-->`). */
+const ID_LINK = new RegExp(`^${ID}@`, 'u');
 
 /**
  * An edge, as edges() reads it.
@@ -732,6 +734,8 @@ function readStatement(/** @type {string} */ line, /** @type {string} */ m, /** 
       else if (SHAPES.some(([open]) => line.startsWith(open, i))) i = shapeSpan(line, i)?.end ?? end;
       const cls = m.slice(i, end).match(new RegExp(`^:::${ID}`, 'u'));
       if (cls) i += cls[0].length;
+      // Mermaid takes a class before an `@{ … }` too (`A:::hot@{ shape: doc }`): part of the reference.
+      if (cls && line.startsWith('@{', i)) i = line.indexOf('}', i) + 1 || end;
       refs.push({ id: id[0], start: offset + from, end: offset + i });
       skip();
       if (m[i] !== '&') return refs;
@@ -868,6 +872,146 @@ export function editEdge(text, svgId, { label = null, arrow = null }) {
   return arrow ? setEdgeArrow(named, svgId, arrow) : { text: named };
 }
 
+// --- edge animation ----------------------------------------------------------------------------------------------
+
+/** The statements that hold edge id `userId`'s settings (`e1@{ animate: true }`), in text order. */
+function settingsStatements(/** @type {string} */ text, /** @type {string} */ userId) {
+  return statements(text).filter((x) => !x.keyword && !x.links.length && x.groups.length === 1
+    && x.groups[0].length === 1 && x.groups[0][0].id === userId && text.startsWith(userId + '@{', x.groups[0][0].start));
+}
+
+/** A settings body's entries as written, split at the commas outside quotes. */
+function settingParts(/** @type {string} */ body) {
+  /** @type {string[]} */
+  const parts = [];
+  let quote = '', at = 0;
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (quote) { if (c === quote) quote = ''; } else if (c === '"' || c === "'") quote = c; else if (c === ',') { parts.push(body.slice(at, i)); at = i + 1; }
+  }
+  parts.push(body.slice(at));
+  return parts;
+}
+
+/** A settings statement's body: what is between its braces. */
+const settingsBody = (/** @type {string} */ text, /** @type {Statement} */ x) => text.slice(text.indexOf('{', x.start) + 1, x.end - 1);
+
+/** The edge drawn as `svgId`, and its edge id when Mermaid uses it (an earlier edge with that id takes it). */
+function edgeWithId(/** @type {string} */ text, /** @type {string} */ svgId) {
+  const e = edges(text).find((x) => x.svgId === svgId);
+  if (!e) throw new Error('That edge is not in the file.');
+  return { e, userId: e.userId && e.svgId === e.userId ? e.userId : null };
+}
+
+/**
+ * Whether the file animates the edge drawn as `svgId`: its settings, read in order as Mermaid merges them, set
+ * `animate: true`, or any `animation` (`fast` or `slow`, which animates it even beside `animate: false`). A class or a
+ * style can animate it too; that is not read here.
+ */
+export function edgeAnimated(/** @type {string} */ text, /** @type {string} */ svgId) {
+  const { userId } = edgeWithId(text, svgId);
+  if (!userId) return false;
+  let animate = false;
+  for (const x of settingsStatements(text, userId)) {
+    for (const p of settingParts(settingsBody(text, x))) {
+      if (/^\s*animation\s*:/.test(p)) return true;
+      const m = /^\s*animate\s*:\s*(.*?)\s*$/s.exec(p);
+      if (m) animate = m[1] === 'true';
+    }
+  }
+  return animate;
+}
+
+/** Why merma cannot animate the edge drawn as `svgId` or stop it, or null: another edge has its id, or its settings span several lines. */
+export function animationRefusal(/** @type {string} */ text, /** @type {string} */ svgId) {
+  const { e, s } = locate(text, svgId);
+  const userId = e.userId && e.svgId === e.userId ? e.userId : null;
+  // Another edge has the id written on its connector: an earlier one, or one drawn from the same `&` group.
+  if ((e.userId || s.links[e.step].userId) && !userId) return "This edge shares its id with another edge. Give it an id of its own in the file first.";
+  if (userId && new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRe(userId)}@\\{[^}]*$`, 'mu').test(text)) {
+    return "This edge's settings are written over several lines. Change them in the code.";
+  }
+  return null;
+}
+
+/**
+ * Animate the edge drawn as `svgId` (`on`) or stop it, as Mermaid writes it: `A e1@--> B`, then `e1@{ animate: true }`
+ * after it (before it, Mermaid would read the settings as a node's). An edge with no id gets the first free `e<n>`
+ * in its connector, in a statement of its own when it shares one (`A --> B & C`). On: `animate: true` where the
+ * settings write `animate` last, else added to its last settings, else a new line. Off: `animate` and `animation`
+ * go from all its settings, and settings left empty go; the id stays. Returns { text, svgId }: the edge's id after.
+ */
+export function setEdgeAnimation(/** @type {string} */ text, /** @type {string} */ svgId, /** @type {boolean} */ on) {
+  const why = animationRefusal(text, svgId);
+  if (why) throw new Error(why);
+  let { userId } = edgeWithId(text, svgId);
+  if (!on) {
+    if (!userId) return { text, svgId };
+    const id = userId;
+    let out = text;
+    for (const x of settingsStatements(text, id).reverse()) {
+      const body = settingsBody(text, x);
+      const kept = settingParts(body).filter((p) => !/^\s*(?:animate|animation)\s*:/.test(p));
+      if (kept.join('').trim()) {
+        // Only the animation goes, with its comma: the rest stays as written.
+        const open = text.indexOf('{', x.start) + 1;
+        out = out.slice(0, open) + /^\s*/.exec(body)?.[0] + kept.join(',').trim() + /\s*$/.exec(body)?.[0] + out.slice(x.end - 1);
+        continue;
+      }
+      // An emptied statement goes, with its line when it was alone there.
+      const lineStart = out.lastIndexOf('\n', x.start - 1) + 1;
+      const lineEnd = out.indexOf('\n', x.end);
+      if (x.alone) out = out.slice(0, lineStart) + out.slice(lineEnd < 0 ? out.length : lineEnd + 1);
+      else out = out.slice(0, x.start) + out.slice(x.end).replace(/^\s*;\s*/, '');
+    }
+    check(text, out, (x) => x, null, new Set([id]));
+    return { text: out, svgId };
+  }
+  let out = text;
+  if (!userId) {
+    userId = freeId(text, 'e');
+    const { e, s, key } = locate(text, svgId);
+    const link = s.links[e.step];
+    if (s.groups[e.step].length === 1 && s.groups[e.step + 1].length === 1) {
+      const ref = text.slice(e.fromRef.start, e.fromRef.end);
+      if (ref.includes('@{')) {
+        // Mermaid takes no edge id right after a node's `@{ … }` (`A@{ shape: rect } e1@--> B` does not parse): the
+        // edge goes on a line of its own from there, from the bare id (`A@{ shape: rect }`, then `A e1@--> B`).
+        const lineStart = text.lastIndexOf('\n', e.fromRef.start - 1) + 1;
+        out = text.slice(0, e.fromRef.end) + '\n' + indentOf(text.slice(lineStart)) + e.from + ' ' + userId + '@' + text.slice(link.start);
+      } else {
+        // Written against the node before it, the id would join the node's (`Ae1@-->B` is node Ae1).
+        const gap = /\S/.test(text[link.start - 1]) ? ' ' : '';
+        out = text.slice(0, link.start) + gap + userId + '@' + text.slice(link.start);
+      }
+      check(text, out, (x) => x);
+    } else {
+      // A shared connector: the edge gets a statement of its own (rewrite keeps the id off a node's `@{ … }`).
+      const body = text.slice(link.start, link.end);
+      out = transform(text, { at: s.start, pairs: new Map([[key, { body: userId + '@' + body }]]), expect: (x) => x });
+    }
+  }
+  const id = userId;
+  const settings = settingsStatements(out, id);
+  const written = settings.filter((x) => settingParts(settingsBody(out, x)).some((p) => /^\s*animate\s*:/.test(p))).at(-1);
+  const last = written ?? settings.at(-1);
+  if (last) {
+    // Changed in place: `animate`'s value where it is written, else `animate: true` added before the brace.
+    const open = out.indexOf('{', last.start) + 1;
+    const body = settingsBody(out, last);
+    const next = written
+      ? settingParts(body).map((p) => p.replace(/^(\s*animate\s*:\s*)(.*?)(\s*)$/s, '$1true$3')).join(',')
+      : body.trim() ? body.replace(/\s*$/, (ws) => `, animate: true${ws}`) : ' animate: true ';
+    out = out.slice(0, open) + next + out.slice(last.end - 1);
+  } else {
+    const e = /** @type {Edge} */ (edges(out).find((x) => x.svgId === id));
+    const line = out.slice(0, e.statement.end).split('\n').length - 1;
+    out = insertAfter(out, line, `${id}@{ animate: true }`);
+  }
+  check(text, out, (x) => x, null, new Set([id]));
+  return { text: out, svgId: id };
+}
+
 /**
  * A label as it goes between pipes. A pipe label is kept as written. A text-form label (`-- yes (maybe) -->`) is
  * quoted, since between pipes `(`, `[`, `{` and the like need quotes; only its `"` is escaped, leaving any entity code
@@ -950,9 +1094,7 @@ function liftEdge(/** @type {string} */ text, /** @type {string} */ svgId, /** @
   const connector = text.slice(link.start, link.end).slice(link.userId ? link.userId.length + 1 : 0);
   const userId = e.userId && e.svgId === e.userId ? e.userId : null;
   // Its settings (`e1@{ animate: true }`) go after it: before it, Mermaid would read them as a node's.
-  const settings = userId ? statements(text).filter((x) => !x.keyword && !x.links.length && x.groups.length === 1
-    && x.groups[0].length === 1 && x.groups[0][0].id === userId && text.startsWith(userId + '@{', x.groups[0][0].start))
-    .map((x) => text.slice(x.start, x.end)) : [];
+  const settings = userId ? settingsStatements(text, userId).map((x) => text.slice(x.start, x.end)) : [];
   const moved = { from: ends.from ?? e.from, to: ends.to ?? e.to, arrow: e.arrow, label: e.label };
   const dropped = transform(text, { at: s.start, pairs: new Map([[key, { drop: true }]]), moved: e, release,
     expect: (x) => (x.index === e.index ? null : x) });
@@ -1797,11 +1939,16 @@ function rewrite(text, s, { pairs, gone, stays }) {
     return ref(g, i);
   }).join(' & ');
   const node = (/** @type {string} */ id) => { ids.push(id); return id; };
+  const bare = (/** @type {number} */ g, /** @type {number[]} */ list) => list.map((i) => G[g][i].id).join(' & ');
   // The edge id (`e1@`) names the last start × first end of its step; it stays on that pair only.
   const link = (/** @type {number} */ step, /** @type {number[]} */ starts, /** @type {{ ends: number[], body: string }} */ seg) => {
     const named = L[step].userId && starts.at(-1) === G[step].length - 1 && seg.ends[0] === 0;
     return (named ? L[step].userId + '@' : '') + seg.body;
   };
+  // Mermaid takes no edge id right after a node's `@{ … }` (`A@{ shape: rect } e1@--> B` does not parse): such a
+  // start is written as a statement of its own, and the edge starts from its bare id. A step kept whole keeps its
+  // text, so only a pair written apart (a split, a reverse) can meet it.
+  const idAfterBlock = (/** @type {string} */ start, /** @type {string} */ connector) => start.includes('@{') && ID_LINK.test(connector);
 
   /** @type {string[]} */
   const parts = [];
@@ -1820,9 +1967,12 @@ function rewrite(text, s, { pairs, gone, stays }) {
       flush();
       for (const { starts, segs } of b.rows) {
         for (const seg of segs) {
-          const a = seg.from ? node(seg.from) : group(g, starts);
-          const b = seg.to ? node(seg.to) : group(g + 1, seg.ends);
-          parts.push(seg.reverse ? `${b} ${link(g, starts, seg)} ${a}` : `${a} ${link(g, starts, seg)} ${b}`);
+          let a = seg.from ? node(seg.from) : group(g, starts);
+          let b = seg.to ? node(seg.to) : group(g + 1, seg.ends);
+          const l = link(g, starts, seg);
+          if (!seg.reverse && idAfterBlock(a, l)) { parts.push(a); a = bare(g, starts); }
+          if (seg.reverse && idAfterBlock(b, l)) { parts.push(b); b = bare(g + 1, seg.ends); }
+          parts.push(seg.reverse ? `${b} ${l} ${a}` : `${a} ${l} ${b}`);
         }
       }
     }

@@ -170,6 +170,11 @@ another click on it closes it.
 - **Reverse edge** turns the edge around (`A --> B` becomes `B --> A`, same arrow and label). Mermaid places nodes
   partly by the order it first meets them, so the layout may shift a little. Grayed on a self-loop (a node connected
   to itself), which has no direction to reverse.
+- **Enable edge animation** (A, in the menu only) makes the edge's line move, as Mermaid draws it: the edge gets an id
+  if it has none, and a settings line after it (`A --> B` becomes `A e1@--> B`, then `e1@{ animate: true }`). On an
+  animated edge it reads **Disable edge animation**, which takes `animate` and `animation` out of its settings (and
+  the line, if nothing is left in it); the id stays. Grayed on an edge animated by a class or a style, which merma does
+  not change, and on one whose settings are written over several lines.
 - **Reassign end…** (C), then a click on a node or a subgraph, moves where the edge goes to there: `A --> B` becomes
   `A --> C`, with the same arrow, label and edge id. **Reassign start…** (Shift+C) moves where it comes from: `C --> B`.
   The start and the end are the text's, whatever the arrowhead (`A <--> B`: start A, end B), and whatever the tick. While you pick, the edge glows pale blue and its tick is dashed at the end that moves; **Space**, or a

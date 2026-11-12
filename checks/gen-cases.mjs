@@ -1,7 +1,7 @@
 // Every action on every node, edge and subgraph of every fixture, as { name, kind, src, out, gone?, keep?, at?, swap?,
 // renamed?, into?, title? } for the browser parse check. `gone`: the node deleted; `keep`: for each edge left, its
 // index before; `at`: the edge changed in place (`swap`: turned around), and `want` what it should be: { type, stroke }
-// as Mermaid names an arrow, { label } a label as written, or { sameLabel } the label it had. `renamed`: a subgraph
+// as Mermaid names an arrow, { label } a label as written, { sameLabel } the label it had, or { animate } animated or not. `renamed`: a subgraph
 // given an id, { from, to }; `into`: { id, subgraph } a node or subgraph added inside another; `title`: { id, text }
 // the subgraph retitled, and its new title as written. `shape`: { id, refs } the node given a shape, and that shape
 // written alone each way it can be (`@{ }`, brackets), for Mermaid's names for it. `move`: { side, to, index } an edge
@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import {
   ARROWS, BRACKETS, addConnected, addNode, addSubgraph, blockOf, connect, copyNode, copySubgraph, deleteEdge, deleteNode, deleteSubgraph, deleteSubgraphContents, contentsOf, edges, freeId, quoteLabel,
   editEdge, mergeNode, moveCut, moveEdges, moveIntoEdge, moveNode, moveSubgraph, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setEdgeArrow, setEdgeLabel, setLink, setShape, setSubgraphTitle, setTitle, subgraphRefusal,
-  subgraphs, writtenLink,
+  subgraphs, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
 // Mermaid's db names for each arrow type: [type, stroke].
@@ -93,6 +93,19 @@ for (const [name, list, src] of sources) {
     cases.push({ name: `${name} label and arrow ${e.svgId}`, kind: 'change', src, at,
       out: editEdge(src, e.svgId, { label: 'Say "hi" #1', arrow: '-.->' }).text,
       want: { type: 'arrow_point', stroke: 'dotted', label: quoteLabel('Say "hi" #1') } });
+    // Animation on, and off again from there: the edge keeps its place, and only it changes.
+    if (!animationRefusal(src, e.svgId)) {
+      const on = setEdgeAnimation(src, e.svgId, true);
+      cases.push({ name: `${name} animate ${e.svgId}`, kind: 'change', src, out: on.text, at, want: { animate: true, sameLabel: Boolean(e.label) } });
+      const off = setEdgeAnimation(on.text, on.svgId, false);
+      cases.push({ name: `${name} animate and stop ${e.svgId}`, kind: 'change', src, out: off.text, at, want: { animate: false, sameLabel: Boolean(e.label) } });
+      // Then reversed: its start becomes the end, and the id must not follow a node's `@{ … }`.
+      cases.push({ name: `${name} animate and reverse ${e.svgId}`, kind: 'change', src, out: reverseEdge(on.text, on.svgId).text, at, swap: true,
+        want: { animate: true, sameLabel: Boolean(e.label) } });
+      if (edgeAnimated(src, e.svgId)) {
+        cases.push({ name: `${name} stop ${e.svgId}`, kind: 'change', src, out: setEdgeAnimation(src, e.svgId, false).text, at, want: { animate: false } });
+      }
+    }
     cases.push({ name: `${name} reverse ${e.svgId}`, kind: 'change', src, out: reverseEdge(src, e.svgId).text, at, swap: true, want: { sameLabel: true } });
     for (const arrow of Object.keys(ARROWS)) {
       const [type, stroke] = DRAWN[arrow];

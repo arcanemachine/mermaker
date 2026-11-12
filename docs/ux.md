@@ -118,7 +118,8 @@ Mermaid's theme is the file's to set.
   stays. Both are one edit, one undo, and work on a collapsed box.
 - A letter outside a menu does exactly what it does in the selected item's menu (the user): R reverses a selected
   edge, as the edge menu's R does. So a letter never means two things. And a letter works outside menus only when no
-  other key does the job (the user): R, C, N and M have no other key. D is the exception (the user: the home row): it
+  other key does the job (the user): R, C, N and M have no other key. A, Enable edge animation, is the exception the
+  other way (the user): it works in the edge menu only, not on the diagram. D is the exception (the user: the home row): it
   deletes outside menus as Delete and Backspace do, on a node, an edge or a subgraph. A key is a
   letter of its label where one fits: M is Merge into… on a node. A letter keeps one meaning across kinds: C picks what
   an edge goes to and Shift+C what it comes from, on a node (Connect to…, Connect from…) and on an edge (Reassign end…,
@@ -158,6 +159,10 @@ Mermaid's theme is the file's to set.
 - The diagram comes first in Tab order, whatever the dock (the user): the diagram, the code panel's handle, the panel,
   its bar, the code, then the footer, and round to the diagram. The diagram has no focus ring (Accessibility), so the
   one stop without a ring is where focus starts and rests, and the cycle never seems to stall on it.
+- A toggle in a menu is one item whose label says what choosing it does now (the user): Collapse subgraph and Expand
+  subgraph, Rotate and Rotate back, Enable edge animation and Disable edge animation. A check mark is for one choice
+  among several, as a setting's submenu holds them (a setting is named by its noun: Page theme ▸). A box is for a
+  setting kept in a panel (Follow selection).
 - No hidden affordances. A shortcut is shown where its item is: a menu item's key at its right, as most apps show
   them (the user: one system, no underlined letters), and a digit in a picker. A key is a letter of its label where
   one fits, for the memory, but need not be (Center in window, F: F is the view key everywhere; Find…, /). Names

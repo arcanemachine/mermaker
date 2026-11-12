@@ -9,7 +9,7 @@ import { NO_LINK, SCRIPT_LINK } from './links.mjs';
  * removes the thing. */
 export const VERBS = ['Add', 'Insert', 'Edit', 'Remove', 'Delete', 'Connect', 'Reverse', 'Reassign', 'Move', 'Merge', 'Open', 'Show', 'Find', 'Fit', 'Center', 'Copy',
   'Cut', 'Paste',
-  'Download', 'Collapse', 'Expand', 'Rotate', 'Flip'];
+  'Download', 'Collapse', 'Expand', 'Rotate', 'Flip', 'Enable', 'Disable'];
 
 /**
  * Keys the page answers outside menus, and the menu actions each one runs. A key is named by KeyboardEvent.key,
@@ -79,6 +79,8 @@ export const LOCKED = 'The code is being edited. Save or cancel it to edit the d
  * @property {boolean} edgesOk the drawn edges match the file's (an edge match)
  * @property {boolean} selfLoop the selected edge goes from a node back to itself
  * @property {string | null} [insertWhy] why a node cannot be inserted into the selected edge
+ * @property {boolean} [animated] the selected edge is animated
+ * @property {string | null} [animateWhy] why the selected edge's animation cannot be turned on or off, or null
  * @property {string | null} nameWhy why the selected subgraph cannot be given an id, or null
  * @property {string | null} [collapseWhy] why the selected subgraph cannot be collapsed or expanded, or null
  * @property {{ rotate: boolean, flip: boolean }} [turn] how the page turns the diagram, or the selected subgraph
@@ -121,6 +123,8 @@ export const whyNot = (/** @type {MenuItem} */ item, /** @type {MenuState} */ st
  */
 
 /** Why an item that adds to a subgraph does nothing while it is collapsed: what it adds would be hidden. */
+/** Why an edge's animation cannot be turned off when its style, not its settings, animates it. */
+export const ANIMATED_BY_STYLE = 'A class or style in the file animates this edge. Change it in the code.';
 /** Why a node cannot be inserted into an edge whose line is in a collapsed subgraph: the node would be hidden. */
 export const INSERT_COLLAPSED = 'This edge is inside a collapsed subgraph. Expand it first (H) to insert a node.';
 const EXPAND_FIRST = 'This subgraph is collapsed. Expand it first (H) to add to it.';
@@ -232,6 +236,9 @@ export const MENUS = {
     { action: 'insert-node', label: 'Insert node', key: 'n', applies: (s) => !s.insertWhy, why: (s) => s.insertWhy ?? null },
     { action: 'edit-edge', label: 'Edit edge' },
     { action: 'reverse-edge', label: 'Reverse edge', key: 'r', applies: (s) => !s.selfLoop, why: () => 'A self-loop has no direction to reverse.' },
+    // A toggle: the label says what choosing it does now (docs/ux.md). A, menu-only (the user).
+    { action: 'toggle-edge-animation', label: 'Enable edge animation', labelBack: 'Disable edge animation',
+      back: (s) => Boolean(s.animated), key: 'a', applies: (s) => !s.animateWhy, why: (s) => s.animateWhy ?? null },
     { action: 'reassign-end', label: 'Reassign end…', key: 'c', mode: true },
     { action: 'reassign-start', label: 'Reassign start…', key: 'shift+c', mode: true },
     // A cut node moved into an edge leaves its own edges behind, deleted, so the item says so.

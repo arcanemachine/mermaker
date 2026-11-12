@@ -32,6 +32,7 @@ Mermaid syntax.
 | **length** | How much longer than its shortest form an arrow is; it asks Mermaid for a longer edge. |
 | **edge label** | An edge's text, as `-->|label|` (pipe form) or `-- label -->` (text form). merma writes the pipe form. |
 | **edge id** | A name given to an edge in the file: `A e1@--> B`. Its settings go in an `e1@{ … }` statement. |
+| **edge animation** | An edge's line drawn moving, set in its settings (`e1@{ animate: true }`, or `animation: fast` or `slow`). Mermaid's word. Enable edge animation and Disable edge animation turn it on and off. |
 | **connector** | Everything between an edge's two nodes in the file: edge id, arrow and label. |
 | **chain** | Several edges in one statement: `A --> B --> C`. |
 | **`&` group** | Several nodes on one side of a connector: `A & B --> C`, which is two edges. |
