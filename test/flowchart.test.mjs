@@ -1047,6 +1047,24 @@ test('setShape keeps a :::class before @{ }, where Mermaid takes it, and reads a
   assert.equal(setShape(written, 'A', 'hex').text, 'flowchart TD\n  A:::hot@{ shape: hex, label: "x" }\n');
 });
 
+test('a class with hyphens after ::: is read whole, so its edges, relabel and setShape see the node', () => {
+  for (const line of ['A:::my-class --> B', 'A:::my-class-->B', 'A:::my-class@{ shape: doc } --> B']) {
+    assert.deepEqual(edges(`flowchart TD\n  ${line}\n`).map((e) => [e.from, e.to]), [['A', 'B']], line);
+  }
+  const shaped = 'flowchart TD\n  A:::my-class@{ shape: doc } --> B\n';
+  assert.equal(relabel(shaped, 'A', 'X').text, 'flowchart TD\n  A:::my-class@{ label: "X", shape: doc } --> B\n');
+  assert.equal(setShape(shaped, 'A', 'hex').text, 'flowchart TD\n  A:::my-class@{ shape: hex } --> B\n');
+  assert.equal(setShape('flowchart TD\n  A:::my-class --> B\n', 'A', 'doc').text, 'flowchart TD\n  A:::my-class@{ shape: doc } --> B\n');
+});
+
+test('a class is not a mention of the node it shares a name with', () => {
+  for (const cls of ['error', 'status-error']) {
+    const src = `flowchart TD\n  A:::${cls} --> error\n  error --> B\n`;
+    assert.equal(relabel(src, 'error', 'X').text, `flowchart TD\n  A:::${cls} --> error["X"]\n  error --> B\n`, cls);
+  }
+  assert.equal(hasNode('flowchart TD\n  A:::status-error --> B\n', 'status'), false);
+});
+
 test('setShape on a bare node shapes its first appearance, labelled with its id', () => {
   const src = fixture('02-graph-header-bare.mmd');
   assert.equal(setShape(src, 'B', 'diam').text, 'graph LR\n    A --> B{B}\n    B --> C\n    C --> A\n');

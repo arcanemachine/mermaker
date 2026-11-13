@@ -8,4 +8,6 @@ flowchart TD
   subgraph box [Box]
     w:::hot@{ shape: circle } --> x:::hot@{ shape: doc } --> y
   end
+  m:::my-class-->n:::my-class@{ shape: doc } --> o:::my-class
   classDef hot fill:#fdd
+  classDef my-class fill:#dfd

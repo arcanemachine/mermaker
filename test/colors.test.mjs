@@ -58,6 +58,14 @@ test('a node with a class of the file\'s own keeps it, with the color after', ()
   assert.deepEqual(colorOf(hot, 'send'), { key: 'none', other: null });
 });
 
+test('a class with hyphens after ::: is read whole: its color, a copy, and whether a preset is still named', () => {
+  const own = 'flowchart TD\n  pack:::my-class --> send\n  classDef my-class fill:#fdd\n';
+  assert.deepEqual(colorOf(own, 'pack'), { key: null, other: 'my-class' });
+  assert.deepEqual(copyNode(own, 'pack').classes, ['my-class']);
+  const both = `flowchart TD\n  pack --> send:::merma-blue\n  class pack merma-blue\n  ${BLUE}\n`;
+  assert.equal(setColor(both, 'pack', 'none', 'node').text, `flowchart TD\n  pack --> send:::merma-blue\n  ${BLUE}\n`);
+});
+
 test('a color on a shared line of merma\'s is split, so the other node keeps it', () => {
   const shared = `${src}  class pack,send merma-blue\n  ${BLUE}\n`;
   assert.equal(setColor(shared, 'pack', 'red', 'node').text,

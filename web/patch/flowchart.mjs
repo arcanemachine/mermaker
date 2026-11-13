@@ -40,6 +40,10 @@
 /** @typedef {{ s: Statement, parts: Part[] }} Change a statement and what replaces it (nothing: it goes) */
 
 const ID = String.raw`[\p{L}\p{N}_]+`;
+// A class name after `:::`: words joined by single hyphens (`my-class`).
+const CLASS = String.raw`[\p{L}\p{N}_]+(?:-[\p{L}\p{N}_]+)*`;
+// A class on a node, `A:::hot`. Mermaid 12.2.0 takes it before an `@{ … }` (`A:::hot@{ shape: doc }`), not after.
+const CLASS_AT = new RegExp(`^:::${CLASS}`, 'u');
 const ID_CHAR = /[\p{L}\p{N}_]/u;
 
 // Lines that name a node without being a place to define one.
@@ -204,7 +208,8 @@ function mentions(/** @type {string} */ text, /** @type {string} */ id) {
   const found = [];
   const re = new RegExp(String.raw`(?<![\p{L}\p{N}_])${escapeRe(id)}(?![\p{L}\p{N}_])`, 'gu');
   for (let n = headerIndex(ls) + 1; n < ls.length; n++) {
-    const m = mask(ls[n]);
+    // A class is not a node, even one named as a node is (`A:::error --> error`).
+    const m = mask(ls[n]).replace(new RegExp(`:::${CLASS}`, 'gu'), (c) => ' '.repeat(c.length));
     for (const hit of m.matchAll(re)) found.push({ line: n, col: hit.index });
   }
   return found;
@@ -508,8 +513,6 @@ export const BRACKETS = {
 };
 
 const SHAPE_KEY = /(shape\s*:\s*)("[^"]*"|[^,}\s]+)/;
-// A class on a node, `A:::hot`. Mermaid 12.2.0 takes it before an `@{ … }` (`A:::hot@{ shape: doc }`), not after.
-const CLASS_AT = new RegExp(`^:::${ID}`, 'u');
 
 /**
  * Where a node's shape is written: its last mention with brackets or an `@{ shape }` (Mermaid takes the shape from
@@ -733,7 +736,7 @@ function readStatement(/** @type {string} */ line, /** @type {string} */ m, /** 
       i += id[0].length;
       if (line.startsWith('@{', i)) i = line.indexOf('}', i) + 1 || end;
       else if (SHAPES.some(([open]) => line.startsWith(open, i))) i = shapeSpan(line, i)?.end ?? end;
-      const cls = m.slice(i, end).match(new RegExp(`^:::${ID}`, 'u'));
+      const cls = m.slice(i, end).match(CLASS_AT);
       if (cls) i += cls[0].length;
       // Mermaid takes a class before an `@{ … }` too (`A:::hot@{ shape: doc }`): part of the reference.
       if (cls && line.startsWith('@{', i)) i = line.indexOf('}', i) + 1 || end;
@@ -821,7 +824,7 @@ function classesOf(/** @type {string} */ text, /** @type {string} */ id) {
     }
     for (const r of s.groups.flat()) {
       if (r.id !== id) continue;
-      for (const c of text.slice(r.start, r.end).matchAll(new RegExp(`:::(${ID})`, 'gu'))) {
+      for (const c of text.slice(r.start, r.end).matchAll(new RegExp(`:::(${CLASS})`, 'gu'))) {
         out.push({ name: c[1], at: r.start + /** @type {number} */ (c.index), s, ids: null });
       }
     }
@@ -835,7 +838,7 @@ function classesUsed(/** @type {string} */ text) {
   for (const s of statements(text)) {
     const body = text.slice(s.start, s.end);
     if (s.keyword === 'class') { const m = body.match(/^class\s+\S+\s+(\S+)/); if (m) used.add(m[1]); }
-    else if (!s.keyword) for (const c of body.matchAll(new RegExp(`:::(${ID})`, 'gu'))) used.add(c[1]);
+    else if (!s.keyword) for (const c of body.matchAll(new RegExp(`:::(${CLASS})`, 'gu'))) used.add(c[1]);
   }
   return used;
 }
@@ -1667,7 +1670,7 @@ export function copyNode(/** @type {string} */ text, /** @type {string} */ id) {
   for (const s of statements(text)) {
     for (const r of s.groups.flat()) {
       if (r.id !== id) continue;
-      for (const c of text.slice(r.start, r.end).matchAll(new RegExp(`:::(${ID})`, 'gu'))) classes.add(c[1]);
+      for (const c of text.slice(r.start, r.end).matchAll(new RegExp(`:::(${CLASS})`, 'gu'))) classes.add(c[1]);
     }
   }
   const own = edges(text).filter((e) => e.from === id || e.to === id).map((e) => ({
