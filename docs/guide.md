@@ -207,7 +207,7 @@ another click on it closes it.
   `subgraph pay ["New title"]`. A title that is also the id keeps it: `subgraph Payment` becomes
   `subgraph Payment ["New title"]`. A title cannot be empty: Enter on an emptied one is refused, and a click away
   keeps the title as it was. The color picker lies above the title, as above a node's label (The node panel), with
-  lighter colors for a box; Tab goes between the two.
+  lighter colors for a box.
 - **Copy subgraph** (Ctrl+C) keeps a copy of the subgraph, as it is now, for this tab: every node Mermaid draws in it
   or in a subgraph inside it, those subgraphs with their titles and `direction` lines, the classes and `style` and
   `click` lines of all of them, and every edge with an end among them. Its Mermaid text goes on the system clipboard
@@ -284,8 +284,7 @@ Edit node, Enter, F2 or a double-click on a node, and adding one (Add connected 
 the label box over the node, the color picker above it, and the shape picker under it, the node's color and shape
 selected (a new node's are None and Rectangle). Nothing is drawn until Enter in the label box, or a click or tap
 away, which writes the label, the color and the shape as one change (only what changed); for a node just added, it
-is undone together with the add. Only Escape closes the panel without writing. Tab and Shift+Tab go round the label,
-the colors and the shapes, top to bottom, landing where Up or Down would; Tab never saves. On a node just added, Escape takes the add back, as if it never was (Redo
+is undone together with the add. Only Escape closes the panel without writing. Tab does nothing in the panel. On a node just added, Escape takes the add back, as if it never was (Redo
 does not bring it back); from the shapes it takes two, since the first goes back to the label. On a touch screen, tap
 away and then Undo. Once the panel an add opened is closed, Undo takes the add back. A node or subgraph added off screen is brought
 into view with its panel, and Escape puts the view back, unless you have moved it since.
@@ -348,8 +347,8 @@ into view with its panel, and Escape puts the view back, unless you have moved i
 Edit edge, Enter, F2 or a double-click on an edge open its panel, as a node's opens: the label box over the edge's
 label (at the edge's middle when it has none), and the arrow type picker under it, the edge's arrow type selected.
 Nothing is drawn until Enter in the label box, or a click or tap away, which writes the label and the arrow type as
-one change and one undo step (only what changed). Only Escape closes the panel without writing. Tab goes between the
-label and the arrow types, and never saves. On an edge
+one change and one undo step (only what changed). Only Escape closes the panel without writing. Tab does nothing in
+the panel. On an edge
 with no label, the picker can cover the arrowhead; the picker shows the current arrow type instead.
 
 - **The label:** Shift+Enter starts a new line. Empty it to remove the label: on an edge, Enter, a click or tap away

@@ -65,7 +65,8 @@ differences are kept few. Each one is listed here:
 The page theme: System, the default, follows the system's setting; Light and Dark override it (the user: auto alone
 "will eventually annoy me"), kept by the browser for every tab. Dark darkens the page's own parts and draws the diagram
 with Mermaid's dark themes, which merma asks for and never writes into the file. The marks keep their colors, chosen to
-read on either: the selection's fill brings its own dark text, and a link's blue follows the node's fill. The label
+read on either: the selection is an outline that keeps the item's own fill and text (the user: an edit's colors show
+after it), find's current match brings its own dark text with its fill, and a link's blue follows the node's fill. The label
 box, the notices and the find bar (amber, as find's marks are) keep their light colors. "Page theme", not "Theme":
 Mermaid's theme is the file's to set.
 
@@ -226,9 +227,9 @@ Mermaid's theme is the file's to set.
   picker for an edge (the user: an edge is edited as a node is, one system for both); above it, the color picker for
   a node and a subgraph (the user: one panel, not a submenu). There is no other way to a picker, no key and no submenu
   (the user: consistency over a shorter way to the arrow type).
-- Tab and Shift+Tab go round the label box and its pickers, top to bottom, landing where Up or Down would (the user:
-  Tab never saves; Enter in the label saves, Escape cancels, a click away saves). In a box with no picker (the
-  diagram's title) Tab does nothing. Grayed colors are skipped, and Up into them says why instead.
+- Tab does nothing in the label box and its pickers (the user: Up and Down already reach the pickers, and Tab adds
+  nothing). It never saves: Enter in the label saves, Escape cancels, a click away saves. Up into grayed colors says
+  why instead.
 - A double-tap opens the box as the finger lifts, and the browser's click for that tap follows on whatever is under
   the finger by then, a picker when the view moved to make room for it; a click on a picker within half a second of
   its opening picks nothing.

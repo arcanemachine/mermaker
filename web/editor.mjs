@@ -1903,8 +1903,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   // The panel's pickers: under the label box, the shape picker on a node and the arrow type picker on an edge; above
   // it, the color picker on a node and a subgraph. Down from the box's last line goes into the one under it, Up from
-  // its first line into the one above; Tab and Shift+Tab go round the box and its pickers, top to bottom, and never
-  // save. In a picker the arrows move focus; a digit, a click, or Enter on the focused entry selects it (Enter also
+  // its first line into the one above; Tab does nothing (the user: Up and Down are the way). In a picker the arrows move focus; a digit, a click, or Enter on the focused entry selects it (Enter also
   // goes back to the box); the arrow back toward the box or Escape goes back to it, keeping what was selected. Enter in
   // the box writes the label and the pickers' choices as one change. Nothing is drawn until then (docs/ux.md, the
   // preview rule).
@@ -1934,7 +1933,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /**
    * A popover for one of the box's pickers, `of()` the picker in it. `back` is the arrow toward the box. Keys the
    * picker leaves: Enter selects the focused entry and goes back to the box; `back` from the edge nearer the box and
-   * Escape go back to the box; Tab and Shift+Tab go round (cycle). None goes on to the page's own keys; Ctrl, Cmd and
+   * Escape go back to the box; Tab does nothing. None goes on to the page's own keys; Ctrl, Cmd and
    * Alt combinations do, as from a menu.
    */
   function pickerPanel(/** @type {string} */ className, /** @type {string} */ back, /** @type {() => BoxPicker | null} */ of) {
@@ -1950,7 +1949,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       const on = /** @type {HTMLElement} */ (document.activeElement);
       const p = of();
       if (e.key === 'Enter' && on.dataset.key && p) { e.preventDefault(); choose(p, on.dataset.key); input.focus(); }
-      else if (e.key === 'Tab') { e.preventDefault(); cycle(el, e.shiftKey); }
+      else if (e.key === 'Tab') e.preventDefault();
       else if (e.key === 'Escape' || (e.key === back && !e.defaultPrevented)) { e.preventDefault(); input.focus(); }
       e.stopPropagation();
     });
@@ -1971,17 +1970,6 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   let colorFrom = null;
   /** when the pickers opened, on the events' clock */
   let pickersOpened = -Infinity;
-
-  /** Tab from `from` (the box or a picker's popover), or Shift+Tab with `back`: the next part, top to bottom, round. */
-  function cycle(/** @type {Element} */ from, /** @type {boolean} */ back) {
-    /** @type {Element[]} */
-    const parts = [...(colorOpen && !boxPickers.color.picker.disabled() ? [colorPickerEl] : []), input, ...(boxPicker ? [boxPickerEl] : [])];
-    if (parts.length < 2) return;
-    const to = parts[(parts.indexOf(from) + (back ? -1 : 1) + parts.length) % parts.length];
-    if (to === input) input.focus();
-    else if (to === colorPickerEl) boxPickers.color.picker.focus();
-    else boxPicker?.picker.focus();
-  }
 
   /**
    * Place the pickers by the label box; `fresh`, as they open. With colors above, each keeps its side (the view moves
@@ -2057,7 +2045,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }
     const hints = [...(colorOpen ? [boxPickers.color.hint] : []), ...(boxPicker ? [boxPicker.hint] : [])];
     if (!hints.length) return;
-    boxPickerHint.textContent = hints.join(', ') + (hints.length > 1 ? ', Tab moves between them' : '');
+    boxPickerHint.textContent = hints.join(', ');
     input.setAttribute('aria-describedby', boxPickerHint.id);
     placeBoxPicker(true);
   }
@@ -2174,8 +2162,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (why) ui.notice(why, 'warning'); else boxPickers.color.picker.focus();
       return;
     }
-    // Tab goes round the box and its pickers; in a box with none it does nothing, so it never saves.
-    if (e.key === 'Tab') { e.preventDefault(); cycle(input, e.shiftKey); return; }
+    // Tab does nothing: it neither saves nor leaves (the user).
+    if (e.key === 'Tab') { e.preventDefault(); return; }
     if (!target || !(e.key === 'Enter' && !e.shiftKey)) return;
     e.preventDefault();
     saveLabel();
