@@ -262,7 +262,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #notice .error { background: var(--error-bg); color: var(--error-fg); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Flowchart nodes, edges and subgraphs can be clicked to select; the selected one is outlined in blue, whatever its
-   shape. A plain stroke, not a drop shadow: Chrome's GPU drawing of a drop-shadow filter over a large area in the
+   shape, its own fill and text kept, so an edit's colors show (the user). A plain stroke, not a drop shadow: Chrome's GPU drawing of a drop-shadow filter over a large area in the
    scaled stage leaves stray fragments around it. !important wins over the colors Mermaid writes inline from classDef
    and style. */
 #stage.selectable g.node[data-page-node], #stage.selectable g.node[data-page-node] *,
@@ -270,10 +270,6 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #stage.selectable [data-page-edge], #stage.selectable [data-page-edge] * { cursor: pointer !important; }
 #stage g.node[data-page-selected] :is(rect, polygon, circle, ellipse, path):not(.label *, .collapsed-indicator),
 #stage g.cluster[data-page-selected] > rect { stroke: var(--select) !important; stroke-width: 3px !important; }
-/* A selected node is also filled pale blue, its label dark on it, so a node's own fill and text color give way. */
-#stage g.node[data-page-selected] :is(rect, polygon, circle, ellipse, path):not(.label *, .collapsed-indicator) { fill: var(--select-bg) !important; }
-#stage g.node[data-page-selected] .label :is(span, p, div) { color: var(--on-select) !important; }
-#stage g.node[data-page-selected] .label text { fill: var(--on-select) !important; }
 #stage text.flowchartTitleText[data-page-selected] { fill: var(--select); text-decoration: underline 2px; }
 /* A node with a link (Open link) reads as one: underlined always, and blue for its fill (editor.mjs), unless the
    diagram gives the label a color of its own, whose inline style wins over these rules. */
@@ -305,9 +301,6 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #stage g.node[data-page-candidate] :is(rect, polygon, circle, ellipse, path):not(.label *, .collapsed-indicator),
 #stage g.cluster[data-page-candidate] > rect { stroke: var(--select) !important; stroke-width: 3px !important;
   stroke-dasharray: none !important; }
-#stage g.node[data-page-candidate] :is(rect, polygon, circle, ellipse, path):not(.label *, .collapsed-indicator) { fill: var(--select-bg) !important; }
-#stage g.node[data-page-candidate] .label :is(span, p, div) { color: var(--on-select) !important; }
-#stage g.node[data-page-candidate] .label text { fill: var(--on-select) !important; }
 /* In Connect to…, an edge the arrows have reached (Enter refuses it) is drawn as a selected one is. */
 #stage path.edge-thickness-normal[data-page-edge][data-page-candidate]:not([data-page-only]) { stroke: var(--select) !important;
   stroke-width: 3px !important; }
