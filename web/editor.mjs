@@ -17,8 +17,10 @@ import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation,
+  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  colorRefusal, setColor,
 } from './patch/flowchart.mjs';
+import { COLORS } from './colors.mjs';
 import { linkEdit, linkTarget, linkTone } from './links.mjs';
 import { limitOf, limitSentence } from './limits.mjs';
 import { createPicker } from './picker.mjs';
@@ -1899,91 +1901,133 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     return { left: x, top: y, width: 0, height: 0 };
   }
 
-  // The panel's picker, under the label box: the shape picker on a node, the arrow type picker on an edge. Down from
-  // the box's last line goes into it, where the arrows move focus; a digit, a click, or Enter on the focused entry
-  // selects it (Enter also goes back to the box); Up from the top row or Escape goes back to the box, keeping what was
-  // selected. Enter in the box writes the label and the picker's choice as one change. Nothing is drawn until then
-  // (docs/ux.md, the preview rule).
-  const shapePicker = createPicker({
-    title: 'Shape',
-    entries: NODE_SHAPES,
-    columns: 10,
-    onPick: (at) => choose(at),
-  });
-  const arrowPicker = createPicker({
-    title: 'Arrow type',
-    entries: ARROW_TYPES,
-    columns: 10,
-    className: 'arrow-picker',
-    onPick: (at) => choose(at),
-  });
-  /** Each kind's picker, what it picks from, and the hint the label box gives for it. */
+  // The panel's pickers: under the label box, the shape picker on a node and the arrow type picker on an edge; above
+  // it, the color picker on a node and a subgraph. Down from the box's last line goes into the one under it, Up from
+  // its first line into the one above; Tab and Shift+Tab go round the box and its pickers, top to bottom, and never
+  // save. In a picker the arrows move focus; a digit, a click, or Enter on the focused entry selects it (Enter also
+  // goes back to the box); the arrow back toward the box or Escape goes back to it, keeping what was selected. Enter in
+  // the box writes the label and the pickers' choices as one change. Nothing is drawn until then (docs/ux.md, the
+  // preview rule).
+  /** @typedef {{ picker: ReturnType<typeof createPicker>, entries: import('./picker.mjs').PickerEntry[], hint: string }} BoxPicker */
+  /** @type {Record<'node' | 'edge' | 'color', BoxPicker>} each picker, what it picks from, and the hint the label box gives for it */
   const boxPickers = {
-    node: { picker: shapePicker, entries: NODE_SHAPES, hint: 'Down arrow chooses a shape' },
-    edge: { picker: arrowPicker, entries: ARROW_TYPES, hint: 'Down arrow chooses an arrow type' },
+    node: { picker: createPicker({ title: 'Shape', entries: NODE_SHAPES, columns: 10, onPick: (at) => choose(boxPickers.node, at) }),
+      entries: NODE_SHAPES, hint: 'Down arrow chooses a shape' },
+    edge: { picker: createPicker({ title: 'Arrow type', entries: ARROW_TYPES, columns: 10, className: 'arrow-picker', onPick: (at) => choose(boxPickers.edge, at) }),
+      entries: ARROW_TYPES, hint: 'Down arrow chooses an arrow type' },
+    color: { picker: createPicker({ title: 'Color', entries: COLORS, columns: 10, className: 'color-picker', exit: 'down', onPick: (at) => choose(boxPickers.color, at) }),
+      entries: COLORS, hint: 'Up arrow chooses a color' },
   };
-  /** @type {(typeof boxPickers)[keyof typeof boxPickers] | null} the picker open under the label box */
+  /** @type {BoxPicker | null} the picker open under the label box */
   let boxPicker = null;
-  /** Select entry `at` in the open picker, and say so: nothing else shows it to a screen reader. */
-  function choose(/** @type {string} */ at) {
-    if (!boxPicker) return;
-    boxPicker.picker.current(at);
+  /** the color picker is open above the label box */
+  let colorOpen = false;
+  /** Select entry `at` in picker `p`, and say so: nothing else shows it to a screen reader. */
+  function choose(/** @type {BoxPicker} */ p, /** @type {string} */ at) {
+    p.picker.current(at);
     /** @type {import('./picker.mjs').PickerEntry | undefined} */
-    const entry = boxPicker.entries.find((e) => e.key === at);
+    const entry = p.entries.find((e) => e.key === at);
     ui.announce(`${entry?.name}${entry?.meaning && entry.meaning !== entry.name ? `, ${entry.meaning}` : ''} selected`);
   }
-  const boxPickerEl = Object.assign(document.createElement('div'), { className: 'menu box-picker', popover: 'manual' });
-  boxPickerEl.dataset.overlay = '';
-  // A press anywhere on the picker, icon or not, leaves focus where it is: on the body, it would close the box.
-  boxPickerEl.addEventListener('mousedown', (e) => e.preventDefault());
-  // Keys the picker leaves: Enter selects the focused entry and goes back to the box; Up from the top row and Escape go
-  // back to the box; Tab saves, as from the box. None goes on to the page's own keys; Ctrl, Cmd and Alt combinations do, as from a menu.
-  boxPickerEl.addEventListener('keydown', (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const on = /** @type {HTMLElement} */ (document.activeElement);
-    if (e.key === 'Enter' && on.dataset.key) { e.preventDefault(); choose(on.dataset.key); input.focus(); }
-    else if (e.key === 'Tab') { e.preventDefault(); saveLabel(keepEmptied()); }
-    else if (e.key === 'Escape' || (e.key === 'ArrowUp' && !e.defaultPrevented)) { e.preventDefault(); input.focus(); }
-    e.stopPropagation();
-  });
-  // The box closes when focus leaves both it and the picker.
-  boxPickerEl.addEventListener('focusout', (e) => {
-    const to = /** @type {Node | null} */ (e.relatedTarget);
-    if (to !== input && !boxPickerEl.contains(to)) commit();
-  });
+  /** Focus in the label box or one of its pickers. */
+  const inBox = (/** @type {Node | null} */ at) => at === input || boxPickerEl.contains(at) || colorPickerEl.contains(at);
+  /**
+   * A popover for one of the box's pickers, `of()` the picker in it. `back` is the arrow toward the box. Keys the
+   * picker leaves: Enter selects the focused entry and goes back to the box; `back` from the edge nearer the box and
+   * Escape go back to the box; Tab and Shift+Tab go round (cycle). None goes on to the page's own keys; Ctrl, Cmd and
+   * Alt combinations do, as from a menu.
+   */
+  function pickerPanel(/** @type {string} */ className, /** @type {string} */ back, /** @type {() => BoxPicker | null} */ of) {
+    const el = Object.assign(document.createElement('div'), { className: `menu ${className}`, popover: 'manual' });
+    el.dataset.overlay = '';
+    // A press anywhere on the picker, icon or not, leaves focus where it is: on the body, it would close the box.
+    el.addEventListener('mousedown', (e) => e.preventDefault());
+    // A double-tap opens the box as the finger lifts, and the browser's click for that tap comes after, on whatever is
+    // under the finger by then: a picker, when the view moved to make room for it. That click picks nothing.
+    el.addEventListener('click', (e) => { if (e.timeStamp - pickersOpened < 500) e.stopPropagation(); }, true);
+    el.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const on = /** @type {HTMLElement} */ (document.activeElement);
+      const p = of();
+      if (e.key === 'Enter' && on.dataset.key && p) { e.preventDefault(); choose(p, on.dataset.key); input.focus(); }
+      else if (e.key === 'Tab') { e.preventDefault(); cycle(el, e.shiftKey); }
+      else if (e.key === 'Escape' || (e.key === back && !e.defaultPrevented)) { e.preventDefault(); input.focus(); }
+      e.stopPropagation();
+    });
+    // The box closes when focus leaves it and its pickers.
+    el.addEventListener('focusout', (e) => { if (!inBox(/** @type {Node | null} */ (e.relatedTarget))) commit(); });
+    els.diagram.append(el);
+    return el;
+  }
+  const boxPickerEl = pickerPanel('box-picker', 'ArrowUp', () => boxPicker);
+  const colorPickerEl = pickerPanel('box-picker', 'ArrowDown', () => (colorOpen ? boxPickers.color : null));
   const boxPickerHint = Object.assign(document.createElement('div'), { className: 'visually-hidden', id: 'box-picker-hint' });
-  els.diagram.append(boxPickerEl);
+  els.diagram.append(boxPickerHint);
   /** @type {'below' | 'above'} the side of the label box the picker opened on, kept as it follows the box */
   let boxPickerSide = 'below';
   /** @type {string | null} what the item had when the picker opened, or null for what these edits cannot read */
   let boxPickerFrom = null;
+  /** @type {string | null} the color the item had when the box opened, or null for a class of the file's own */
+  let colorFrom = null;
+  /** when the pickers opened, on the events' clock */
+  let pickersOpened = -Infinity;
 
-  /** Place the picker under the label box; `fresh`, as it opens: above it when there is no room below. */
-  function placeBoxPicker(fresh = false) {
-    if (!boxPicker) return;
-    const r = input.getBoundingClientRect(), s = boxPickerEl.getBoundingClientRect();
-    const center = (r.left + r.right) / 2 - s.width / 2;
-    const at = place({ left: center, top: r.top, right: center + s.width, bottom: r.bottom }, s,
-      els.diagram.getBoundingClientRect(), { side: fresh ? 'below' : boxPickerSide, gap: 6, flip: fresh });
-    if (fresh) boxPickerSide = at.flipped ? 'above' : 'below';
-    boxPickerEl.style.left = at.left + 'px';
-    boxPickerEl.style.top = at.top + 'px';
+  /** Tab from `from` (the box or a picker's popover), or Shift+Tab with `back`: the next part, top to bottom, round. */
+  function cycle(/** @type {Element} */ from, /** @type {boolean} */ back) {
+    /** @type {Element[]} */
+    const parts = [...(colorOpen && !boxPickers.color.picker.disabled() ? [colorPickerEl] : []), input, ...(boxPicker ? [boxPickerEl] : [])];
+    if (parts.length < 2) return;
+    const to = parts[(parts.indexOf(from) + (back ? -1 : 1) + parts.length) % parts.length];
+    if (to === input) input.focus();
+    else if (to === colorPickerEl) boxPickers.color.picker.focus();
+    else boxPicker?.picker.focus();
   }
 
   /**
-   * Bring what was just added into view with its label box and the picker under it (the user), so all of it can be
-   * used. The picker counts where it would lie below the box, not where the window's edge has pushed it; once in view,
-   * it is placed afresh, so one flipped above for want of room goes back below.
+   * Place the pickers by the label box; `fresh`, as they open. With colors above, each keeps its side (the view moves
+   * to make room: revealLabelBox); else the one under the box goes above it when there is no room below.
    */
-  function revealLabelBox(/** @type {Item} */ item) {
-    const r = input.getBoundingClientRect(), s = boxPickerEl.getBoundingClientRect();
-    const below = new DOMRect((r.left + r.right) / 2 - s.width / 2, r.bottom + 6, s.width, s.height);
-    reveal(item, boxPicker ? [r, below] : [r]);
+  function placeBoxPicker(fresh = false) {
+    const r = input.getBoundingClientRect(), bounds = els.diagram.getBoundingClientRect();
+    const at = (/** @type {HTMLElement} */ el, /** @type {'below' | 'above'} */ side, /** @type {boolean} */ flip) => {
+      const s = el.getBoundingClientRect();
+      const center = (r.left + r.right) / 2 - s.width / 2;
+      const p = place({ left: center, top: r.top, right: center + s.width, bottom: r.bottom }, s, bounds, { side, gap: 6, flip });
+      el.style.left = p.left + 'px';
+      el.style.top = p.top + 'px';
+      return p;
+    };
+    if (colorOpen) at(colorPickerEl, 'above', false);
+    if (!boxPicker) return;
+    const p = at(boxPickerEl, fresh || colorOpen ? 'below' : boxPickerSide, fresh && !colorOpen);
+    if (fresh) boxPickerSide = p.flipped ? 'above' : 'below';
+  }
+
+  /**
+   * Bring the item into view with its label box and the pickers by it (the user), so all of it can be used: on an add,
+   * and when the colors above and the picker below do not both fit. Each picker counts where it would lie, not where
+   * the window's edge has pushed it; once in view, they are placed afresh.
+   */
+  function revealLabelBox(/** @type {Item} */ item, onlyIfCut = false) {
+    const r = input.getBoundingClientRect(), bounds = els.diagram.getBoundingClientRect();
+    const rects = [r];
+    if (boxPicker) {
+      const s = boxPickerEl.getBoundingClientRect();
+      rects.push(new DOMRect((r.left + r.right) / 2 - s.width / 2, r.bottom + 6, s.width, s.height));
+    }
+    if (colorOpen) {
+      const s = colorPickerEl.getBoundingClientRect();
+      rects.push(new DOMRect((r.left + r.right) / 2 - s.width / 2, r.top - 6 - s.height, s.width, s.height));
+    }
+    const cut = rects.some((x) => x.top < bounds.top || x.bottom > bounds.bottom);
+    if (!onlyIfCut || cut) reveal(item, rects);
     placeBoxPicker(true);
   }
 
-  /** Open the picker for `target`; `added`: a node just added, so it is a rectangle whatever it reads as. */
+  /** Open the pickers for `target`; `added`: a node just added, so it is a rectangle whatever it reads as. */
   function openBoxPicker(/** @type {Item} */ target, /** @type {boolean} */ added) {
+    boxPicker = null;
+    pickersOpened = performance.now();
     if (target.kind === 'node') {
       boxPicker = boxPickers.node;
       boxPickerFrom = shownShape(target.id) ?? (added ? 'rect' : null);
@@ -1995,10 +2039,25 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       boxPickerFrom = arrowType(arrow);
       // An arrow not in the list (`<--o`) is named as written, with none pressed.
       boxPicker.picker.current(boxPickerFrom, arrow);
-    } else return;
-    boxPickerHint.textContent = boxPicker.hint;
-    boxPickerEl.replaceChildren(boxPicker.picker.el, boxPickerHint);
-    boxPickerEl.showPopover();
+    }
+    colorOpen = target.kind === 'node' || target.kind === 'subgraph';
+    if (colorOpen) {
+      const text = source.snapshot().text ?? '';
+      const { key, other } = colorOf(text, target.id);
+      colorFrom = key;
+      // A class of the file's own is named, with none pressed.
+      boxPickers.color.picker.current(key, other ? `class ${other}` : '');
+      boxPickers.color.picker.disable(colorRefusal(text, target.id, target.kind === 'node' ? 'node' : 'subgraph'));
+      colorPickerEl.replaceChildren(boxPickers.color.picker.el);
+      colorPickerEl.showPopover();
+    }
+    if (boxPicker) {
+      boxPickerEl.replaceChildren(boxPicker.picker.el);
+      boxPickerEl.showPopover();
+    }
+    const hints = [...(colorOpen ? [boxPickers.color.hint] : []), ...(boxPicker ? [boxPicker.hint] : [])];
+    if (!hints.length) return;
+    boxPickerHint.textContent = hints.join(', ') + (hints.length > 1 ? ', Tab moves between them' : '');
     input.setAttribute('aria-describedby', boxPickerHint.id);
     placeBoxPicker(true);
   }
@@ -2006,7 +2065,9 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   function closeBoxPicker() {
     boxPicker = null;
     boxPickerFrom = null;
-    if (boxPickerEl.matches(':popover-open')) boxPickerEl.hidePopover();
+    colorOpen = false;
+    colorFrom = null;
+    for (const el of [boxPickerEl, colorPickerEl]) if (el.matches(':popover-open')) el.hidePopover();
     input.removeAttribute('aria-describedby');
   }
 
@@ -2027,6 +2088,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     input.style.display = 'block';
     sizeLabelBox();
     openBoxPicker(target, same(naming, target));
+    if (colorOpen) revealLabelBox(target, true);
     input.focus();
     input.select();
   }
@@ -2054,7 +2116,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * Focus left the label box and its picker (a click or tap away, Tab): save, as Enter does; only Escape discards
+   * Focus left the label box and its pickers (a click or tap away): save, as Enter does; only Escape discards
    * (docs/ux.md). An emptied label is kept as it was, and the click goes on. What cannot be saved (a shape the label
    * cannot take, or another edit still saving) keeps the box open, focus back in it, and the click that left it does
    * nothing.
@@ -2069,7 +2131,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     else if (kept) keptClick = true;
   }
   /**
-   * Leaving the box (a click away, Tab) with a node's label or a subgraph's title emptied keeps it as it was, rather
+   * Leaving the box (a click away) with a node's label or a subgraph's title emptied keeps it as it was, rather
    * than refusing the save as Enter does. Returns the notice that says so, or null.
    */
   function keepEmptied() {
@@ -2084,7 +2146,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   input.addEventListener('input', sizeLabelBox);
   input.addEventListener('blur', (e) => {
-    if (!boxPickerEl.contains(/** @type {Node | null} */ (e.relatedTarget))) commit();
+    if (!inBox(/** @type {Node | null} */ (e.relatedTarget))) commit();
   });
   input.addEventListener('keydown', (e) => {
     const target = labelling;
@@ -2105,9 +2167,18 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       boxPicker.picker.focus();
       return;
     }
-    if (!target || !(e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey))) return;
+    // Up goes into the colors only from the first line, likewise. Grayed, they say why instead.
+    if (e.key === 'ArrowUp' && colorOpen && !input.value.slice(0, input.selectionStart).includes('\n')) {
+      e.preventDefault();
+      const why = colorRefusal(source.snapshot().text ?? '', labelling?.id ?? '', labelling?.kind === 'node' ? 'node' : 'subgraph');
+      if (why) ui.notice(why, 'warning'); else boxPickers.color.picker.focus();
+      return;
+    }
+    // Tab goes round the box and its pickers; in a box with none it does nothing, so it never saves.
+    if (e.key === 'Tab') { e.preventDefault(); cycle(input, e.shiftKey); return; }
+    if (!target || !(e.key === 'Enter' && !e.shiftKey)) return;
     e.preventDefault();
-    saveLabel(e.key === 'Tab' ? keepEmptied() : null);
+    saveLabel();
   });
 
   /**
@@ -2139,7 +2210,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * Enter, or Tab either way: save, and leave focus in the diagram, where what was edited is selected, rather than on
+   * Enter: save, and leave focus in the diagram, where what was edited is selected, rather than on
    * the next control in the page, which is not where the user was working.
    */
   function saveLabel(/** @type {string | null} */ kept = null) {
@@ -2166,11 +2237,20 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const chosen = picked && picked !== boxPickerFrom ? picked : null;
     const shape = target.kind === 'node' ? chosen : null;
     const arrow = target.kind === 'edge' ? chosen : null;
-    /** A node's new label and shape, as one change. */
+    // A class of the file's own picks nothing, likewise; grayed colors pick nothing at all.
+    const tinted = colorOpen && !boxPickers.color.picker.disabled() ? boxPickers.color.picker.value() : null;
+    // None on a class of the file's own changes nothing, and is no edit.
+    const now = source.snapshot().text ?? '';
+    const color = tinted && tinted !== colorFrom && setColor(now, target.id, tinted, target.kind === 'node' ? 'node' : 'subgraph').text !== now
+      ? tinted : null;
+    /** A node's new label, shape and color, as one change. */
     const renamed = (/** @type {string} */ text) => {
       const named = relabelled ? relabel(text, target.id, label).text : text;
-      return shape ? setShape(named, target.id, shape) : { text: named };
+      const shaped = shape ? setShape(named, target.id, shape) : { text: named };
+      return color ? { ...shaped, text: setColor(shaped.text, target.id, color, 'node').text } : shaped;
     };
+    /** What a change of shape or color says aloud: a screen reader does not see it, unlike a label it typed. */
+    const said = [NODE_SHAPES.find((e) => e.key === shape)?.name, COLORS.find((e) => e.key === color)?.name].filter(Boolean).join(' and ');
     // A shape the label cannot take is refused before the box closes, so what was typed is kept to try another.
     if (shape) {
       try { renamed(source.snapshot().text ?? ''); } catch (err) { ui.notice(NOT_SAVED + err.message, 'error'); return false; }
@@ -2178,7 +2258,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     closeLabelBox();
     // Enter on an unchanged label is not an edit: the file keeps its own spelling of the label. The item stays
     // selected, as after an edit: the two look alike.
-    if (!relabelled && !chosen) { select(target); naming = null; if (kept) ui.notice(kept, 'warning'); return true; }
+    if (!relabelled && !chosen && !color) { select(target); naming = null; if (kept) ui.notice(kept, 'warning'); return true; }
     if (target.kind === 'title') {
       edit((text) => setTitle(text, label), { after: () => ({ item: TITLE }) });
       return true;
@@ -2193,19 +2273,22 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }
     const into = naming && same(naming, target) ? naming.entry : null;
     naming = null;
+    const name = named(target);
     if (target.kind === 'node') {
-      const names = [named(target), NODE_SHAPES.find((e) => e.key === shape)?.name];
-      // A shape change is not seen by a screen reader, unlike a label it typed.
-      const afterSave = shape && !relabelled ? () => {
-        ui.announce(`Changed ${names[0]} to ${names[1]}`);
+      const afterSave = said && !relabelled ? () => {
+        ui.announce(`Changed ${name} to ${said}`);
         if (kept) ui.notice(kept, 'warning');
       } : undefined;
       edit(renamed, { into, afterSave, after: () => ({ item: target }) });
       return true;
     }
-    const change = (/** @type {string} */ text) => setSubgraphTitle(text, target.id, label);
+    const change = (/** @type {string} */ text) => {
+      const titled = relabelled ? setSubgraphTitle(text, target.id, label) : { text, id: target.id };
+      return color ? setColor(titled.text, titled.id, color, 'subgraph') : titled;
+    };
     /** @type {EditOptions} */
-    const options = { into, after: (result) => ({ item: { kind: 'subgraph', id: result.id } }) };
+    const options = { into, afterSave: said && !relabelled ? () => ui.announce(`Changed ${name} to ${said}`) : undefined,
+      after: (result) => ({ item: { kind: 'subgraph', id: result.id } }) };
     if (drawnOnly(target.id)) editDrawn(change, options); else edit(change, options);
     return true;
   }

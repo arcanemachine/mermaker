@@ -36,7 +36,17 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   an edge written inside a subgraph block when its new end is named outside that block: an edge line pulls both its ends
   into its block, so the line moves out, after the last edge, and its `linkStyle` number goes with it (the others after
   it move down one).
-- The page never redraws as a preview while you choose (a shape, an arrow type): a redraw is a save, and agents
+- Colors are presets only (the user: a few things done well), each a `classDef` of merma's own name (`merma-blue`)
+  and a `class` line at the end, so the node's own lines are untouched and a file's own class names are never taken.
+  Mermaid draws a node's last class over the others, whatever order the `classDef`s are in, so a color is always its
+  node's last class: changed in place when merma's line already is, else moved to the end. merma writes a `classDef`
+  only where the file has none by that name, and removes only its own, once nothing names it and it is exactly as
+  merma wrote it, so a color the user changed by hand stays theirs. A paste writes the `classDef` its colors need,
+  since a class with none draws plain. A `style` line setting a fill, border or text color draws over any class, so
+  the colors are grayed there, with the reason, and merma never removes the file's `style` line. One set serves both
+  page themes, each with its text color set: a per-theme set would mean drawing the file other than as Mermaid draws
+  it, and Copy SVG differing from the file.
+- The page never redraws as a preview while you choose (a shape, an arrow type, a color): a redraw is a save, and agents
   watching the file would see each keypress. The choice is shown beside what you are editing, and saved on Enter.
 
 ## The diagram looks as Mermaid draws it
@@ -177,8 +187,10 @@ Mermaid's theme is the file's to set.
   For the same reason an edit keeps the view (the user): the diagram is fitted when the page opens, and again only on
   Fit to window or, until the view is zoomed or moved, a change in the window's size. A diagram that grows can run
   past the edge; that is the price of nodes staying put. An add is the one exception, since its label box must be
-  in view to be used (the user): the view moves the least that shows the new item, its label box and the shape picker
-  centered under it, zoomed out only if they cannot fit, and not again while the box grows; Escape, which takes the
+  in view to be used (the user): the view moves the least that shows the new item, its label box and the pickers
+  centered by it, zoomed out only if they cannot fit, and not again while the box grows. The colors above a box are
+  the other: opening a panel whose colors or shapes would be cut off by the window's edge moves the view the same
+  way; Escape, which takes the
   add back, puts the view back as it was, unless you moved it since. An open menu keeps its place across renders too, so after
   someone else's edit it can sit apart from its node until it is reopened: following the node would move it under the
   pointer whenever a pick resizes the node. On a pan or zoom an open menu moves with the diagram: an item's menu with
@@ -194,7 +206,7 @@ Mermaid's theme is the file's to set.
   While a menu, the label box or find is open, a press in the diagram moves no focus, so a drag leaves the keys with
   what is open; the click decides.
 - A click away is a click anywhere else on the page, header and footer included. Whatever waits for a click (a menu,
-  Connect to…, Help, find) ends on one, as on Escape. The label box is the exception (the user): a click or tap away, or Tab,
+  Connect to…, Help, find) ends on one, as on Escape. The label box is the exception (the user): a click or tap away
   keeps what you typed (it saves, as Enter does); only Escape discards it. In the box an add opened, Escape takes the
   add back too (the user): it cancels what was started, and what was started is the add. Undo takes a save back, which
   is what makes saving on a click away safe, and a touch screen has no other sure way to save. A press on Undo or Redo
@@ -210,12 +222,20 @@ Mermaid's theme is the file's to set.
   the band around its line, a subgraph, the title), the browser's own hand everywhere else, where a drag moves the
   diagram. Menu and picker items do highlight under the pointer, as every menu
   does, and the item under the pointer is the focused one, so there is only ever one highlight and Enter runs it.
-- A picker lies under the label box, filled by what is edited: the shape picker for a node, the arrow type picker
-  for an edge (the user: an edge is edited as a node is, one system for both). There is no other way to a picker, no
-  key and no submenu (the user: consistency over a shorter way to the arrow type).
+- A picker lies by the label box, filled by what is edited: under it, the shape picker for a node and the arrow type
+  picker for an edge (the user: an edge is edited as a node is, one system for both); above it, the color picker for
+  a node and a subgraph (the user: one panel, not a submenu). There is no other way to a picker, no key and no submenu
+  (the user: consistency over a shorter way to the arrow type).
+- Tab and Shift+Tab go round the label box and its pickers, top to bottom, landing where Up or Down would (the user:
+  Tab never saves; Enter in the label saves, Escape cancels, a click away saves). In a box with no picker (the
+  diagram's title) Tab does nothing. Grayed colors are skipped, and Up into them says why instead.
+- A double-tap opens the box as the finger lifts, and the browser's click for that tap follows on whatever is under
+  the finger by then, a picker when the view moved to make room for it; a click on a picker within half a second of
+  its opening picks nothing.
 - Arrow keys in a picker wrap within their row or column, never on into the next: Right at a row's end goes to its
   start, Down at the bottom to the top of the same column. So a key always moves along one line of the grid. The one
-  exception: Up from its top row goes back to the label box above it.
+  exception: the arrow toward the label box from the row nearest it goes back to the box (Up from the shapes' top row,
+  Down from the colors' bottom row).
 - A picker's short last row is centered under the rest (the user: the arrow type picker's last two, under the dotted
   and thick columns). Its keys take it as starting at column floor((columns − its length) / 2): exact at ten columns,
   half a column left of where it is drawn at five, where the drawing stays centered (mostly used by touch). Down from a
@@ -554,5 +574,5 @@ Mermaid's theme is the file's to set.
   limited to, "Editing flowcharts") is not reused for another (a usage note gets a look of its own). Two roles in one
   look tell the reader they are the same kind of thing.
 
-- Like things share one component: one menu, one picker for arrow types and shapes. A new kind of choice uses them
+- Like things share one component: one menu, one picker for arrow types, shapes and colors. A new kind of choice uses them
   rather than a look of its own.

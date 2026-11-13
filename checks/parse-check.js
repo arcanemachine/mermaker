@@ -32,6 +32,19 @@
       const doc = new DOMParser().parseFromString(svg, 'text/html');
       return [...doc.querySelectorAll('path[data-edge="true"]')].map((p) => doc.querySelector(`g.edgeLabel [data-id="${p.dataset.id}"]`)?.textContent.trim() ?? '');
     };
+    /* The fill a node or subgraph is drawn with, read from the page: the render is put in it for that, off screen. */
+    const host = document.body.appendChild(Object.assign(document.createElement('div'), { style: 'position: absolute; left: -99999px; top: 0' }));
+    const drawnFill = async (text, { kind, id }) => {
+      const { svg } = await mermaid.render('parse-check-' + k++, text);
+      host.innerHTML = svg;
+      const g = kind === 'node' ? [...host.querySelectorAll('g.node')].find((n) => new RegExp(`flowchart-${id}-\\d+$`).test(n.id))
+        : host.querySelector(`g.cluster[id$="-${id}"]`);
+      const shape = g?.querySelector(':scope > rect, :scope > path, :scope > polygon, :scope > circle, :scope > g > path, :scope > g > circle');
+      const fill = shape ? getComputedStyle(shape).fill : null;
+      host.innerHTML = '';
+      return fill;
+    };
+    const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
     const fails = [];
     for (const c of cases) {
       try {
@@ -63,6 +76,20 @@
           const { svg } = await mermaid.render('parse-check-' + k++, c.out);
           const got = new DOMParser().parseFromString(svg, 'text/html').querySelector('.flowchartTitleText')?.textContent ?? null;
           if (got !== c.diagramTitle) fails.push(`${c.name}: title drawn as ${JSON.stringify(got)}`);
+          continue;
+        }
+        if (c.kind === 'color') {
+          /* The item's last class is the preset's, and it is drawn with its fill; every node keeps its type and text, and every other its classes. */
+          const item = c.color.kind === 'node' ? after.getVertices().get(c.color.id) : after.getSubGraphs().find((g) => g.id === c.color.id);
+          if (item?.classes?.at(-1) !== c.color.cls) fails.push(`${c.name}: its classes are ${item?.classes}, expected ${c.color.cls} last`);
+          const fill = await drawnFill(c.out, c.color);
+          if (fill !== rgb(c.color.fill)) fails.push(`${c.name}: drawn with fill ${fill}, expected ${rgb(c.color.fill)}`);
+          const now = after.getVertices();
+          for (const [id, v] of before.getVertices()) {
+            const w = now.get(id);
+            const same = w?.type === v.type && w?.text === v.text && (id === c.color.id || String(w?.classes) === String(v.classes));
+            if (!same) fails.push(`${c.name}: ${id} is ${w?.type} ${JSON.stringify(w?.text)} ${w?.classes}, was ${v.type} ${JSON.stringify(v.text)} ${v.classes}`);
+          }
           continue;
         }
         if (c.kind === 'relabel') {

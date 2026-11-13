@@ -375,6 +375,9 @@ main:has(#find:not([hidden])) #notice { display: none; }
 .menu .picker-grid:not(:focus-within) button[data-start] { outline: 2px solid var(--focus); outline-offset: -2px; }
 .menu .picker-grid button:focus { background: none; }
 .menu .picker-grid button[aria-pressed="true"] { background: var(--pressed); }
+/* A disabled picker (the colors on a node with its own style line) is grayed, its reason where the name goes. */
+.picker[aria-disabled="true"] .picker-grid { opacity: 0.4; }
+.menu .picker-grid button:disabled { cursor: default; }
 /* The grid sets the width, never the name: a picker that resized as names changed would move under the pointer. */
 .picker-name { font-size: 12px; color: var(--text-soft); padding: 4px 4px 2px; min-height: 1.2em; text-align: center;
                contain: inline-size; }
@@ -382,7 +385,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #label-box { position: absolute; display: none; z-index: 6; box-sizing: border-box; font: inherit; font-size: 14px;
           padding: 4px 6px; line-height: 18px; text-align: center; border: 2px solid var(--select); border-radius: 4px;
           background: var(--canvas); color: var(--canvas-text); color-scheme: light; resize: none; overflow: hidden; user-select: text; cursor: text; }
-/* The picker under the label box: a menu's look, placed by the editor. */
+/* The pickers by the label box: a menu's look, placed by the editor. */
 .menu.box-picker { padding: 4px 6px 6px; }
 /* On a narrow screen a picker's ten columns would not fit: five. The picker's arrow keys follow the grid as drawn. The
    arrow type picker's icons are wider, so its ten need more room than the shape picker's. */

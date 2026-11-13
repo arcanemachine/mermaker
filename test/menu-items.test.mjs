@@ -180,6 +180,7 @@ const HELP_ONLY = {
   '`': 'code-panel.mjs answers it',
   'shift+`': 'code-panel.mjs answers it',
   '?': 'main.mjs answers it',
+  tab: 'the label box answers it',
   'ctrl+c': 'copy, handled before the key map',
   'ctrl+v': 'paste, handled before the key map',
   'ctrl+shift+v': 'paste without edges, handled before the key map',
@@ -235,7 +236,7 @@ test("every row under Help's Keys sections names a key, and each is one the page
 
 // Within a Keys section, rows go by the key: punctuation and digits, then letters, then named keys (Arrows, Backspace,
 // Delete, …), each key's forms together in the order plain, Shift, Ctrl, Ctrl+Shift.
-const NAMED = ['arrows', 'backspace', 'delete', 'arrowdown', 'enter', 'escape', 'f2', 'f10', ' ', 'arrowup'];
+const NAMED = ['arrows', 'backspace', 'delete', 'arrowdown', 'enter', 'escape', 'f2', 'f10', ' ', 'tab', 'arrowup'];
 const sortKey = (/** @type {string} */ shortcut) => {
   const [, mods, base] = /** @type {RegExpMatchArray} */ (shortcut.match(/^((?:ctrl\+)?(?:shift\+)?)(.+)$/));
   const form = ['', 'shift+', 'ctrl+', 'ctrl+shift+'].indexOf(mods);

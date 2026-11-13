@@ -1,7 +1,8 @@
 // A grid of choices (arrow types, shapes) under a text field, each drawn as a small icon with its digit in the corner.
 // The line under it names the focused entry, else the current one. It reports a pick; what a pick does is up to its
 // host (the label box keeps it until Enter). Keys while focus is in it: a digit picks, the arrow keys move, wrapping
-// within their row or column (grid.mjs). Keys it does not use (Enter, Escape, Up from the top row) go on to its host.
+// within their row or column (grid.mjs). Keys it does not use (Enter, Escape, the arrow off its edge toward its field:
+// Up from the top row of one under the field, Down from the bottom row of one above it) go on to its host.
 //
 // Mouse and keyboard share one focus: the outline. Its buttons take real focus only when its host gives it (`focus`);
 // once focus is in the grid, the pointer moving over an entry focuses it, as in a menu. While focus is in its field,
@@ -10,6 +11,8 @@
 // picker opened under a resting pointer would otherwise take the entry under it. The host keeps a click from moving
 // focus. It remembers where the arrows were when focus went back to its field, and `focus` returns there; a pick moves
 // that place to the picked entry.
+//
+// A disabled picker (`disable`) is drawn grayed, its reason where the name goes, and takes no focus or pick.
 //
 // While Shift is held the root has `data-shift` (set by the editor), and the digits Shift picks show dark and the plain
 // ones gray, the other way round when it is not (style.css).
@@ -38,8 +41,9 @@ const label = (/** @type {PickerEntry} */ entry) => entry.name
  * @param {(key: string) => void} options.onPick
  * @param {number} [options.columns]
  * @param {string} [options.className] a class of its own, for CSS that is this picker's alone
+ * @param {'up' | 'down'} [options.exit] the side its field is on, which the arrow that way leaves to
  */
-export function createPicker({ title, entries, onPick, columns = 5, className = '' }) {
+export function createPicker({ title, entries, onPick, columns = 5, className = '', exit = 'up' }) {
   const el = document.createElement('div');
   el.className = `picker ${className}`.trim();
   el.setAttribute('role', 'group');
@@ -69,7 +73,7 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     });
     b.addEventListener('pointermove', (e) => {
       // Touch has no hover: a tap names the current one (docs/ux.md).
-      if (e.pointerType === 'touch') return;
+      if (e.pointerType === 'touch' || disabled) return;
       const inGrid = grid.contains(document.activeElement);
       if (before === undefined) {
         before = inGrid ? /** @type {HTMLButtonElement} */ (document.activeElement) : buttons.find((x) => x.hasAttribute('data-start')) ?? null;
@@ -96,6 +100,8 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
    * field; undefined while the pointer has not moved it */
   let before;
   let pointerFocus = false;
+  /** @type {string | null} why it is disabled, or null */
+  let disabled = null;
   // A pointer that only passed over changes nothing: the outline goes back, and focus with it when it is in the grid.
   grid.addEventListener('pointerleave', () => {
     if (before === undefined) return;
@@ -117,7 +123,7 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     const outlined = before === undefined ? -1 : buttons.findIndex((b) => b.hasAttribute('data-start'));
     const at = Math.max(buttons.findIndex((b) => b === focused), outlined);
     const entry = entries.find((e) => e.key === current);
-    name.textContent = at >= 0 ? label(entries[at]) : entry ? `Current: ${label(entry)}` : other ? `Current: ${other}` : '';
+    name.textContent = disabled ?? (at >= 0 ? label(entries[at]) : entry ? `Current: ${label(entry)}` : other ? `Current: ${other}` : '');
   }
 
   /**
@@ -146,8 +152,10 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     const digit = entries.findIndex((entry) => entry.digit && Boolean(entry.shift) === e.shiftKey
       && (e.code === `Digit${entry.digit}` || (e.code === `Numpad${entry.digit}` && e.key === entry.digit)));
     if (digit >= 0) { e.preventDefault(); e.stopPropagation(); buttons[digit].focus(); onPick(entries[digit].key); return; }
-    // Up from the top row is the way back to its field.
-    if (at < 0 || (e.key === 'ArrowUp' && at < across)) return;
+    // The arrow off its edge toward its field is the way back to it.
+    const last = buttons.filter((b) => b.offsetTop === buttons[buttons.length - 1].offsetTop).length;
+    if (at < 0 || (exit === 'up' && e.key === 'ArrowUp' && at < across)
+      || (exit === 'down' && e.key === 'ArrowDown' && at >= buttons.length - last)) return;
     const to = move(at, e.key, buttons.length, across);
     if (to === null) return;
     e.preventDefault();
@@ -162,5 +170,15 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     focus: () => (buttons.find((b) => b.hasAttribute('data-start')) ?? buttons[0]).focus(),
     /** The current entry's key, or null. */
     value: () => current,
+    /** Gray it out with `reason` shown in its place, or with null bring it back. */
+    disable: (/** @type {string | null} */ reason) => {
+      disabled = reason;
+      el.toggleAttribute('aria-disabled', Boolean(reason));
+      if (reason) el.setAttribute('aria-disabled', 'true');
+      for (const b of buttons) b.disabled = Boolean(reason);
+      showName();
+    },
+    /** Whether it is disabled. */
+    disabled: () => disabled !== null,
   };
 }

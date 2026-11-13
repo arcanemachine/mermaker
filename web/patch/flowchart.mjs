@@ -766,6 +766,171 @@ function readStatement(/** @type {string} */ line, /** @type {string} */ m, /** 
   return s;
 }
 
+// --- colors --------------------------------------------------------------------------------------------------
+
+/**
+ * merma's color presets, in a fixed order (colors.mjs gives each its digit): a node's fill, border and text color, and
+ * a subgraph's lighter `-box` set. Each is a `classDef` named `merma-<key>` or `merma-<key>-box`, so it never takes a
+ * file's own class name. The text color is always set, so a label stays readable in either page theme.
+ * @type {Record<string, { node: [string, string, string], box: [string, string, string] }>}
+ */
+export const PRESETS = {
+  gray: { node: ['#f3f4f6', '#4b5563', '#111827'], box: ['#f9fafb', '#9ca3af', '#111827'] },
+  red: { node: ['#fee2e2', '#dc2626', '#7f1d1d'], box: ['#fef2f2', '#f87171', '#7f1d1d'] },
+  orange: { node: ['#ffedd5', '#ea580c', '#7c2d12'], box: ['#fff7ed', '#fb923c', '#7c2d12'] },
+  yellow: { node: ['#fef9c3', '#ca8a04', '#713f12'], box: ['#fefce8', '#facc15', '#713f12'] },
+  green: { node: ['#dcfce7', '#16a34a', '#14532d'], box: ['#f0fdf4', '#4ade80', '#14532d'] },
+  teal: { node: ['#ccfbf1', '#0d9488', '#134e4a'], box: ['#f0fdfa', '#2dd4bf', '#134e4a'] },
+  blue: { node: ['#dbeafe', '#2563eb', '#1e3a8a'], box: ['#eff6ff', '#60a5fa', '#1e3a8a'] },
+  purple: { node: ['#f3e8ff', '#9333ea', '#581c87'], box: ['#faf5ff', '#c084fc', '#581c87'] },
+  pink: { node: ['#fce7f3', '#db2777', '#831843'], box: ['#fdf2f8', '#f472b6', '#831843'] },
+};
+
+/** The class a preset is written as: `merma-blue` on a node, `merma-blue-box` on a subgraph. */
+export function presetClass(/** @type {string} */ key, /** @type {'node' | 'subgraph'} */ kind) {
+  return `merma-${key}${kind === 'subgraph' ? '-box' : ''}`;
+}
+
+/** The preset a class name is, as { key, kind }, or null for a class of the file's own. */
+function presetOf(/** @type {string} */ name) {
+  const m = name.match(/^merma-([a-z]+)(-box)?$/);
+  return m && PRESETS[m[1]] ? { key: m[1], kind: m[2] ? 'subgraph' : 'node' } : null;
+}
+
+/** The `classDef` merma writes for preset class `name`, or null for any other name. */
+function presetDef(/** @type {string} */ name) {
+  const p = presetOf(name);
+  if (!p) return null;
+  const [fill, stroke, color] = PRESETS[p.key][p.kind === 'subgraph' ? 'box' : 'node'];
+  return `classDef ${name} fill:${fill},stroke:${stroke},color:${color}`;
+}
+
+/**
+ * The classes the file gives `id`, in text order: from `:::` on its mentions, and from `class` lines naming it. Each
+ * with its statement; a `class` line's ids too. Mermaid draws the last one over the others (properties it does not
+ * set still show).
+ */
+function classesOf(/** @type {string} */ text, /** @type {string} */ id) {
+  /** @type {{ name: string, at: number, s: Statement, ids: string[] | null }[]} */
+  const out = [];
+  for (const s of statements(text)) {
+    if (s.keyword === 'class') {
+      const m = text.slice(s.start, s.end).match(/^class\s+(\S+)\s+(\S+)/);
+      if (m && m[1].split(',').includes(id)) out.push({ name: m[2], at: s.start, s, ids: m[1].split(',') });
+      continue;
+    }
+    for (const r of s.groups.flat()) {
+      if (r.id !== id) continue;
+      for (const c of text.slice(r.start, r.end).matchAll(new RegExp(`:::(${ID})`, 'gu'))) {
+        out.push({ name: c[1], at: r.start + /** @type {number} */ (c.index), s, ids: null });
+      }
+    }
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+
+/** Every class name a `class` line or a `:::` uses. */
+function classesUsed(/** @type {string} */ text) {
+  const used = new Set();
+  for (const s of statements(text)) {
+    const body = text.slice(s.start, s.end);
+    if (s.keyword === 'class') { const m = body.match(/^class\s+\S+\s+(\S+)/); if (m) used.add(m[1]); }
+    else if (!s.keyword) for (const c of body.matchAll(new RegExp(`:::(${ID})`, 'gu'))) used.add(c[1]);
+  }
+  return used;
+}
+
+/** The `classDef` statements in the file, by the name they define. */
+function classDefs(/** @type {string} */ text) {
+  /** @type {Map<string, Statement>} */
+  const defs = new Map();
+  for (const s of statements(text)) {
+    if (s.keyword !== 'classDef') continue;
+    const m = text.slice(s.start, s.end).match(/^classDef\s+(\S+)/);
+    if (m) for (const name of m[1].split(',')) defs.set(name, s);
+  }
+  return defs;
+}
+
+/**
+ * The color node or subgraph `id` shows, read from the last class it has: `{ key }`, a preset's key; `{ key: 'none' }`
+ * with no class; `{ key: null, other }`, a class of the file's own.
+ */
+export function colorOf(/** @type {string} */ text, /** @type {string} */ id) {
+  const last = classesOf(text, id).at(-1);
+  if (!last) return { key: 'none', other: null };
+  const p = presetOf(last.name);
+  return p ? { key: p.key, other: null } : { key: null, other: last.name };
+}
+
+/**
+ * Why node or subgraph `id` cannot be given a color, or null when it can. A `style` line setting its fill, border or
+ * text color draws over any class, so a preset would change little or nothing. An id-less subgraph is given an id
+ * first, which some files refuse (subgraphRefusal).
+ */
+export function colorRefusal(/** @type {string} */ text, /** @type {string} */ id, /** @type {'node' | 'subgraph'} */ kind) {
+  if (kind === 'subgraph') {
+    const why = subgraphRefusal(text, id);
+    if (why) return why;
+  }
+  const styled = settingsOf(text, id).some((s) => s.keyword === 'style' && /(^|[\s,])(fill|stroke|color)\s*:/.test(s.rest));
+  return styled ? `This ${kind} has its own style line, which Mermaid draws over a color.` : null;
+}
+
+/**
+ * Give node or subgraph `id` the preset `key`, or with 'none' take merma's color off it. The color is a `class` line
+ * at the end (`class A merma-blue`), the node's own lines untouched; a line of merma's that is the node's last class
+ * is changed in place, else merma's lines for it go and a new one is appended, so the color is the last class and
+ * Mermaid draws it over the file's own. The preset's `classDef` is appended when the file has none by that name; one
+ * of merma's that nothing names any longer goes, unless it was changed by hand. An id-less subgraph is given an id
+ * first. Returns { text, id }.
+ */
+export function setColor(/** @type {string} */ text, /** @type {string} */ id, /** @type {string} */ key, /** @type {'node' | 'subgraph'} */ kind) {
+  if (kind === 'node') assertNode(text, id);
+  else {
+    const sg = subgraphBlock(text, id);
+    if (!sg) throw new Error('That subgraph is not in the file.');
+    if (!sg.written) ({ text, id } = nameSubgraph(text, sg));
+  }
+  if (key !== 'none' && !PRESETS[key]) throw new Error(`There is no color ${key}.`);
+  const name = key === 'none' ? null : presetClass(key, kind);
+  const all = classesOf(text, id);
+  const mine = all.filter((c) => c.ids && presetOf(c.name));
+  const last = all.at(-1);
+  /** @type {string} */
+  let out;
+  if (name && last && mine.includes(last) && last.ids?.length === 1) {
+    if (last.name === name) return { text, id };
+    out = apply(text, [{ s: last.s, parts: [{ text: `class ${id} ${name}` }] }]);
+  } else {
+    /** @type {Change[]} */
+    const off = mine.map((c) => ({ s: c.s, parts: /** @type {string[]} */ (c.ids).length === 1 ? []
+      : [{ text: `class ${/** @type {string[]} */ (c.ids).filter((x) => x !== id).join(',')} ${c.name}` }] }));
+    out = apply(text, off);
+    if (name) out = appendLine(out, `class ${id} ${name}`);
+  }
+  // merma's own classDefs that nothing names now go; one changed by hand stays.
+  const used = classesUsed(out);
+  const gone = [...new Set(mine.map((c) => c.name))].filter((n) => !used.has(n));
+  const defs = classDefs(out);
+  const drop = gone.flatMap((n) => {
+    const s = defs.get(n);
+    return s && out.slice(s.start, s.end) === presetDef(n) ? [{ s, parts: [] }] : [];
+  });
+  out = apply(out, drop);
+  return { text: withPresetDefs(out), id };
+}
+
+/** `text` with the `classDef` of every preset it names and does not define appended, so the color shows. */
+export function withPresetDefs(/** @type {string} */ text) {
+  const defs = classDefs(text);
+  for (const name of classesUsed(text)) {
+    const def = !defs.has(name) && presetDef(name);
+    if (def) text = appendLine(text, def);
+  }
+  return text;
+}
+
 // --- changing and deleting edges and nodes ---------------------------------------------------------------------
 
 /**
@@ -1590,7 +1755,7 @@ export function copiedText(/** @type {Copied} */ c) {
  * subgraph `into.id`, in the block node `into.id` is drawn in, or at the top level (null). With `withEdges`, it gets
  * every edge the original had, its id in place of the original's, after the last edge; an edge whose other end is no
  * longer in the file is left out. Pasted into an edge, it gets that edge's halves only. Its classes and its `style`
- * and `click` lines come too. Returns { text, id }.
+ * and `click` lines come too, and a color preset's `classDef` when the file has none. Returns { text, id }.
  * @param {string} text
  * @param {Copied} c
  * @param {{ kind: 'edge', svgId: string, side: 'first' | 'second' } | { kind: 'subgraph' | 'node', id: string } | null} into
@@ -1616,7 +1781,7 @@ export function pasteNode(text, c, into, withEdges = true) {
   for (const line of [...c.classes.map((k) => `class ${id} ${k}`), ...c.settings.map((s) => `${s.keyword} ${id}${s.rest}`)]) {
     text = appendLine(text, line);
   }
-  return { text, id };
+  return { text: withPresetDefs(text), id };
 }
 
 /**
@@ -1709,7 +1874,8 @@ export function copiedSubgraphText(/** @type {CopiedSubgraph} */ c) {
  * Paste copy `c` as a new subgraph, every node and subgraph in it under a fresh id: inside subgraph `into.id`, in the
  * block node `into.id` is drawn in, or at the top level (null). Its edges among its own items always come, and with
  * `withEdges` those to items outside it too, their outside end left as it was; an edge whose outside end is no longer
- * in the file is left out. Every edge goes after the last edge, so no `linkStyle` number changes. Returns { text, id }.
+ * in the file is left out. Every edge goes after the last edge, so no `linkStyle` number changes. A color preset's
+ * `classDef` is written when the file has none. Returns { text, id }.
  * @param {string} text
  * @param {CopiedSubgraph} c
  * @param {{ kind: 'subgraph' | 'node', id: string } | null} into
@@ -1743,7 +1909,7 @@ export function pasteSubgraph(text, c, into, withEdges = true) {
     .map((e) => `${as(e.from)} ${e.connector} ${as(e.to)}`);
   if (own.length) text = afterLastEdge(text, own);
   for (const line of blockSettings(c.block, as)) text = appendLine(text, line);
-  return { text, id: as(c.id) };
+  return { text: withPresetDefs(text), id: as(c.id) };
 }
 
 /**

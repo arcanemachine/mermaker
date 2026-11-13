@@ -205,8 +205,9 @@ another click on it closes it.
 - **Connect from…** (Shift+C) adds one to this subgraph from the node or subgraph picked.
 - **Edit title** edits the title in place, in the label box, saved as an edge label is: `subgraph pay [Payment]` becomes
   `subgraph pay ["New title"]`. A title that is also the id keeps it: `subgraph Payment` becomes
-  `subgraph Payment ["New title"]`. A title cannot be empty: Enter on an emptied one is refused, and a click away or Tab
-  keeps the title as it was.
+  `subgraph Payment ["New title"]`. A title cannot be empty: Enter on an emptied one is refused, and a click away
+  keeps the title as it was. The color picker lies above the title, as above a node's label (The node panel), with
+  lighter colors for a box; Tab goes between the two.
 - **Copy subgraph** (Ctrl+C) keeps a copy of the subgraph, as it is now, for this tab: every node Mermaid draws in it
   or in a subgraph inside it, those subgraphs with their titles and `direction` lines, the classes and `style` and
   `click` lines of all of them, and every edge with an end among them. Its Mermaid text goes on the system clipboard
@@ -280,16 +281,17 @@ R reverses it; on a subgraph, they turn just its inside (below).
 ## The node panel
 
 Edit node, Enter, F2 or a double-click on a node, and adding one (Add connected node, Add node, N), open its panel:
-the label box over the node, and the shape picker under it, the node's shape selected (a new node's is
-Rectangle). Nothing is drawn until Enter in the label box, or a click or tap away, or Tab, which writes the label
-and the shape as one change (only what changed); for a node just added, it is undone together with the add. Only
-Escape closes the panel without writing. On a node just added, Escape takes the add back, as if it never was (Redo
+the label box over the node, the color picker above it, and the shape picker under it, the node's color and shape
+selected (a new node's are None and Rectangle). Nothing is drawn until Enter in the label box, or a click or tap
+away, which writes the label, the color and the shape as one change (only what changed); for a node just added, it
+is undone together with the add. Only Escape closes the panel without writing. Tab and Shift+Tab go round the label,
+the colors and the shapes, top to bottom, landing where Up or Down would; Tab never saves. On a node just added, Escape takes the add back, as if it never was (Redo
 does not bring it back); from the shapes it takes two, since the first goes back to the label. On a touch screen, tap
 away and then Undo. Once the panel an add opened is closed, Undo takes the add back. A node or subgraph added off screen is brought
 into view with its panel, and Escape puts the view back, unless you have moved it since.
 
 - **The label:** Shift+Enter starts a new line (written as `<br>`). A label cannot be empty: Enter on an emptied
-  label is refused, and the panel stays open with the error; a click or tap away, or Tab, keeps the label as it was
+  label is refused, and the panel stays open with the error; a click or tap away keeps the label as it was
   (still saving a shape picked meanwhile) and says so. A node drawn with none (a shape such as `bolt`) can still
   change shape with its label left empty. Only the label changes, where the node is first given a
   shape; a node that only appears bare gets brackets at its first appearance.
@@ -300,6 +302,18 @@ into view with its panel, and Escape puts the view back, unless you have moved i
   back to the label, and Up from the top row or Escape goes back to the label, keeping what was selected.
   The selected shape is filled; the outline is where the arrows are. The line under them names the shape under the
   pointer, else the one the arrows are on, else the selected one ("Current: Rectangle (Process)").
+- **The colors:** click one to select it, or press Up (from the label's first line) to go into them; the keys are the
+  shapes', mirrored: Down from the bottom row goes back to the label. 1 is None, then gray, red, orange, yellow,
+  green, teal, blue, purple and pink. Each sets the fill, the border and the text color, so a label reads in either
+  page theme.
+- **What a color writes:** `class pack merma-blue` at the end, and the first time a file uses that color, its
+  `classDef merma-blue fill:…,stroke:…,color:…`; the node's own lines stay as they are. A later color changes merma's
+  line in place. None takes the line off, and the `classDef` too once nothing names it, unless it was changed by hand:
+  a `classDef merma-…` edited in the file keeps your colors. A node with a class of the file's own (`:::hot`,
+  `class A hot`) keeps it, and the color is drawn over it (the picker names the file's class as current, with none
+  selected). A copy carries the color, and a paste into another diagram brings its `classDef`. The colors are grayed,
+  with the reason, on a node or subgraph with a `style` line setting its fill, border or text color: Mermaid draws
+  that line over any class.
 - **What is written:** the shape changes where Mermaid takes it from, the node's last mention with one, and the label
   stays as written. Shapes with brackets keep that form (`B{OK?}`); the others are written
   `B@{ shape: doc, label: "OK?" }`, after any `:::class`. A label with a `}`, or a Markdown label, cannot move into
@@ -333,12 +347,13 @@ into view with its panel, and Escape puts the view back, unless you have moved i
 
 Edit edge, Enter, F2 or a double-click on an edge open its panel, as a node's opens: the label box over the edge's
 label (at the edge's middle when it has none), and the arrow type picker under it, the edge's arrow type selected.
-Nothing is drawn until Enter in the label box, or a click or tap away, or Tab, which writes the label and the arrow
-type as one change and one undo step (only what changed). Only Escape closes the panel without writing. On an edge
+Nothing is drawn until Enter in the label box, or a click or tap away, which writes the label and the arrow type as
+one change and one undo step (only what changed). Only Escape closes the panel without writing. Tab goes between the
+label and the arrow types, and never saves. On an edge
 with no label, the picker can cover the arrowhead; the picker shows the current arrow type instead.
 
 - **The label:** Shift+Enter starts a new line. Empty it to remove the label: on an edge, Enter, a click or tap away
-  and Tab all save it emptied. It is written as `-->|"label"|`.
+  all save it emptied. It is written as `-->|"label"|`.
 - **The arrow types:** click one to select it, or press Down (from the label's last line) to go into them; the keys are
   the shapes' (above): the arrows move, a digit or Space selects, Enter selects and goes back to the label, Up from the
   top row or Escape goes back. The arrow changes and keeps its label and its length (`---->` asks for a longer edge,

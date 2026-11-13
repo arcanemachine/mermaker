@@ -17,12 +17,13 @@
 // alone or with its contents: the nodes `gone` not drawn, every other node in the subgraph blockOf says after (`blocks`),
 // and `edges` edges in all.
 // `link`: { id, url } node id given the link url (null: none), drawn with it, every other node's link as before.
+// `color`: { id, kind, cls, fill } node or subgraph `id` given a color preset: `cls` its last class, drawn filled `fill`.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ARROWS, BRACKETS, addConnected, addNode, addSubgraph, blockOf, connect, copyNode, copySubgraph, deleteEdge, deleteNode, deleteSubgraph, deleteSubgraphContents, contentsOf, edges, freeId, quoteLabel,
   editEdge, mergeNode, moveCut, moveEdges, moveIntoEdge, moveNode, moveSubgraph, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setEdgeArrow, setEdgeLabel, setLink, setShape, setSubgraphTitle, setTitle, subgraphRefusal,
-  subgraphs, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation,
+  subgraphs, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, setColor, colorRefusal, presetClass, PRESETS,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
 // Mermaid's db names for each arrow type: [type, stroke].
@@ -57,6 +58,12 @@ for (const [name, list, src] of sources) {
     const now = renamed?.to ?? sg.id;
     const title = 'Say "hi" #1 <b> & [x]';
     cases.push({ name: `${name} title ${sg.id}`, kind: 'title', src, out: setSubgraphTitle(src, sg.id, title).text, renamed, title: { id: now, text: quoteLabel(title) } });
+    if (!colorRefusal(src, sg.id, 'subgraph')) {
+      const colored = setColor(src, sg.id, 'teal', 'subgraph');
+      cases.push({ name: `${name} color ${sg.id}`, kind: 'color', src, out: colored.text,
+        renamed: colored.id === sg.id ? null : { from: sg.id, to: colored.id },
+        color: { id: colored.id, kind: 'subgraph', cls: presetClass('teal', 'subgraph'), fill: PRESETS.teal.box[0] } });
+    }
     const node = addNode(src, { subgraph: sg.id });
     cases.push({ name: `${name} add node in ${sg.id}`, kind: 'add', src, out: node.text, into: { id: node.id, subgraph: sg.id } });
     const inner = addSubgraph(src, { parent: sg.id });
@@ -76,6 +83,10 @@ for (const [name, list, src] of sources) {
       const b = BRACKETS[key];
       const refs = [`flowchart TD\n  X@{ shape: ${key} }\n`, ...(b ? [`flowchart TD\n  X${b[0]}x${b[1]}\n`] : [])];
       cases.push({ name: `${name} shape ${key} ${id}`, kind: 'shape', src, out: setShape(src, id, key).text, shape: { id, refs } });
+    }
+    if (!colorRefusal(src, id, 'node')) {
+      cases.push({ name: `${name} color ${id}`, kind: 'color', src, out: setColor(src, id, 'blue', 'node').text,
+        color: { id, kind: 'node', cls: presetClass('blue', 'node'), fill: PRESETS.blue.node[0] } });
     }
     const keep = edges(src).filter((e) => e.from !== id && e.to !== id).map((e) => e.index);
     cases.push({ name: `${name} delete node ${id}`, kind: 'delete', src, out: deleteNode(src, id).text, gone: id, keep });
