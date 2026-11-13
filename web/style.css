@@ -46,7 +46,7 @@ html, body { height: 100%; }
   --warning-bg: #fff4d6; --warning-fg: #5c4400;
   --error-bg: #fde2e2; --error-fg: #7b1d1d;
   /* The selection: an outline, and a node's fill; #diagram derives the faint stroke an invisible edge shows. */
-  --select: #0969da; --select-bg: #b6e3ff; --on-select: #1f2328;
+  --select: #0969da; --on-select: #1f2328;
   /* Find's marks: amber, apart from the selection's blue. */
   --find-bg: #fff1b8; --find-fg: #222; --find-mark: #bf8700;
   /* The current match: strong against the plain match mark, so its blink reads at a glance (the user). */
