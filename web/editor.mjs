@@ -359,7 +359,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const sg = subgraphs(shownText).find((g) => g.id === id);
     return sg && !sg.written ? shownText.slice(sg.title.start, sg.title.end) : null;
   };
-  /** Cut node or Cut subgraph: the selection, glowing until a paste moves it or Escape drops it. It replaces any copy. */
+  /** Cut node or Cut subgraph: the selection, drawn thicker until a paste moves it or Escape drops it. It replaces any copy. */
   function cutSelected() {
     const sel = selection();
     if (sel.kind !== 'node' && sel.kind !== 'subgraph') return;
@@ -374,7 +374,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     markCut();
   }
   /**
-   * Mark the cut node glowing, and nothing else. A cut whose node is gone from the file is dropped; one hidden in a
+   * Mark the cut node thicker, and nothing else. A cut whose node is gone from the file is dropped; one hidden in a
    * collapsed subgraph is kept, unmarked, and marked again once it is drawn.
    */
   function markCut() {
@@ -390,12 +390,13 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** @type {string | null} the action of the menu item with focus, while a menu is open */
   let menuFocus = null;
   /**
-   * A cut node's edges glow while it is cut, as a pick's moving edges do (the user), under a marker of their own, since
-   * a pick's glow goes with each selection. Pale red where the paste would delete them: on an edge, where the move
-   * applies; with Shift held or "Move node here without edges" focused in a menu, where that applies. A cut subgraph's
-   * edges never change in its move, so they do not glow.
+   * A cut node's edges are drawn thicker while it is cut, as a pick's moving edges are (the user), under a mark of
+   * their own, since a pick's goes with each selection. A pale red glow lies under them where the paste would delete
+   * them: on an edge, where the move applies; with Shift held or "Move node here without edges" focused in a menu,
+   * where that applies. A cut subgraph's edges never change in its move, so they are not marked.
    */
   function glowCut() {
+    clearMarks('data-page-cut-edge');
     for (const e of drawn('[data-page-cut-glow]')) e.remove();
     if (cut?.kind !== 'node') return;
     const id = cut.id;
@@ -407,9 +408,11 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     for (const { svgId } of own) {
       const path = edgeEls(svgId).find((x) => x.matches('path:not([data-page-only])'));
       if (!path) continue;
+      mark(path, 'data-page-cut-edge');
+      if (!red) continue;
       const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       glow.setAttribute('d', path.getAttribute('d') ?? '');
-      glow.setAttribute('data-page-cut-glow', red ? 'delete' : '');
+      glow.setAttribute('data-page-cut-glow', 'delete');
       glow.setAttribute('data-page-only', '');   // the SVG export leaves it out
       path.before(glow);
     }
@@ -778,16 +781,16 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   // --- selection -----------------------------------------------------------------------------------------------
 
-  // The page's marks: the selection, Connect to…'s candidate, find's matches and its current one. A node or a subgraph
-  // is marked by bands under its shapes (drawBands), its own colors kept. An edge's line is recolored: Mermaid writes
-  // linkStyle colors inline with !important, which no stylesheet rule beats, so while an edge is marked its inline
-  // colors lose the !important (the original kept in data-page-style), so the mark's colors show.
-  const MARKED = '[data-page-selected], [data-page-candidate], [data-page-source], [data-page-cut], [data-page-match], [data-page-current]';
-  /** Give `el` the mark `attr`, loosening an edge's inline colors. */
+  // The page's marks: the selection, Connect to…'s candidate, find's matches and its current one, and what a pick or
+  // a cut will change, drawn thicker. A node or a subgraph is outlined by bands under its shapes (drawBands), its own
+  // colors kept; an edge's line is recolored. Mermaid writes classDef, style and linkStyle colors inline with
+  // !important, which no stylesheet rule beats: while an item is marked, its inline colors lose the !important (the
+  // original kept in data-page-style), so the mark's colors and widths show.
+  const MARKED = '[data-page-selected], [data-page-candidate], [data-page-source], [data-page-cut], [data-page-match], [data-page-current], [data-page-pick-edge], [data-page-cut-edge]';
+  /** Give `el` the mark `attr`, loosening its inline colors. */
   const mark = (/** @type {Element} */ el, /** @type {string} */ attr) => {
     el.setAttribute(attr, '');
     queueBands();
-    if (el.matches('g.node, g.cluster')) return;
     for (const e of [el, ...el.querySelectorAll('[style*="important"]')]) {
       const style = e.getAttribute('style');
       if (!style?.includes('important')) continue;
@@ -811,7 +814,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     : [...g.querySelectorAll(':scope > :is(rect, polygon, circle, ellipse, path), :scope > g > :is(rect, polygon, circle, ellipse, path)')]
       .filter((e) => !e.closest('.label') && !e.matches('.collapsed-indicator, [data-page-only]'));
   // One blue band per item, the first of these it carries; a find band, wider, under it.
-  const BLUE = /** @type {const} */ (['candidate', 'cut', 'source', 'selected']);
+  const BLUE = /** @type {const} */ (['candidate', 'selected']);
   let bandsQueued = false;
   /** Redraw the bands once the marks in hand have settled, however many changed. */
   const queueBands = () => {
@@ -828,7 +831,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     for (const e of drawn('[data-page-band]')) e.remove();
     for (const g of drawn('g.node, g.cluster')) {
       const blue = BLUE.find((m) => g.hasAttribute(`data-page-${m}`));
-      const find = g.hasAttribute('data-page-current') ? 'current' : g.hasAttribute('data-page-match') ? 'match' : null;
+      const find = g.hasAttribute('data-page-match') ? 'match' : null;
       if (!blue && !find) continue;
       const shapes = shapesOf(g);
       for (const band of [find, blue]) {
@@ -848,20 +851,19 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }
   }
   const unmark = () => {
-    clearMarks('data-page-selected', 'data-page-candidate', 'data-page-source');
-    for (const e of drawn('[data-page-end], [data-page-glow]')) e.remove();
+    clearMarks('data-page-selected', 'data-page-candidate', 'data-page-source', 'data-page-pick-edge');
+    for (const e of drawn('[data-page-end]')) e.remove();
     candidate = null;
   };
   /**
-   * During a pick, what it will change (the user: solid is where the keys are, marked is what changes):
-   * the selected node or subgraph glowing in place of its selection, and each edge that will move glows, a
-   * wide pale line under it, so its own dashes and arrowheads still read; in the reassign pick, the tick dashed at the
-   * end that moves. A collapsed box's glow is only on its own
-   * edges, the ones that move.
+   * During a pick, what it will change (the user: solid is where the keys are, and what changes is drawn thicker):
+   * the selected node or subgraph with its own outline thicker in place of its selection, and each edge that will move
+   * with its own line thicker, its dashes and colors kept; in the reassign pick, the tick dashed at the end that moves.
+   * A collapsed box's thick edges are only its own, the ones that move.
    */
   function markSource() {
-    clearMarks('data-page-source');
-    for (const e of drawn('[data-page-end], [data-page-glow]')) e.remove();
+    clearMarks('data-page-source', 'data-page-pick-edge');
+    for (const e of drawn('[data-page-end]')) e.remove();
     if (!picking || !selected) return;
     const sel = selected, which = picking;
     for (const e of elsOf(sel)) { e.removeAttribute('data-page-selected'); mark(e, 'data-page-source'); }
@@ -870,12 +872,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         .map((e) => e.svgId);
     for (const id of moving) {
       const path = edgeEls(id).find((x) => x.matches('path:not([data-page-only])'));
-      if (!path) continue;
-      const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      glow.setAttribute('d', path.getAttribute('d') ?? '');
-      glow.setAttribute('data-page-glow', '');
-      glow.setAttribute('data-page-only', '');   // the SVG export leaves it out
-      path.before(glow);
+      if (path) mark(path, 'data-page-pick-edge');
     }
     if (movingEnd()) markEnd();
   }

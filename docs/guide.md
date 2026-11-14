@@ -110,7 +110,7 @@ another click on it closes it.
   so it joins the same subgraph. (`class`, `style` and `click` lines don't count: they usually sit at the bottom.)
 - **Connect to…**, then a click on a node or a subgraph, adds `<a> --> <b>` at the end of the file, outside any
   subgraph, so neither node moves. Mermaid draws an edge to a subgraph to its box. A click on the node itself adds a
-  self-loop, `<a> --> <a>`. A click anywhere else, or Escape, cancels. While you pick, the node glows pale blue, and
+  self-loop, `<a> --> <a>`. A click anywhere else, or Escape, cancels. While you pick, the node is drawn with a thicker outline, and
   by keyboard the blue outline starts on the node itself (Enter at once makes a self-loop); the arrows move it by the same rules as the selection (Moving by
   keyboard, below), read out as it goes, and Enter connects to it; on an edge, Enter is refused. Or find it with /:
   Enter in the find puts the outline on the current match without connecting, and Enter again connects.
@@ -120,8 +120,8 @@ another click on it closes it.
   other one, and this node is deleted (its `style`, `class` and `click` lines with it), in one edit, one undo. For a
   duplicate, or a node being replaced: two "Charge card" nodes become one. An edge between the two goes; a self-loop
   becomes one of the other node; an edge that would come out the same as one the other node has (same ends, arrow
-  type and label) goes too, unless it has an edge id or a `linkStyle`. While you pick, the node glows pale blue and
-  its edges glow pale blue; by keyboard, the blue outline starts on the node and moves as in Connect to…, and Enter
+  type and label) goes too, unless it has an edge id or a `linkStyle`. While you pick, the node and
+  its edges are drawn thicker; by keyboard, the blue outline starts on the node and moves as in Connect to…, and Enter
   picks. A subgraph is refused. Grayed without an edge match. An edge written inside a subgraph moves out after the
   last edge when the other node is named outside it, as Reassign end… says.
 - **Edit node** opens the node panel on it: its label and its shape (below).
@@ -141,9 +141,9 @@ another click on it closes it.
   `style` and `click` lines come either way. One copy can be pasted many times, and still after the node it came from
   is changed or deleted. Grayed until a node or a subgraph has been copied in this tab; with a subgraph copied, they
   read **Paste subgraph** and **Paste subgraph without outside edges** (Copy subgraph, in the subgraph menu).
-- **Cut node** (Ctrl+X) makes the node and its edges glow pale blue, to move it: select where it goes (walk
+- **Cut node** (Ctrl+X) draws the node and its edges thicker, to move it: select where it goes (walk
   or click there; a click away keeps the cut), then Ctrl+V, whose items read **Move node here** and **Move node here
-  without edges**. The glow turns pale red where the paste would delete the edges: while Shift is held, while **Move
+  without edges**. The edges glow pale red where the paste would delete them: while Shift is held, while **Move
   node here without edges** has focus or the pointer in a menu, and with an edge selected. It goes in
   the block of the selected node, inside the selected subgraph (a collapsed one too, its box selected after), to the
   top level with nothing selected, or into the selected edge (below). It keeps its edges, or with Ctrl+Shift+V they
@@ -177,7 +177,7 @@ another click on it closes it.
   not change, and on one whose settings are written over several lines.
 - **Reassign end…** (C), then a click on a node or a subgraph, moves where the edge goes to there: `A --> B` becomes
   `A --> C`, with the same arrow, label and edge id. **Reassign start…** (Shift+C) moves where it comes from: `C --> B`.
-  The start and the end are the text's, whatever the arrowhead (`A <--> B`: start A, end B), and whatever the tick. While you pick, the edge glows pale blue and its tick is dashed at the end that moves; **Space**, or a
+  The start and the end are the text's, whatever the arrowhead (`A <--> B`: start A, end B), and whatever the tick. While you pick, the edge is drawn thicker and its tick is dashed at the end that moves; **Space**, or a
   click on the edge's line nearer the other end, moves that end instead. A click anywhere else, or Escape, cancels. By
   keyboard, the blue outline starts on the edge itself (Enter there changes nothing), and the arrows or a find (/)
   move it from the end that moves, as in Connect to…; Enter picks the node or subgraph it is on.
@@ -218,7 +218,7 @@ another click on it closes it.
   their outside end as it was, and **Paste subgraph without outside edges** (Ctrl+Shift+V) leaves those out. Every
   edge is written after the last edge, and one whose outside end is no longer in the file is left out. One copy can
   be pasted many times, also into the subgraph it came from. Grayed on an edge.
-- **Cut subgraph** (Ctrl+X) makes it glow pale blue, to move it with everything in it, its lines as written, as a node's
+- **Cut subgraph** (Ctrl+X) draws it with a thicker outline, to move it with everything in it, its lines as written, as a node's
   cut does: select where it goes, then Ctrl+V (**Move subgraph here**) puts it inside the selected subgraph, in the
   block of the selected node, or at the top level with nothing selected. Grayed into itself or a subgraph inside it,
   on an edge, and without edges ("A subgraph is moved with its edges."). A move that would make another subgraph draw
@@ -505,8 +505,7 @@ Up to the title, or Escape and a click. Escape clears the selection; Enter bring
 **Find** with / (or the footer's **Find**, the way in on a phone, which opens it and closes it again; or **Find…**
 in the empty-space menu): type, and every node, edge label,
 subgraph and title holding what you typed (ignoring case), on screen or off, is outlined in amber (for an edge label,
-its edge's line turns amber). The current match is outlined in a near-black amber (bright yellow with the Dark page
-theme), and blinks a few times as
+its edge's line turns amber). The current match is filled (an edge's line a near-black amber), and blinks a few times as
 it becomes current: as you type, the best one on screen, else the best; the
 count says how many are off screen ("2 of 5, 3 off screen"). Typing never moves the view. Tab and Shift+Tab move to
 the next match and the one before; the first of them with any match off screen also moves the view once so every match
@@ -521,7 +520,7 @@ what Shift+Tab, Tab and Escape do, for the mouse and touch; the find box keeps t
 In Connect to…, the blue outline starts on the node or subgraph the edge comes from (in Reassign end… and Reassign start…, on
 the edge itself; in Merge into…, on the node being merged) and moves by the same rules as the selection, through
 edges (Enter on one is refused), with I and O; Enter picks the outlined one. What the pick will change is marked
-meanwhile: the node or subgraph it starts from and the edges that will move glowing pale blue. / opens the find
+meanwhile: the node or subgraph it starts from and the edges that will move drawn thicker. / opens the find
 inside them, as it looks anywhere else: Enter there puts the outline on the current match (on the title it is refused,
 and the find stays) and Escape puts it back where it was; either way the pick goes on, for Enter to pick. A click on a
 node or subgraph picks it at once.
