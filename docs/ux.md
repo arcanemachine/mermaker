@@ -65,8 +65,9 @@ differences are kept few. Each one is listed here:
 The page theme: System, the default, follows the system's setting; Light and Dark override it (the user: auto alone
 "will eventually annoy me"), kept by the browser for every tab. Dark darkens the page's own parts and draws the diagram
 with Mermaid's dark themes, which merma asks for and never writes into the file. The marks keep their colors, chosen to
-read on either: the selection is an outline that keeps the item's own fill and text (the user: an edit's colors show
-after it), find's current match brings its own dark text with its fill, and a link's blue follows the node's fill. The label
+read on either: a node or a subgraph is marked by a band around it that keeps its own fill, border and text (the
+user: an edit's colors show after it), find's current match is a bright band there, and a link's blue follows the
+node's fill. The label
 box, the notices and the find bar (amber, as find's marks are) keep their light colors. "Page theme", not "Theme":
 Mermaid's theme is the file's to set.
 
@@ -143,8 +144,8 @@ Mermaid's theme is the file's to set.
   of one Reassign edge… on E that moved the end at the tick): "end" and "start" are the text's (`A --> B`: start A,
   end B). Their candidate starts on the edge itself, as Connect to…'s does on its item. Space, wherever the candidate
   is, or a click on the edge's line nearer the other end moves that one instead (the user; with several edges, later,
-  Space would swap only the one the candidate is on). The tick stays through the pick, dashed at the end that moves,
-  as what a pick will change is; the notice stays as it was. Outside a pick the tick only says which end's edges the
+  Space would swap only the one the candidate is on). The tick stays through the pick, dashed at the end that moves;
+  the notice stays as it was. Outside a pick the tick only says which end's edges the
   cross arrows step.
 - Merge into… (the user, after trying it as three moves): a node's edges move to another node (the end at it moves),
   and the node goes. The user expected moving a node's edges to swing their far ends (a redirect: "Start" now leads to
@@ -165,8 +166,9 @@ Mermaid's theme is the file's to set.
   its letter, as Ctrl+Shift+V does beside Ctrl+V; on a Mac ⌘⇧L works too, since the menus show Ctrl as ⌘ there.
 - In a pick, solid is where the keys are and marked is what will change (the user). The candidate, which the arrows
   move, Enter picks and which is selected after, is drawn as the selection is. What the pick will change is marked
-  instead: the node or subgraph it starts from outlined dashed, and each edge that will move or go glows, a wide pale
-  line under it (not dashed: a dashed edge reads as Mermaid's dotted arrow, and vanishes on one).
+  instead: the node or subgraph it starts from glows, a wide pale band around it, and so does each edge that will move
+  or go, a wide pale line under it. Not dashed: a dashed edge reads as Mermaid's dotted arrow, and vanishes on one,
+  and a dashed band breaks up on shapes drawn as several outlines (the user had asked for dashed).
 - The diagram comes first in Tab order, whatever the dock (the user): the diagram, the code panel's handle, the panel,
   its bar, the code, then the footer, and round to the diagram. The diagram has no focus ring (Accessibility), so the
   one stop without a ring is where focus starts and rests, and the cycle never seems to stall on it.
@@ -416,7 +418,7 @@ Mermaid's theme is the file's to set.
   with no text selected: Ctrl+C with a node or a subgraph selected, Ctrl+V with something copied or cut. Otherwise the browser's own copy and
   paste go on. Moving a node or a subgraph into or out of a subgraph is cut and paste, with no move items of its own
   (the user: V for a move reads as paste). Cut (Ctrl+X) is a pick spread over time: the node or subgraph is marked
-  dashed while you select where it goes, a cut node's edges glowing as a pick's moving edges do (the user), pale red
+  glowing while you select where it goes, a cut node's edges glowing as a pick's moving edges do (the user), pale red
   wherever the paste would delete them, so Ctrl+Shift+V's cost shows before it is pressed; a click away keeps it (clicking around is how you get there), and Escape
   drops it first, before the selection. Undoing the move cuts it again and redoing it drops the cut (the user), so a
   move put in the wrong place is undone and pasted again. A move that would change nothing is grayed with its

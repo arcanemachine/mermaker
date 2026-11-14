@@ -359,7 +359,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const sg = subgraphs(shownText).find((g) => g.id === id);
     return sg && !sg.written ? shownText.slice(sg.title.start, sg.title.end) : null;
   };
-  /** Cut node or Cut subgraph: the selection, marked dashed until a paste moves it or Escape drops it. It replaces any copy. */
+  /** Cut node or Cut subgraph: the selection, glowing until a paste moves it or Escape drops it. It replaces any copy. */
   function cutSelected() {
     const sel = selection();
     if (sel.kind !== 'node' && sel.kind !== 'subgraph') return;
@@ -374,7 +374,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     markCut();
   }
   /**
-   * Mark the cut node dashed, and nothing else. A cut whose node is gone from the file is dropped; one hidden in a
+   * Mark the cut node glowing, and nothing else. A cut whose node is gone from the file is dropped; one hidden in a
    * collapsed subgraph is kept, unmarked, and marked again once it is drawn.
    */
   function markCut() {
@@ -443,13 +443,13 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     };
     for (const id of nodes) {
       for (const g of elsOf({ kind: 'node', id })) {
-        for (const shape of g.querySelectorAll(':scope > :is(rect, polygon, circle, ellipse, path), :scope > g > :is(rect, polygon, circle, ellipse, path)')) {
+        for (const shape of g.querySelectorAll(':scope > :is(rect, polygon, circle, ellipse, path):not([data-page-only]), :scope > g > :is(rect, polygon, circle, ellipse, path):not([data-page-only])')) {
           if (!shape.closest('.label')) band(shape);
         }
       }
     }
     for (const k of tree.slice(1)) {
-      const box = clusterEl(/** @type {string} */ (sgs[k].id))?.querySelector(':scope > rect');
+      const box = clusterEl(/** @type {string} */ (sgs[k].id))?.querySelector(':scope > rect:not([data-page-only])');
       if (box) band(box);
     }
     const ids = new Set(gone.map((e) => e.svgId));
@@ -778,13 +778,16 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   // --- selection -----------------------------------------------------------------------------------------------
 
-  // The page's marks: the selection, Connect to…'s candidate, find's matches and its current one. Mermaid writes
-  // classDef, style and linkStyle colors inline with !important, which no stylesheet rule beats: while an item is
-  // marked, its inline colors lose the !important (the original kept in data-page-style), so the mark's colors show.
+  // The page's marks: the selection, Connect to…'s candidate, find's matches and its current one. A node or a subgraph
+  // is marked by bands under its shapes (drawBands), its own colors kept. An edge's line is recolored: Mermaid writes
+  // linkStyle colors inline with !important, which no stylesheet rule beats, so while an edge is marked its inline
+  // colors lose the !important (the original kept in data-page-style), so the mark's colors show.
   const MARKED = '[data-page-selected], [data-page-candidate], [data-page-source], [data-page-cut], [data-page-match], [data-page-current]';
-  /** Give `el` the mark `attr`, loosening its inline colors. */
+  /** Give `el` the mark `attr`, loosening an edge's inline colors. */
   const mark = (/** @type {Element} */ el, /** @type {string} */ attr) => {
     el.setAttribute(attr, '');
+    queueBands();
+    if (el.matches('g.node, g.cluster')) return;
     for (const e of [el, ...el.querySelectorAll('[style*="important"]')]) {
       const style = e.getAttribute('style');
       if (!style?.includes('important')) continue;
@@ -795,12 +798,55 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** Take the marks `attrs` off everything, giving Mermaid's colors back where no mark is left. */
   const clearMarks = (/** @type {string[]} */ ...attrs) => {
     for (const attr of attrs) for (const e of drawn(`[${attr}]`)) e.removeAttribute(attr);
+    queueBands();
     for (const e of drawn('[data-page-style]')) {
       if (e.closest(MARKED)) continue;
       e.setAttribute('style', e.getAttribute('data-page-style') ?? '');
       e.removeAttribute('data-page-style');
     }
   };
+  /** A node's or a subgraph's own shapes, which its bands copy: a box with no height (an empty subgraph) has none. */
+  const shapesOf = (/** @type {Element} */ g) => g.matches('g.cluster')
+    ? [...g.querySelectorAll(':scope > rect:not([data-page-only])')].filter((r) => Number(r.getAttribute('height')) > 0)
+    : [...g.querySelectorAll(':scope > :is(rect, polygon, circle, ellipse, path), :scope > g > :is(rect, polygon, circle, ellipse, path)')]
+      .filter((e) => !e.closest('.label') && !e.matches('.collapsed-indicator, [data-page-only]'));
+  // One blue band per item, the first of these it carries; a find band, wider, under it.
+  const BLUE = /** @type {const} */ (['candidate', 'cut', 'source', 'selected']);
+  let bandsQueued = false;
+  /** Redraw the bands once the marks in hand have settled, however many changed. */
+  const queueBands = () => {
+    if (bandsQueued) return;
+    bandsQueued = true;
+    queueMicrotask(() => { bandsQueued = false; drawBands(); });
+  };
+  /**
+   * Mark each marked node and subgraph by a band (the user: its own fill, border and text always show): a copy of its
+   * shapes with a wide stroke, under all of them, so only the outline of the whole shows, a compound shape's inner
+   * parts hidden under its fill. The SVG export leaves the bands out.
+   */
+  function drawBands() {
+    for (const e of drawn('[data-page-band]')) e.remove();
+    for (const g of drawn('g.node, g.cluster')) {
+      const blue = BLUE.find((m) => g.hasAttribute(`data-page-${m}`));
+      const find = g.hasAttribute('data-page-current') ? 'current' : g.hasAttribute('data-page-match') ? 'match' : null;
+      if (!blue && !find) continue;
+      const shapes = shapesOf(g);
+      for (const band of [find, blue]) {
+        if (!band) continue;
+        /** @type {Map<Node, Element>} */
+        const first = new Map();
+        for (const shape of shapes) if (shape.parentNode && !first.has(shape.parentNode)) first.set(shape.parentNode, shape);
+        for (const shape of shapes) {
+          const copy = /** @type {Element} */ (shape.cloneNode(false));
+          for (const a of ['id', 'class', 'style', 'marker-start', 'marker-end']) copy.removeAttribute(a);
+          copy.setAttribute('data-page-band', band);
+          if (band === find && blue) copy.setAttribute('data-page-under', '');
+          copy.setAttribute('data-page-only', '');
+          /** @type {Element} */ (first.get(/** @type {Node} */ (shape.parentNode))).before(copy);
+        }
+      }
+    }
+  }
   const unmark = () => {
     clearMarks('data-page-selected', 'data-page-candidate', 'data-page-source');
     for (const e of drawn('[data-page-end], [data-page-glow]')) e.remove();
@@ -808,7 +854,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   };
   /**
    * During a pick, what it will change (the user: solid is where the keys are, marked is what changes):
-   * the selected node or subgraph outlined dashed in place of its selection, and each edge that will move glows, a
+   * the selected node or subgraph glowing in place of its selection, and each edge that will move glows, a
    * wide pale line under it, so its own dashes and arrowheads still read; in the reassign pick, the tick dashed at the
    * end that moves. A collapsed box's glow is only on its own
    * edges, the ones that move.
@@ -935,7 +981,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     for (const [a, v] of Object.entries({ x1: ends[0].x, y1: ends[0].y, x2: ends[1].x, y2: ends[1].y })) el.setAttribute(a, String(v));
     el.setAttribute('stroke-width', String(width));
-    // In the reassign pick, dashed as what the pick will change is: four dashes across, at any size.
+    // In the reassign pick, dashed at the end that moves: four dashes across, at any size.
     if (movingEnd()) { el.setAttribute('stroke-dasharray', String((2 * h) / 7)); el.setAttribute('data-page-moving', ''); }
     el.setAttribute('data-page-end', '');
     el.setAttribute('data-page-only', '');
