@@ -59,6 +59,7 @@ export const GLOBAL_KEYS = {
   '/': ['find'],
   h: ['collapse-subgraph', 'expand-subgraph'],
   ' ': [],
+  'ctrl+shift+ ': [],
   '+': [],
   '=': [],
   '-': [],

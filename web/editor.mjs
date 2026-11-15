@@ -1579,6 +1579,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       ui.announce(`Reached from ${named(/** @type {Item} */ ({ kind, id: to.id }))}`);
       return true;
     },
+    // Ctrl+Shift+Space as Space, so the tick can be swapped while Ctrl+Shift+Arrows skip the nodes.
+    'ctrl+shift+ ': () => keys[' '](),
     '+': () => { viewer.zoom(ZOOM_STEP); return true; },
     // 0 is actual size, as a browser's Ctrl+0 is: the digits are the pickers' only.
     0: () => { viewer.zoomTo(1); return true; },

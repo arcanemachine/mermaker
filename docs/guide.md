@@ -430,6 +430,7 @@ here does just what it does in the selected item's menu:
 | / (wherever it is on your keyboard) | Find in the whole diagram (below) |
 | ` (the key left of 1, or whichever key types it) | Go to the code panel, opening it if it is closed; on the panel, back to the diagram (in any diagram) |
 | Space with an edge selected | Walk the other end's edges: the cross arrows step that end's fan (the tick moves there) |
+| Ctrl+Shift+Space (Option+Shift on a Mac) with an edge selected | As Space, so Ctrl+Shift can stay held while skipping nodes |
 | O | Select the subgraph the selection is in; from a top-level item, nothing |
 | I with a subgraph selected | Go into it: the item you last left it by, else its top-left one; a collapsed one is expanded first |
 | I with nothing selected | Select again what O or Escape let go of |

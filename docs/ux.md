@@ -378,7 +378,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
     jump across the screen. Across the edge, they step to the next edge, as the plain arrows do. A subgraph's box
     passed is not entered: its own edges count. Not Shift+Arrows, which multi-select keeps to extend a selection.
     From a node or a box they are plain arrows; with nothing selected, or in a pick, they do nothing, and in the label
-    box, find and the code panel they select words as usual. The opposite Ctrl+Shift arrow takes a jump back.
+    box, find and the code panel they select words as usual. The opposite Ctrl+Shift arrow takes a jump back. Ctrl+Shift+Space
+    swaps the tick as Space does, so Ctrl+Shift can stay held.
   - I goes back to the item you last left a subgraph by, while keys select; a click, a find or an edit forgets it (a
     click starts afresh). It is not the trail: one item per subgraph, not a list of steps. O from a top-level item, the
     title included, selects nothing (O is out a level, and above the top level is the diagram), and says so; it lets go
