@@ -212,6 +212,7 @@ const helpKeyRows = () => {
     const keys = [];
     if (text === 'Arrows with Ctrl or Shift') keys.push(...ARROW_KEYS, ...ARROW_KEYS.map((a) => 'ctrl+' + a), ...ARROW_KEYS.map((a) => 'shift+' + a));
     else if (text.startsWith('Ctrl+Arrows')) keys.push(...ARROW_KEYS.map((a) => 'ctrl+' + a));
+    else if (text.startsWith('Ctrl+Shift+Arrows')) keys.push(...ARROW_KEYS.map((a) => 'ctrl+shift+' + a));
     else {
       if (/\bArrows\b/.test(text)) keys.push(...ARROW_KEYS);
       for (const [run] of pc.matchAll(/<kbd>[^<]*<\/kbd>(?:\+<kbd>[^<]*<\/kbd>)*/g)) {

@@ -3,11 +3,12 @@
 // subgraph.
 // The editor measures the diagram and selects; it tells this when a selection was not made by a key, to forget both.
 
-import { FRESH, back, byPlace, enter, heading, moved, nearest, nest, otherEnd, skip, stepBack, walk } from './navigate.mjs';
+import { FRESH, back, byPlace, enter, heading, jump, moved, nearest, nest, otherEnd, skip, stepBack, walk } from './navigate.mjs';
 
 /** @typedef {import('./editor.mjs').Item} Item */
 /** @typedef {{ boxes: import('./navigate.mjs').Box[], edges: import('./navigate.mjs').Edge[] }} Graph */
 /** @typedef {import('./navigate.mjs').Cursor} Cursor */
+/** @typedef {import('./navigate.mjs').Mod} Mod */
 
 const TITLE = /** @type {Item} */ ({ kind: 'title', id: '' });
 /** A selected edge as a box for moving by place: its middle, in the innermost subgraph around it. */
@@ -36,17 +37,18 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
   const inside = new Map();
   const selection = () => /** @type {Item} */ (state.selected());
 
-  /** An arrow key, with Ctrl or not, on the selection or, in Connect to…, the candidate. */
-  function arrow(/** @type {string} */ key, /** @type {boolean} */ ctrl) {
+  /** An arrow key, with `mod`, on the selection or, in Connect to…, the candidate (Ctrl+Shift: never the candidate). */
+  function arrow(/** @type {string} */ key, /** @type {Mod} */ mod) {
     const graph = layout();
     if (state.picking()) {
+      if (mod === 'ctrl+shift') return;
       // The candidate moves by the same rules as the selection, with a trail of its own; it may rest on an edge, which
       // Enter refuses, but never on the title.
-      const went = step(graph, state.candidate() ?? selection(), candidateCursor, key, ctrl);
+      const went = step(graph, state.candidate() ?? selection(), candidateCursor, key, mod);
       if (went.next && went.next.kind !== 'title') { candidateCursor = went.cursor; markCandidate(went.next); }
       return;
     }
-    const went = step(graph, selection(), cursor, key, ctrl);
+    const went = step(graph, selection(), cursor, key, mod);
     if (went.next) {
       // The cursor first: the selection's mark shows the end it counts from.
       cursor = went.cursor;
@@ -55,17 +57,17 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
   }
 
   /**
-   * Where arrow `key` (with Ctrl or not) takes a cursor, the selection or Connect to…'s candidate, from `here`
+   * Where arrow `key` (with `mod`) takes a cursor, the selection or Connect to…'s candidate, from `here`
    * (navigate.mjs gives the rules): the item it reaches, or null, and the cursor after the move. Leaving a subgraph for
    * its own box sets where I goes back to there.
    * @param {Graph} graph
    * @param {Item} here
    * @param {Cursor} cursor
    * @param {string} key
-   * @param {boolean} ctrl
+   * @param {Mod} mod
    * @returns {{ next: Item | null, cursor: Cursor }}
    */
-  function step(graph, here, cursor, key, ctrl) {
+  function step(graph, here, cursor, key, mod) {
     if (here.kind === 'title') {
       // Down from the title goes to the nearest node or box below it.
       const t = titleEl()?.getBoundingClientRect();
@@ -75,10 +77,12 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
       return { next: hit ? { kind: hit.kind, id: hit.id } : null, cursor: FRESH };
     }
     const at = /** @type {import('./navigate.mjs').Target} */ (here);
+    // Ctrl+Shift skips the node between two edges; from a node or a box it is a plain arrow.
+    if (mod === 'ctrl+shift' && at.kind !== 'edge') mod = 'plain';
     // The opposite key takes back the latest move into here, before any rule: a box's crossing edge can head one way
     // where it leaves the node inside and another where it crosses the border, so walk() is no guide to which arrow
     // goes back along it.
-    const retraced = (ctrl ? null : stepBack(cursor, at, key)) ?? back(cursor, at, key, ctrl);
+    const retraced = (mod !== 'plain' ? null : stepBack(cursor, at, key)) ?? back(cursor, at, key, mod);
     if (retraced) return { next: retraced.to, cursor: retraced.cursor };
     /** The next thing that way by place, from `here` (an edge from its middle); none upwards, and nothing at all drawn above: the title. */
     const placed = () => {
@@ -100,7 +104,13 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
     let next = null;
     /** @type {import('./navigate.mjs').Fan | null} after a step across: the fan the edge reached counts as reached from */
     let fan = null;
-    if (ctrl) {
+    /** @type {import('./navigate.mjs').Fan | null} after a jump: the item passed, which the edge reached counts as reached from */
+    let passed = null;
+    if (mod === 'ctrl+shift') {
+      const went = jump(graph, at.id, key, cursor.came);
+      next = went?.to ?? null;
+      passed = went?.fan ?? null;
+    } else if (mod === 'ctrl') {
       // Ctrl skips the edge plain would select; with none that way, it goes by place.
       next = (state.edgesOk() ? skip(graph, at, key) : null) ?? placed();
     } else if (at.kind === 'edge') {
@@ -126,7 +136,7 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
     }
     if (next.kind === 'title') return { next, cursor: FRESH };
     const to = /** @type {import('./navigate.mjs').Target} */ (next);
-    return { next, cursor: moved(cursor, { from: at, to, key, ctrl }, fan) };
+    return { next, cursor: moved(cursor, { from: at, to, key, mod }, fan, passed) };
   }
 
   /**

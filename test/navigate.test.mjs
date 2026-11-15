@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FRESH, across, back, byPlace, countedEnd, enter, flow, heading, leaving, moved, nearest, nest, otherEnd, skip, stepBack, walk, within } from '../web/navigate.mjs';
+import { FRESH, across, back, byPlace, countedEnd, enter, flow, heading, jump, leaving, moved, nearest, nest, otherEnd, skip, stepBack, walk, within } from '../web/navigate.mjs';
 
 // A diagram as drawn (middles on screen), like the demo's:
 //
@@ -233,8 +233,8 @@ test("a self-loop belongs to its node's edges at its ends; on it, along goes bac
   // Back on the box from its own loop, which frames it: by the arrow, as if gone round it that way (the user), and that
   // arrow goes in; with no trail (the box clicked), the way its contents flow (none here: Down).
   const box = at('subgraph', 's'), loopEdge = at('edge', 's-s');
-  const round = (/** @type {string} */ key) => [{ from: box, to: loopEdge, key: 'ArrowDown', ctrl: false },
-    { from: loopEdge, to: box, key, ctrl: false }];
+  const round = (/** @type {string} */ key) => [{ from: box, to: loopEdge, key: 'ArrowDown', mod: 'plain' },
+    { from: loopEdge, to: box, key, mod: 'plain' }];
   assert.deepEqual(enter(round('ArrowUp'), sg, box, 'ArrowUp'), at('node', 'in'));
   assert.equal(enter(round('ArrowUp'), sg, box, 'ArrowDown'), null);
   assert.deepEqual(enter(round('ArrowDown'), sg, box, 'ArrowDown'), at('node', 'in'));
@@ -288,34 +288,34 @@ test('a loop-back that leaves both ends the same way: Up or Down goes to the end
 });
 
 test('back takes back the latest move into here, with its opposite key and the same modifier, and cuts the trail before it', () => {
-  const down = { from: at('node', 'wait'), to: at('edge', 'wait-paid'), key: 'ArrowDown', ctrl: false };
-  const onto = { from: at('edge', 'wait-paid'), to: at('node', 'paid'), key: 'ArrowDown', ctrl: false };
-  const away = { from: at('node', 'paid'), to: at('edge', 'paid-retry'), key: 'ArrowDown', ctrl: false };
+  const down = { from: at('node', 'wait'), to: at('edge', 'wait-paid'), key: 'ArrowDown', mod: 'plain' };
+  const onto = { from: at('edge', 'wait-paid'), to: at('node', 'paid'), key: 'ArrowDown', mod: 'plain' };
+  const away = { from: at('node', 'paid'), to: at('edge', 'paid-retry'), key: 'ArrowDown', mod: 'plain' };
   const cursor = { trail: [down, onto, away], came: null };
   // Found deeper than the last move: back to where it came from, the moves after it gone.
-  assert.deepEqual(back(cursor, at('edge', 'wait-paid'), 'ArrowUp', false),
+  assert.deepEqual(back(cursor, at('edge', 'wait-paid'), 'ArrowUp', 'plain'),
     { to: at('node', 'wait'), cursor: { trail: [], came: null } });
   // Back onto an edge: it counts as reached from the item just left, by this arrow.
-  assert.deepEqual(back({ trail: [down, onto], came: null }, at('node', 'paid'), 'ArrowUp', false),
+  assert.deepEqual(back({ trail: [down, onto], came: null }, at('node', 'paid'), 'ArrowUp', 'plain'),
     { to: at('edge', 'wait-paid'), cursor: { trail: [down], came: { id: 'paid', key: 'ArrowUp' } } });
-  assert.equal(back(cursor, at('edge', 'paid-retry'), 'ArrowUp', true), null);
-  assert.equal(back(cursor, at('edge', 'paid-retry'), 'ArrowLeft', false), null);
-  assert.equal(back(cursor, at('node', 'retry'), 'ArrowUp', false), null);
-  assert.equal(back(FRESH, at('node', 'paid'), 'ArrowUp', false), null);
+  assert.equal(back(cursor, at('edge', 'paid-retry'), 'ArrowUp', 'ctrl'), null);
+  assert.equal(back(cursor, at('edge', 'paid-retry'), 'ArrowLeft', 'plain'), null);
+  assert.equal(back(cursor, at('node', 'retry'), 'ArrowUp', 'plain'), null);
+  assert.equal(back(FRESH, at('node', 'paid'), 'ArrowUp', 'plain'), null);
   // Reached twice, the latest by another key: that one is how you got here, so the older is not retraced.
-  const again = { from: at('node', 'check'), to: at('node', 'paid'), key: 'ArrowRight', ctrl: false };
-  assert.equal(back({ trail: [down, onto, again], came: null }, at('node', 'paid'), 'ArrowUp', false), null);
+  const again = { from: at('node', 'check'), to: at('node', 'paid'), key: 'ArrowRight', mod: 'plain' };
+  assert.equal(back({ trail: [down, onto, again], came: null }, at('node', 'paid'), 'ArrowUp', 'plain'), null);
 });
 
 test('moved: a step across stays off the trail and counts from its fan; any other move goes on it', () => {
-  const onto = { from: at('node', 'paid'), to: at('edge', 'paid-retry'), key: 'ArrowDown', ctrl: false };
+  const onto = { from: at('node', 'paid'), to: at('edge', 'paid-retry'), key: 'ArrowDown', mod: 'plain' };
   const one = moved(FRESH, onto);
   assert.deepEqual(one, { trail: [onto], came: { id: 'paid', key: 'ArrowDown' } });
   const fan = { id: 'paid', key: 'ArrowDown' };
-  const across1 = { from: at('edge', 'paid-retry'), to: at('edge', 'paid-ship'), key: 'ArrowRight', ctrl: false };
+  const across1 = { from: at('edge', 'paid-retry'), to: at('edge', 'paid-ship'), key: 'ArrowRight', mod: 'plain' };
   assert.deepEqual(moved(one, across1, fan),
     { trail: [onto], came: fan, steps: [{ from: at('edge', 'paid-retry'), to: at('edge', 'paid-ship'), key: 'ArrowRight', came: one.came }] });
-  const off = { from: at('edge', 'paid-retry'), to: at('node', 'retry'), key: 'ArrowDown', ctrl: false };
+  const off = { from: at('edge', 'paid-retry'), to: at('node', 'retry'), key: 'ArrowDown', mod: 'plain' };
   assert.deepEqual(moved(one, off), { trail: [onto, off], came: null });
 });
 
@@ -328,7 +328,7 @@ function press(/** @type {{ kind: any, id: string }} */ from, /** @type {string[
   /** @type {import('../web/navigate.mjs').Cursor} */
   let cursor = FRESH;
   return keys.map((key) => {
-    const retraced = back(cursor, here, key, false);
+    const retraced = back(cursor, here, key, 'plain');
     if (retraced) {
       here = retraced.to;
       cursor = retraced.cursor;
@@ -336,7 +336,7 @@ function press(/** @type {{ kind: any, id: string }} */ from, /** @type {string[
     }
     const went = walk(g, here, key, here.kind === 'edge' ? cursor.came : null);
     if (!went) return null;
-    cursor = moved(cursor, { from: here, to: went.to, key, ctrl: false }, went.fan);
+    cursor = moved(cursor, { from: here, to: went.to, key, mod: 'plain' }, went.fan);
     here = went.to;
     return `${here.kind} ${here.id}`;
   });
@@ -446,7 +446,7 @@ test('the arrow that brought you to a box goes on in, to the item nearest the si
   const inner = nest([sub('ship', 100, 100, 200, 160), node('pack', 60, 50), node('tape', 160, 70), node('label', 60, 150)]);
   const g = { boxes: inner, edges: [edge('pack', 'label', [60, 65], 'D', [60, 135], 'U')] };
   const ship = at('subgraph', 'ship');
-  const by = (/** @type {string} */ key) => [{ from: at('node', 'far'), to: ship, key, ctrl: false }];
+  const by = (/** @type {string} */ key) => [{ from: at('node', 'far'), to: ship, key, mod: 'plain' }];
   // Each arrow in by the side it enters: from the top the leftmost, from the left the topmost; backwards from the
   // bottom (the rightmost) and from the right (the lowest).
   assert.deepEqual(enter(by('ArrowDown'), g, ship, 'ArrowDown'), at('node', 'pack'));
@@ -460,11 +460,11 @@ test('the arrow that brought you to a box goes on in, to the item nearest the si
   assert.deepEqual(enter([], g, ship, 'ArrowDown'), at('node', 'pack'));
   assert.equal(enter([], g, ship, 'ArrowRight'), null);
   // Only the move that ended here counts: a trail that ended elsewhere is no arrival.
-  assert.equal(enter([{ from: at('node', 'far'), to: at('node', 'label'), key: 'ArrowRight', ctrl: false }], g, ship, 'ArrowRight'), null);
+  assert.equal(enter([{ from: at('node', 'far'), to: at('node', 'label'), key: 'ArrowRight', mod: 'plain' }], g, ship, 'ArrowRight'), null);
   // Items along a side are what overlaps the nearest one: forwards from the top, backwards from the bottom.
   const level = nest([sub('row', 100, 100, 200, 100), node('r', 160, 82, 60, 34), node('l', 40, 80)]);
   const lg = { boxes: level, edges: [] };
-  const up = [{ from: at('node', 'under'), to: at('subgraph', 'row'), key: 'ArrowUp', ctrl: false }];
+  const up = [{ from: at('node', 'under'), to: at('subgraph', 'row'), key: 'ArrowUp', mod: 'plain' }];
   assert.deepEqual(enter([], lg, at('subgraph', 'row'), 'ArrowDown'), at('node', 'l'));
   // r's bottom is lower by a few pixels, but they are one row: the rightmost, not the lowest.
   assert.deepEqual(enter(up, lg, at('subgraph', 'row'), 'ArrowUp'), at('node', 'r'));
@@ -474,33 +474,33 @@ test('in, out and in again by the same arrow: going back out of a box keeps the 
   const inner = nest([node('top', 100, -60), sub('ship', 100, 100, 200, 160), node('pack', 60, 50), node('label', 60, 150)]);
   const g = { boxes: inner, edges: [edge('pack', 'label', [60, 65], 'D', [60, 135], 'U')] };
   const ship = at('subgraph', 'ship');
-  const intoBox = { from: at('node', 'top'), to: ship, key: 'ArrowDown', ctrl: false };
-  const intoPack = { from: ship, to: at('node', 'pack'), key: 'ArrowDown', ctrl: false };
-  const out = back({ trail: [intoBox, intoPack], came: null }, at('node', 'pack'), 'ArrowUp', false);
+  const intoBox = { from: at('node', 'top'), to: ship, key: 'ArrowDown', mod: 'plain' };
+  const intoPack = { from: ship, to: at('node', 'pack'), key: 'ArrowDown', mod: 'plain' };
+  const out = back({ trail: [intoBox, intoPack], came: null }, at('node', 'pack'), 'ArrowUp', 'plain');
   assert.deepEqual(out?.to, ship);
   assert.deepEqual(enter(out?.cursor.trail ?? [], g, ship, 'ArrowDown'), at('node', 'pack'));
   assert.equal(enter(out?.cursor.trail ?? [], g, ship, 'ArrowUp'), null);
   // Come out from inside, by place (Down from label to the box's border): Down walks on, only Up would go back in.
-  const leftBy = [{ from: at('node', 'label'), to: ship, key: 'ArrowDown', ctrl: false }];
+  const leftBy = [{ from: at('node', 'label'), to: ship, key: 'ArrowDown', mod: 'plain' }];
   assert.equal(enter(leftBy, g, ship, 'ArrowDown'), null);
   assert.deepEqual(enter(leftBy, g, ship, 'ArrowUp'), at('node', 'label'));
   // And from an edge whose middle lies inside it: one within it, or one crossing its border (Ctrl by place from its
   // middle reaches the border); a crossing edge with its middle outside comes in.
-  const fromEdge = [{ from: at('edge', 'pack-label'), to: ship, key: 'ArrowRight', ctrl: false }];
+  const fromEdge = [{ from: at('edge', 'pack-label'), to: ship, key: 'ArrowRight', mod: 'plain' }];
   assert.equal(enter(fromEdge, g, ship, 'ArrowRight'), null);
   const crossing = { ...edge('pack', 'far', [30, 50], 'L', [-100, 50], 'R'), mid: P(10, 50) };
   const outer = { ...edge('label', 'far', [30, 150], 'L', [-100, 150], 'R'), mid: P(-40, 150) };
   const cg = { boxes: inner, edges: [...g.edges, crossing, outer] };
-  const ctrlLeft = (/** @type {string} */ id) => [{ from: at('edge', id), to: ship, key: 'ArrowLeft', ctrl: true }];
+  const ctrlLeft = (/** @type {string} */ id) => [{ from: at('edge', id), to: ship, key: 'ArrowLeft', mod: 'ctrl' }];
   assert.equal(enter(ctrlLeft('pack-far'), cg, ship, 'ArrowLeft'), null);
   assert.deepEqual(enter(ctrlLeft('pack-far'), cg, ship, 'ArrowRight'), at('node', 'pack'));
-  assert.deepEqual(enter([{ from: at('edge', 'label-far'), to: ship, key: 'ArrowRight', ctrl: true }], cg, ship, 'ArrowRight'), at('node', 'pack'));
+  assert.deepEqual(enter([{ from: at('edge', 'label-far'), to: ship, key: 'ArrowRight', mod: 'ctrl' }], cg, ship, 'ArrowRight'), at('node', 'pack'));
   const above = { ...edge('pack', 'sky', [60, 35], 'U', [60, -100], 'D'), mid: P(60, 0) };
-  assert.deepEqual(enter([{ from: at('edge', 'pack-sky'), to: ship, key: 'ArrowDown', ctrl: true }],
+  assert.deepEqual(enter([{ from: at('edge', 'pack-sky'), to: ship, key: 'ArrowDown', mod: 'ctrl' }],
     { boxes: inner, edges: [above] }, ship, 'ArrowDown'), at('node', 'pack'));
   // Reached sideways, by place: Right goes in, and again after coming back out.
-  const side = { from: at('node', 'top'), to: ship, key: 'ArrowRight', ctrl: false };
-  const again = back({ trail: [side, { ...intoPack, key: 'ArrowRight' }], came: null }, at('node', 'pack'), 'ArrowLeft', false);
+  const side = { from: at('node', 'top'), to: ship, key: 'ArrowRight', mod: 'plain' };
+  const again = back({ trail: [side, { ...intoPack, key: 'ArrowRight' }], came: null }, at('node', 'pack'), 'ArrowLeft', 'plain');
   assert.deepEqual(enter(again?.cursor.trail ?? [], g, ship, 'ArrowRight'), at('node', 'pack'));
 });
 
@@ -584,10 +584,10 @@ function walkWith(/** @type {{ kind: any, id: string }} */ from, /** @type {stri
       const to = otherEnd(g, here.id, cursor.came);
       if (to) cursor = { trail: cursor.trail, came: to };
     } else {
-      const retraced = stepBack(cursor, here, key) ?? back(cursor, here, key, false);
+      const retraced = stepBack(cursor, here, key) ?? back(cursor, here, key, 'plain');
       const went = retraced ? null : walk(g, here, key, here.kind === 'edge' ? cursor.came : null);
       if (retraced) { here = retraced.to; cursor = retraced.cursor; } else if (went) {
-        cursor = moved(cursor, { from: here, to: went.to, key, ctrl: false }, went.fan);
+        cursor = moved(cursor, { from: here, to: went.to, key, mod: 'plain' }, went.fan);
         here = went.to;
       } else return null;
     }
@@ -609,10 +609,48 @@ test('steps across are forgotten after any other move, and after Space', () => {
   // Space on order-wait: the steps are gone, so Left steps by the rules, in the fan now counted (order's).
   assert.deepEqual(walkWith(at('node', 'wait'), ['ArrowUp', 'ArrowRight', 'ArrowLeft', 'Space', 'ArrowLeft']),
     ['order-wait from wait', 'order-note from order', 'order-wait from wait', 'order-wait from order', 'order-check from order']);
-  const cursor = moved(FRESH, { from: at('edge', 'order-check'), to: at('edge', 'order-wait'), key: 'ArrowRight', ctrl: false },
+  const cursor = moved(FRESH, { from: at('edge', 'order-check'), to: at('edge', 'order-wait'), key: 'ArrowRight', mod: 'plain' },
     { id: 'order', key: 'ArrowDown' });
-  const along = moved(cursor, { from: at('edge', 'order-wait'), to: at('node', 'wait'), key: 'ArrowDown', ctrl: false });
+  const along = moved(cursor, { from: at('edge', 'order-wait'), to: at('node', 'wait'), key: 'ArrowDown', mod: 'plain' });
   assert.equal(stepBack(along, at('edge', 'order-wait'), 'ArrowLeft'), null);
   assert.equal(stepBack(cursor, at('edge', 'order-wait'), 'ArrowRight'), null);
   assert.deepEqual(stepBack(cursor, at('edge', 'order-wait'), 'ArrowLeft')?.to, at('edge', 'order-check'));
+});
+
+test("Ctrl+Shift jumps past the edge's far end (the end it does not count from) to that end's first edge that way", () => {
+  const fromOrder = { id: 'order', key: 'ArrowDown' }, fromWait = { id: 'wait', key: 'ArrowUp' };
+  assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown', fromOrder), { to: at('edge', 'wait-paid'), fan: { id: 'wait', key: 'ArrowDown' } });
+  // Clicked: it counts from its source.
+  assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown')?.to, at('edge', 'wait-paid'));
+  // Counted from wait, the far end is order, whichever way the key points; the edge itself is passed over.
+  assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown', fromWait)?.to, at('edge', 'order-check'));
+  assert.equal(jump(graph, 'order-wait', 'ArrowUp', fromOrder), null);
+  // A dead end.
+  assert.equal(jump(graph, 'paid-retry', 'ArrowDown', { id: 'paid', key: 'ArrowDown' }), null);
+});
+
+test("Ctrl+Shift past a subgraph's box takes the box's own edges, never one inside it", () => {
+  const g = {
+    boxes: nest([node('top', 100, 0), sub('pay', 100, 100, 200, 100), node('paid', 100, 100), node('retry', 60, 130),
+      node('ship', 100, 300), node('log', 260, 220)]),
+    edges: [
+      edge('top', 'pay', [100, 15], 'D', [100, 50], 'U'),
+      edge('paid', 'retry', [90, 115], 'D', [60, 115], 'U'),
+      edge('paid', 'log', [110, 115], 'D', [260, 205], 'U'),
+      edge('paid', 'ship', [100, 115], 'D', [100, 285], 'U'),
+    ],
+  };
+  assert.deepEqual(go(g, at('node', 'paid'), 'ArrowDown'), at('edge', 'paid-retry'));
+  assert.deepEqual(jump(g, 'top-pay', 'ArrowDown', { id: 'top', key: 'ArrowDown' }),
+    { to: at('edge', 'paid-ship'), fan: { id: 'pay', key: 'ArrowDown' } });
+});
+
+test('the opposite Ctrl+Shift arrow takes a jump back, counting from where it did before; another modifier does not', () => {
+  const before = { trail: [], came: { id: 'order', key: 'ArrowDown' } };
+  const went = /** @type {NonNullable<ReturnType<typeof jump>>} */ (jump(graph, 'order-wait', 'ArrowDown', before.came));
+  const cursor = moved(before, { from: at('edge', 'order-wait'), to: went.to, key: 'ArrowDown', mod: 'ctrl+shift' }, null, went.fan);
+  assert.deepEqual(cursor.came, { id: 'wait', key: 'ArrowDown' });
+  assert.deepEqual(back(cursor, at('edge', 'wait-paid'), 'ArrowUp', 'ctrl+shift'),
+    { to: at('edge', 'order-wait'), cursor: { trail: [], came: { id: 'order', key: 'ArrowDown' } } });
+  assert.equal(back(cursor, at('edge', 'wait-paid'), 'ArrowUp', 'plain'), null);
 });

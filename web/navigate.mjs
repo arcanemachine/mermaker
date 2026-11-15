@@ -1,7 +1,8 @@
 // Where an arrow key moves the selection, from the diagram as drawn: no DOM (the editor measures and passes it in).
 // docs/ux.md gives the rules and why. The arrows are screen directions. Plain arrows walk edges: from a node or a
 // subgraph's box, an arrow selects an edge leaving it that way; on an edge, the arrow along it goes to that end and the
-// other two step to the edges beside it. Ctrl+Arrows skip the edge, or jump by place when there is none that way.
+// other two step to the edges beside it. Ctrl+Arrows skip the edge, or jump by place when there is none that way;
+// Ctrl+Shift+Arrows, on an edge, skip the node.
 
 /** @typedef {{ x: number, y: number }} Point */
 /**
@@ -247,6 +248,26 @@ export function skip(graph, at, key) {
 }
 
 /**
+ * Where Ctrl+Shift+Arrow `key` goes from edge `id`: past the item at its far end (the end it does not count as reached
+ * from, `came`; null: its source), to that item's first edge heading `key`, as selecting it and pressing `key` would.
+ * A subgraph's box there is not entered: its own edges count, those crossing its border included. The edge itself is
+ * passed over. Returns the edge reached and the fan it counts as reached from (the item passed), or null: a dead end.
+ * @param {{ boxes: Box[], edges: Edge[] }} graph boxes from nest()
+ * @param {string} id
+ * @param {string} key
+ * @param {Fan | null} [came]
+ * @returns {{ to: Target, fan: Fan } | null}
+ */
+export function jump(graph, id, key, came = null) {
+  const far = otherEnd(graph, id, came);
+  const box = far && graph.boxes.find((b) => b.id === far.id);
+  if (!far || !box) return null;
+  const inside = box.kind === 'subgraph' ? within(graph.boxes, box.id) : undefined;
+  const next = leaving(graph.edges, box.id, key, inside).find((e) => e !== id);
+  return next ? { to: { kind: 'edge', id: next }, fan: { id: box.id, key } } : null;
+}
+
+/**
  * The subgraph each box is drawn in: the smallest subgraph box holding its middle, other than itself.
  * @returns {Box[]} the boxes, each with `parent`
  */
@@ -404,10 +425,11 @@ export function enter(trail, graph, at, key) {
 }
 
 /**
- * A move made by an arrow key, kept so the opposite key can take it back: from `from` to `to` by `key`, with Ctrl or
- * not.
- * @typedef {{ from: Target, to: Target, key: string, ctrl: boolean }} Move
+ * A move made by an arrow key, kept so the opposite key can take it back: from `from` to `to` by `key`, with `mod`.
+ * A jump past a node (Ctrl+Shift) keeps `came`, the fan the edge it left counted from, to count from again on the way back.
+ * @typedef {{ from: Target, to: Target, key: string, mod: Mod, came?: Fan | null }} Move
  */
+/** An arrow's modifiers: none, Ctrl (Option on a Mac), or Ctrl+Shift. @typedef {'plain' | 'ctrl' | 'ctrl+shift'} Mod */
 /** A box whose fan an edge is stepped across in, and the way that fan heads. @typedef {{ id: string, key: string }} Fan */
 /** A step across, from edge `from` to edge `to` by `key`, and the fan `from` counted from before it. @typedef {{ from: Target, to: Target, key: string, came: Fan | null }} Step */
 /**
@@ -423,21 +445,23 @@ export const FRESH = /** @type {Cursor} */ (Object.freeze({ trail: [], came: nul
 
 /**
  * The opposite arrow takes back the latest move into `at` (the user: you go back the way you came, past any steps
- * across): when `key` is that move's opposite, with the same Ctrl, it goes to where that move came from, and the trail
+ * across): when `key` is that move's opposite, with the same modifiers, it goes to where that move came from, and the trail
  * is cut to before it; else null, and the rules decide. Back on an edge, it counts as reached from `at`, the item just
- * left: its fan is the one the cross arrows step (from Order log, Left steps Order log's edges).
+ * left: its fan is the one the cross arrows step (from Order log, Left steps Order log's edges); back from a jump, it
+ * counts from where it did before.
  * @param {Cursor} cursor
  * @param {Target} at
  * @param {string} key
- * @param {boolean} ctrl
+ * @param {Mod} mod
  * @returns {{ to: Target, cursor: Cursor } | null}
  */
-export function back({ trail }, at, key, ctrl) {
+export function back({ trail }, at, key, mod) {
   let i = trail.length - 1;
   while (i >= 0 && !(trail[i].to.kind === at.kind && trail[i].to.id === at.id)) i--;
   const m = trail[i];
-  if (!m || key !== OPPOSITE[m.key] || ctrl !== m.ctrl) return null;
-  return { to: m.from, cursor: { trail: trail.slice(0, i), came: m.from.kind === 'edge' ? { id: at.id, key } : null } };
+  if (!m || key !== OPPOSITE[m.key] || mod !== m.mod) return null;
+  const came = m.came !== undefined ? m.came : m.from.kind === 'edge' ? { id: at.id, key } : null;
+  return { to: m.from, cursor: { trail: trail.slice(0, i), came } };
 }
 
 /**
@@ -459,13 +483,16 @@ export function stepBack({ trail, steps = [] }, at, key) {
 /**
  * The cursor after `move`. A step across (`fan`, from walk()) stays off the trail, goes on the steps across, and the
  * edge reached counts as reached from that fan; any other move goes on the trail, clears the steps across, and an edge
- * it lands on counts as reached from where it came, by its arrow.
+ * it lands on counts as reached from where it came, by its arrow. A jump past a node (`passed`, from jump()) goes on the
+ * trail too, and the edge reached counts as reached from the item passed.
  * @param {Cursor} cursor
  * @param {Move} move
  * @param {Fan | null} [fan]
+ * @param {Fan | null} [passed]
  * @returns {Cursor}
  */
-export function moved({ trail, came, steps = [] }, move, fan = null) {
+export function moved({ trail, came, steps = [] }, move, fan = null, passed = null) {
   if (fan) return { trail, came: fan, steps: [...steps, { from: move.from, to: move.to, key: move.key, came }] };
+  if (passed) return { trail: [...trail, { ...move, came }], came: passed };
   return { trail: [...trail, move], came: move.to.kind === 'edge' ? { id: move.from.id, key: move.key } : null };
 }

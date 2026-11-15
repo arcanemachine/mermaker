@@ -1452,7 +1452,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'shift+f': () => edgeKey('fit-edge') || itemKey('fit-node') || itemKey('fit-subgraph'),
     ...Object.fromEntries(['Up', 'Down', 'Left', 'Right'].flatMap((d) => {
       const key = `Arrow${d}`, name = key.toLowerCase();
-      return [[name, () => arrow(key, 'plain')], [`ctrl+${name}`, () => arrow(key, 'ctrl')], [`shift+${name}`, () => arrow(key, 'shift')]];
+      return [[name, () => arrow(key, 'plain')], [`ctrl+${name}`, () => arrow(key, 'ctrl')], [`shift+${name}`, () => arrow(key, 'shift')],
+        [`ctrl+shift+${name}`, () => arrow(key, 'ctrl+shift')]];
     })),
     // O from a top-level item selects nothing, as Escape does, so Enter or I brings it back.
     o: () => {
@@ -1564,17 +1565,19 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /**
    * An arrow key, `how`: plain, with Ctrl (or Alt), or with Shift. With nothing selected it moves the diagram: plain a
    * tenth of the view, Ctrl half, Shift a fiftieth. With something selected (or in Connect to…, the candidate), plain
-   * walks the edges and Ctrl jumps by place (keys.mjs); Shift does nothing yet.
+   * walks the edges and Ctrl jumps by place (keys.mjs); Shift does nothing yet. Ctrl+Shift, on an edge, skips the node
+   * to the next edge; with nothing selected or in Connect to…, it does nothing.
    */
-  function arrow(/** @type {string} */ key, /** @type {'plain' | 'ctrl' | 'shift'} */ how) {
+  function arrow(/** @type {string} */ key, /** @type {'plain' | 'ctrl' | 'shift' | 'ctrl+shift'} */ how) {
     const [vx, vy] = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[key] ?? [0, 0];
     if (!selected) {
+      if (how === 'ctrl+shift') return false;
       const step = { plain: PAN_STEP, ctrl: PAN_BIG, shift: PAN_SMALL }[how];
       viewer.pan(vx * step, vy * step);
       return true;
     }
     if (how === 'shift') return false;
-    moves.arrow(key, how === 'ctrl');
+    moves.arrow(key, how);
     return true;
   }
   const moves = createKeys({

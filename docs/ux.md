@@ -365,6 +365,12 @@ Mermaid's theme is the file's to set.
     way by place. A far end inside subgraphs you are not in lands on the outermost of their boxes (the user: from
     Shipping, Ctrl+Up should be Payment, as from In stock, Ctrl+Down is), so Ctrl goes in a level a press; I and O go in
     and out.
+  - Ctrl+Shift+Arrows on an edge skip the node, as Ctrl skips the edge (the user): to the first edge that way at the
+    edge's far end, the end without the tick, as selecting that end and pressing the arrow would; the tick lands at the
+    end passed. A subgraph's box there is skipped past, not entered: its own edges count. Not Shift+Arrows, which
+    multi-select keeps to extend a selection. From a node or a box they are plain arrows; with nothing selected, or in
+    a pick, they do nothing, and in the label box, find and the code panel they select words as usual. The opposite
+    Ctrl+Shift arrow takes a jump back.
   - I goes back to the item you last left a subgraph by, while keys select; a click, a find or an edit forgets it (the
     user: keeping it across a click was backwards). It is not the trail: one item per subgraph, not a list of steps.
     O from a top-level item, the title included, selects nothing (the user: O is out a level, and above the top level
