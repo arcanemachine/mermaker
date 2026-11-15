@@ -161,11 +161,11 @@ another click on it closes it.
   children: every node it leads to, down the chain, except those a node that stays still leads to. An edge counts
   the way the file writes it, from its start to its end, whatever its arrow. An edge to a subgraph leads to no node
   in it. A subgraph the delete leaves empty goes too, with its edges; one that was already empty stays. Outside
-  menus it takes two presses: the first marks what would go pale red and says what it is ("Press the same key again
-  to delete "Print label", its 4 children and 7 edges."), and the same key again deletes it. Escape, a click, any
-  other key or a change to the diagram cancels; a held key's repeat never deletes. When nothing would go but the node
-  and its edges, the first press deletes it, as D does. In the menu it deletes at once, and while it has focus or the
-  pointer, what it would take is marked. One undo brings it all back.
+  menus it always takes two presses: the first marks what would go pale red, the node too, and says what goes ("Press
+  the same key again to delete this node, its 4 children and 7 edges.", or "…this node and 2 edges."), and the same
+  key again deletes it. Escape, a click, any other key or a change to the diagram cancels; a held key's repeat never
+  deletes. In the menu it deletes at once, and while it has focus or the pointer, what it would take is marked. One
+  undo brings it all back.
 
 ### Edge menu
 
@@ -200,7 +200,9 @@ another click on it closes it.
   pasted into an edge."). With a node cut, **Move node here without
   edges** moves it into the edge the same way: its own edges are deleted, and it goes into the subgraph the edge is written in. Grayed
   on one of the node's own edges.
-- **Delete edge** (D) removes it. Its nodes stay. The item you came from by the arrows is selected after it, else its
+- **Delete edge** (D) removes it. Its nodes stay. Shift+D, Shift+Delete or Shift+Backspace outside menus delete it too,
+  in two presses: the first marks it pale red and asks for the same key again ("Press the same key again to delete
+  this edge."). The item you came from by the arrows is selected after it, else its
   source node.
 
 ### Subgraph menu
@@ -255,8 +257,8 @@ another click on it closes it.
 - **Delete subgraph and contents** (Shift+D, or Shift+Delete or Shift+Backspace outside menus) takes it with
   everything Mermaid draws in it: each node, with its edges and settings as Delete node takes them, then each box.
   Outside menus it takes two presses, as Delete node and children does: the first marks what it would take pale red
-  (its nodes, boxes and edges) and asks for the same key again ("Press the same key again to delete "Payment", 4 nodes
-  and 7 edges."). An empty subgraph goes at the first press. In the menu it deletes at once, and while it has focus or
+  (the box, its nodes, boxes and edges; an empty subgraph's title) and asks for the same key again ("Press the same
+  key again to delete this subgraph, 4 nodes and 7 edges."). In the menu it deletes at once, and while it has focus or
   the pointer, what it would take is marked. Both work on a collapsed box too, and one undo brings it all back.
 
 ### Title menu
@@ -434,7 +436,7 @@ here does just what it does in the selected item's menu:
 | H with a subgraph selected | Collapse it, or expand it: this tab's view only, never the file |
 | Up from the top row, Down from the title | Select the diagram's title, and back to the nearest node below it |
 | D, Delete or Backspace | Delete the selected node or edge, or the selected subgraph alone (what it held stays) |
-| Shift+D, Shift+Delete or Shift+Backspace, twice | Delete the selected subgraph and its contents, or the selected node and its children; on an edge, as D (above) |
+| Shift+D, Shift+Delete or Shift+Backspace, twice | Delete the selected subgraph and its contents, the selected node and its children, or the selected edge (above) |
 | ? (wherever it is on your keyboard) | Open Help, or close it |
 | R or Shift+R with nothing selected | Rotate, or Flip, the diagram (this tab only) |
 | R or Shift+R with a subgraph selected | Rotate, or Flip, its inside (this tab only) |

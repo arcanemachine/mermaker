@@ -124,12 +124,13 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   plain form keeps (Ctrl+Shift+V a cut node's edges, Shift+D a subgraph's contents or a node's children), what would
   go glows pale red while that item is in focus or under the pointer in the menu, or after a first press that asks
   for a second. Holding Shift shows nothing: the glow would flash under every Shift key (Ctrl+Shift+Arrows, Shift+F).
-  Shift+D, Shift+Delete and Shift+Backspace outside menus take two presses: the first marks what would go
-  and says what it is in a notice; the same key again (any of the three) deletes it. Escape, a click, any other key
-  or a redraw cancels; a key's repeat never confirms, and pressing Shift never cancels. When the Shift form would
-  take no more than the plain one (a node with no children, an empty subgraph), the first press deletes. The menu
-  item deletes at once, since its focus already showed the cost. On an edge, Shift+D does what D does. What is hidden
-  in a collapsed box gets no mark; the notice and the announcement count it.
+  Shift+D, Shift+Delete and Shift+Backspace outside menus always take two presses, on a node, an edge or a subgraph,
+  whatever would go: the first marks all that would go pale red, the selected item too (its band wider than the
+  selection's, under it), and says what goes in a notice that names the item only as "this node", "this edge" or
+  "this subgraph", since the selection shows which; the same key again (any of the three) deletes it. Escape, a click,
+  any other key or a redraw cancels; a key's repeat never confirms, and pressing Shift never cancels. The menu item
+  deletes at once, since its focus already showed the cost. On an edge, the two presses delete the edge, as D does.
+  What is hidden in a collapsed box gets no mark; the notice and the announcement count it.
 - Deleting a subgraph, two ways: Delete subgraph (D, Delete, Backspace) takes the box alone, unwrapping
   it: its `subgraph`, own `direction` and `end` lines go, and so do the edges to the subgraph itself; what it held
   keeps its lines and is drawn where Mermaid then draws it (the block around it, or another block that also names a
@@ -173,7 +174,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   first and the pick after, so the candidate stays the one thing Enter picks.
 - Shift with an item's letter does its counterpart: the other way round, or the same thing further . Shift+C is Connect from…, C's edge the other way; Shift+R flips the diagram as R rotates it;
   Shift+F fits the selection, which F only centers; Shift+D deletes a subgraph with its contents, which D takes alone,
-  and a node with its children (on an edge, Shift+D does what D does, with no item of its own). A Shift key
+  and a node with its children (on an edge, Shift+D deletes the edge as D does, in two presses, with no item of its own). A Shift key
   exists only beside its plain letter in the same menu, shown as ⇧ and the letter, as the shape picker shows Shift with a digit, and is read from the Shift key held,
   never from the letter's case, so Caps Lock does not count. Ctrl+Shift+L (Show link) sits beside L,
   its letter, as Ctrl+Shift+V does beside Ctrl+V; on a Mac ⌘⇧L works too, since the menus show Ctrl as ⌘ there.

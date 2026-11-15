@@ -299,11 +299,16 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #stage g.node[data-page-link="light"] .label text { fill: var(--link); }
 #stage g.node[data-page-link="dark"] .label span { color: var(--link-on-dark); }
 #stage g.node[data-page-link="dark"] .label text { fill: var(--link-on-dark); }
-/* What Delete subgraph and contents would take, while Shift is held or its item has focus: a wide pale red band under
-   each node, box and edge (docs/ux.md, the Shift rule). */
+/* What a Shift delete would take, after its first press or while its menu item has focus: a wide pale red band
+   under each node, box and edge (docs/ux.md, the Shift rule). */
 #stage [data-page-doomed][data-page-only] { fill: none !important; stroke: var(--delete-faint) !important;
   stroke-width: 12px !important; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: none !important;
   filter: none !important; pointer-events: none; }
+/* The selected item's own, under its blue band and wider, so both show. */
+#stage [data-page-doomed="selected"][data-page-only] { stroke-width: 20px !important; }
+/* An empty subgraph has no box to band: its title is filled pale red (an outline would be clipped by the title's
+   foreignObject). */
+#stage g.cluster[data-page-doomed-box]:has(> rect[height="0"]) .cluster-label div { background: var(--delete-faint); }
 /* A cut node's edges glow pale red under their line where a paste would delete them (the Shift rule): a wide pale
    line, not a dash, which would read as a dotted edge. */
 #stage path[data-page-cut-glow="delete"][data-page-only] { fill: none; stroke: var(--delete-faint);

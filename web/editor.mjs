@@ -419,37 +419,52 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** @type {Item | null} the item a first Shift+D (or Shift+Delete, Shift+Backspace) armed: the same key again deletes */
   let armed = null;
-  /** The Shift delete on `sel`: Delete subgraph and contents, or Delete node and children. */
-  const shiftAction = (/** @type {Item} */ sel) => (sel.kind === 'subgraph' ? 'delete-subgraph-contents' : 'delete-node-children');
+  /** The menu item of the Shift delete on `sel`: Delete subgraph and contents, or Delete node and children; an edge has none. */
+  const shiftAction = (/** @type {Item} */ sel) => (sel.kind === 'subgraph' ? 'delete-subgraph-contents' : sel.kind === 'node' ? 'delete-node-children' : null);
   /**
-   * What the Shift delete takes from `sel` (contentsOf, childrenOf), and whether that is more than D takes (the item
-   * and its edges). Null on anything else.
+   * What the Shift delete takes besides `sel` itself (contentsOf, childrenOf): `nodes`, `boxes` (places in subgraphs())
+   * and `edges`, by their drawn ids. Null on the title.
+   * @returns {{ nodes: string[], boxes: number[], edges: { svgId: string }[] } | null}
    */
   function doomedBy(/** @type {Item} */ sel, sgs = subgraphs(shownText)) {
+    if (sel.kind === 'edge') return { nodes: [], boxes: [], edges: [{ svgId: sel.id }] };
     if (sel.kind === 'subgraph') {
       const c = contentsOf(shownText, sel.id, sgs);
-      return { ...c, boxes: c.tree.slice(1), more: c.nodes.length > 0 || c.tree.length > 1 };
+      return { nodes: c.nodes, boxes: c.tree.slice(1), edges: c.edges };
     }
     if (sel.kind !== 'node') return null;
     const c = childrenOf(shownText, sel.id, sgs);
-    return { ...c, nodes: c.nodes.slice(1), boxes: c.tree, more: c.nodes.length > 1 || c.tree.length > 0 };
+    return { nodes: c.nodes.slice(1), boxes: c.tree, edges: c.edges };
   }
   /**
    * What the Shift delete would take, pale red, before it happens (docs/ux.md, the Shift rule): once a first press has
-   * armed it, or while its menu item is focused or hovered, where it applies. The selected item is not marked, since
-   * it shows the selection: each node and box that would go gets a wide pale band under its shape, and each edge that
-   * would go glows.
+   * armed it, or while its menu item is focused or hovered, where it applies. Each node and box that would go gets a
+   * wide pale band under its shape, and each edge that would go glows. The selected item too, its band wider than the
+   * selection's and under it, so both show; an empty subgraph, which has no box, gets its title framed.
    */
   function glowDoomed() {
     for (const e of drawn('[data-page-doomed]')) e.remove();
-    if ((selected?.kind !== 'subgraph' && selected?.kind !== 'node') || picking) return;
+    for (const e of drawn('[data-page-doomed-box]')) e.removeAttribute('data-page-doomed-box');
+    if (!selected || selected.kind === 'title' || picking) return;
     const action = shiftAction(selected);
-    if (!(armed && same(armed, selected)) && menuFocus !== action) return;
-    const item = /** @type {import('./menu-items.mjs').MenuItem} */ (MENUS[isBox(selected) ? 'box' : selected.kind]
-      .find((i) => i.action === action));
-    if (!applies(item, menuState())) return;
+    if (!(armed && same(armed, selected)) && (!action || menuFocus !== action)) return;
+    const item = action ? MENUS[isBox(selected) ? 'box' : selected.kind].find((i) => i.action === action) : undefined;
+    if (item && !applies(item, menuState())) return;
     const sgs = subgraphs(shownText);
     const { nodes, boxes, edges: gone } = /** @type {NonNullable<ReturnType<typeof doomedBy>>} */ (doomedBy(selected, sgs));
+    for (const el of selected.kind === 'edge' ? [] : elsOf(selected)) {
+      const shapes = shapesOf(el);
+      if (!shapes.length) { el.setAttribute('data-page-doomed-box', ''); continue; }
+      for (const shape of shapes) {
+        const copy = /** @type {Element} */ (shape.cloneNode(false));
+        for (const a of ['id', 'class', 'style', 'marker-start', 'marker-end']) copy.removeAttribute(a);
+        copy.setAttribute('data-page-doomed', 'selected');
+        copy.setAttribute('data-page-only', '');
+        // Before the selection's band, which drawBands puts just before the shapes: the blue lies over the red.
+        const under = /** @type {Element | null} */ (shape.parentNode?.querySelector(':scope > [data-page-band]') ?? null);
+        (under ?? shape).before(copy);
+      }
+    }
     const band = (/** @type {Element} */ shape) => {
       const copy = /** @type {Element} */ (shape.cloneNode(false));
       copy.removeAttribute('id');
@@ -1302,23 +1317,25 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * Shift+D, Shift+Delete or Shift+Backspace: on a subgraph or a node whose Shift delete takes more than D
-   * would, the first press marks what would go pale red and asks for the same key again, which deletes it; a key
-   * repeat never does. Anything else deletes at once, as D.
+   * Shift+D, Shift+Delete or Shift+Backspace, always two presses: the first marks what would go pale red and asks for
+   * the same key again, which deletes it (a subgraph with its contents, a node with its children, an edge); a key
+   * repeat never does. The notice says "this node", never its label: the selection shows which.
    */
   function shiftDelete() {
     if (!selected || picking) return false;
     if (repeating) return true;
     const sel = selected;
-    if (armed && same(armed, sel)) { disarm(); deleteSelected(sel.kind === 'subgraph' ? 'contents' : 'children'); return true; }
-    const doomed = (sel.kind === 'node' || sel.kind === 'subgraph') && edgesOk && !locked ? doomedBy(sel) : null;
-    if (!doomed?.more) { deleteSelected(sel.kind === 'subgraph' ? 'contents' : sel.kind === 'node' ? 'children' : 'one'); return true; }
+    const how = sel.kind === 'subgraph' ? 'contents' : sel.kind === 'node' ? 'children' : 'one';
+    if (armed && same(armed, sel)) { disarm(); deleteSelected(how); return true; }
+    const doomed = edgesOk && !locked ? doomedBy(sel) : null;
+    if (!doomed) { deleteSelected(how); return true; }   // refused, saying why
     armed = sel;
     glowDoomed();
-    const what = sel.kind === 'subgraph' ? counted(doomed.nodes.length, 'node')
-      : doomed.nodes.length ? `its ${doomed.nodes.length} ${doomed.nodes.length === 1 ? 'child' : 'children'}` : null;
-    const parts = [what, counted(doomed.boxes.length, 'subgraph'), counted(doomed.edges.length, 'edge')];
-    ui.notice(`Press the same key again to delete ${named(sel)}${listed(parts)}.`, 'info');
+    const n = doomed.nodes.length;
+    const what = sel.kind === 'subgraph' ? counted(n, 'node') : n ? `its ${n} ${n === 1 ? 'child' : 'children'}` : null;
+    const parts = sel.kind === 'edge' ? [] : [what, counted(doomed.boxes.length, 'subgraph'), counted(doomed.edges.length, 'edge')];
+    const some = /** @type {string[]} */ (parts.filter(Boolean));
+    ui.notice(`Press the same key again to delete this ${sel.kind}${some.length === 1 ? ` and ${some[0]}` : listed(some)}.`, 'info');
     return true;
   }
   /** `n` things, or null for none. */
