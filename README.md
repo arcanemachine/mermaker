@@ -86,6 +86,7 @@ from the merma in use and offer to update it, keeping its Custom rules section.
 | `web/navigate.mjs` | Where an arrow key moves the selection: along edges, or to the next thing that way |
 | `web/find.mjs` | Find on /: which drawn items match, best first |
 | `web/blink.mjs` | When find's current match blinks |
+| `web/hold.mjs` | Escape held: when it clears everything at once |
 | `web/notices.mjs` | The notice's rows: a mode's notice, and what was refused in it under it |
 | `web/place.mjs` | Where a menu goes so that it stays on screen |
 | `web/frame.mjs` | The view that shows find's matches all at once |

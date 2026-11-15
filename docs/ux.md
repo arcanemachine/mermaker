@@ -211,6 +211,13 @@ Mermaid's theme is the file's to set.
   on that side even when the other has room again. Its submenu and the label box's picker do the same.
 - Menus open on click (right-click, long-press, or their key) and stay open until clicked away or Escape. Submenus open
   on click too, never on hover.
+- Escape held for three quarters of a second clears everything at once (the user: not a step at a time), as if Escape were pressed
+  until nothing was left: Help, a menu, the label box, find, a pick, a cut, the selection and the code panel. The
+  press does Escape's first step as always, and the rest follows once the time is up if Escape is still down; the key's
+  own repeats do nothing, so a hold never steps one level at a time. Letting go, another key, a click, or the page
+  losing focus before then cancels it. A changed draft still asks, once Escape is let go, since a question opened
+  under a held Escape would take its repeats as Cancel; if the first press itself asked, the hold does nothing more.
+  No chord was free: Ctrl+Esc, Shift+Esc and Alt+Esc belong to the system or the browser.
 - A drag is never a cancel (the user: it had bitten more than once). In the diagram, where a press can become a pan
   or a pinch, a press-and-drag, a pinch or the wheel closes nothing and cancels nothing: not a menu, Help, the label
   box, find or Connect to…; only a click (a release without a drag, as the viewer's slop decides) does. Outside the

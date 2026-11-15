@@ -353,9 +353,12 @@ export function createCodePanel(els, hooks) {
   save.addEventListener('click', saveEdit);
   let closing = false;   // Escape on the diagram is saving the draft to close the panel: a second asks nothing
   /** Drop the draft, asking first if it differs from where it started. Whether it was dropped (or there was none). */
+  let asked = 0;
+  /** The browser's confirm, counted: a held Escape does nothing after a press that asked (hold.mjs). */
+  const ask = (/** @type {string} */ question) => { asked++; return confirm(question); };
   function cancelEdit() {
     if (!editing) return true;
-    if (code.value !== editing.base.text && !confirm('Discard your changes to the code?')) return false;
+    if (code.value !== editing.base.text && !ask('Discard your changes to the code?')) return false;
     hooks.unlock();
     endEdit();
     return true;
@@ -369,7 +372,7 @@ export function createCodePanel(els, hooks) {
     if (!open) return false;
     if (closing) return true;
     if (editing && code.value !== editing.base.text) {
-      if (confirm('Save the code and close the panel? Cancel keeps editing.')) {
+      if (ask('Save the code and close the panel? Cancel keeps editing.')) {
         closing = true;
         saveEdit().then(() => { if (!editing) { setOpen(false); diagram.focus(); } }).finally(() => { closing = false; });
       } else {
@@ -427,6 +430,10 @@ export function createCodePanel(els, hooks) {
   return {
     /** Escape from the diagram, its last step: close the panel (the user: it offers to save a changed draft first). */
     escape: closePanel,
+    /** How many questions the panel has asked. */
+    questions: () => asked,
+    /** Whether closing would ask first: a draft with changes. */
+    asks: () => Boolean(editing && code.value !== editing.base.text),
     /**
      * Show a version of the file. The scroll stays where it was; a selection in the code is lost. While editing, the
      * draft stays, and the header says when the file has changed since.

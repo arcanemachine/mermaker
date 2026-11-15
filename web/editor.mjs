@@ -1506,6 +1506,16 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // only when it let go of something, so that otherwise the browser's own use of it goes ahead.
     escape: () => ESCAPE.some(([, step]) => step()),
   };
+  /**
+   * Escape held: everything Escape steps out of, at once, each step once and in order, but the code panel's, which the
+   * caller runs (its question waits for the key's release). The steps announce as each Escape does.
+   */
+  function escapeAll() {
+    closeMenus();
+    if (labelling) escapeLabelBox();
+    if (finding) closeFind(null, true);
+    for (const [name, step] of ESCAPE) if (name !== 'code panel') step();
+  }
   const VIEW_KEYS = ['f', 'shift+f', 'escape', '+', '=', '-', '0',
     ...['up', 'down', 'left', 'right'].flatMap((d) => [`arrow${d}`, `ctrl+arrow${d}`, `shift+arrow${d}`])];
   for (const k of Object.keys(GLOBAL_KEYS)) if (!keys[k]) throw new Error(`No handler for the key ${k}`);
@@ -2179,18 +2189,23 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   input.addEventListener('blur', (e) => {
     if (!inBox(/** @type {Node | null} */ (e.relatedTarget))) commit();
   });
-  input.addEventListener('keydown', (e) => {
+  /** Escape in the label box: what was typed is discarded, and an add being named is taken back. */
+  function escapeLabelBox() {
     const target = labelling;
+    if (naming && same(naming, target)) { cancelAdd(naming); return; }
+    closeLabelBox();
+    els.diagram.focus();
+    naming = null;
+    ui.hideNotice();   // a refused save's error is about the box, which is gone
+    if (target) select(target);
+  }
+  input.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.stopPropagation();
-      if (naming && same(naming, target)) { cancelAdd(naming); return; }
-      closeLabelBox();
-      els.diagram.focus();
-      naming = null;
-      ui.hideNotice();   // a refused save's error is about the box, which is gone
-      if (target) select(target);
+      escapeLabelBox();
       return;
     }
+    const target = labelling;
     // Down goes into the picker only from the last line, where it would not move the caret. The line is the text's:
     // the box widens to its text (sizeLabelBox), so a line never wraps.
     if (e.key === 'ArrowDown' && boxPicker && !input.value.slice(input.selectionEnd).includes('\n')) {
@@ -2500,6 +2515,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   return {
     save,
+    escapeAll,
     viewChanged: (/** @type {boolean} */ byUser) => {
       // What is on screen changed, so the count's "off screen" did; what matches, and its marks, did not.
       if (finding) {

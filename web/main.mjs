@@ -5,6 +5,7 @@ import { createEditor } from './editor.mjs';
 import { createMenu } from './menu.mjs';
 import { EXPORT_MENU, NO_SUBGRAPH_MATCH } from './menu-items.mjs';
 import { createSource } from './source.mjs';
+import { createHold } from './hold.mjs';
 import { createCodePanel } from './code-panel.mjs';
 import { drawnAs, prune, setView, viewText } from './collapse.mjs';
 import { baseDir, subgraphDir, turnText } from './turn.mjs';
@@ -681,6 +682,29 @@ function closeHelp() {
   helpOpener.focus({ preventScroll: true });
 }
 /** @type {HTMLElement} */ (help.querySelector('.help-close')).addEventListener('click', closeHelp);
+// Escape held clears everything at once (hold.mjs); registered first, so its repeats reach nothing else.
+const escapeHeld = createHold({
+  setTimer: (run, ms) => setTimeout(run, ms),
+  clearTimer: (t) => clearTimeout(/** @type {number} */ (t)),
+  questions: () => codePanel.questions(),
+  onHold: () => {
+    if (help.matches(':popover-open')) help.hidePopover();
+    editor?.escapeAll();
+    el('diagram').focus({ preventScroll: true });
+    if (codePanel.asks()) return () => codePanel.escape();
+    codePanel.escape();
+    return undefined;
+  },
+});
+const plainKey = (/** @type {KeyboardEvent} */ e) => !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !plainKey(e)) { escapeHeld.cancel(); return; }
+  if (escapeHeld.press(e.repeat)) { e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+document.addEventListener('keyup', (e) => { if (e.key === 'Escape') escapeHeld.release(); }, true);
+document.addEventListener('pointerdown', () => escapeHeld.cancel(), true);
+window.addEventListener('blur', () => escapeHeld.cancel());
+document.addEventListener('visibilitychange', () => { if (document.hidden) escapeHeld.cancel(); });
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || !help.matches(':popover-open')) return;
   e.preventDefault();

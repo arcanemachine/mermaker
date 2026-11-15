@@ -434,6 +434,7 @@ here does just what it does in the selected item's menu:
 | + (or =) and - | Zoom in and out, keeping the middle of the view where it is (in any diagram) |
 | 0 | Zoom to actual size, keeping the middle of the view where it is (in any diagram) |
 | Escape | Cancel Connect to…, or deselect (the arrows then move the diagram); Enter then selects it again. With nothing selected, hide the notice, then close the code panel (asking to save a changed draft first) |
+| Escape, held for three quarters of a second | Close everything at once: Help, a menu, the label box (discarding what was typed, as Escape does), find, Connect to… and the other picks, a cut, the selection (Enter brings it back) and the code panel. A changed draft asks first, once you let go of Escape |
 | Ctrl \| ⌘+C with a node or a subgraph selected | Copy node or Copy subgraph (on an edge, it says only a node or a subgraph can be copied) |
 | Ctrl \| ⌘+X with a node or a subgraph selected | Cut node or Cut subgraph: mark it, to move it with Ctrl+V (on an edge, it says only a node or a subgraph can be cut) |
 | Ctrl \| ⌘+V, or with Shift | Paste node, or Paste node without edges (with a subgraph copied: Paste subgraph, or without outside edges; with a node or a subgraph cut: move it here): into the selected edge, inside the selected subgraph, beside the selected node, or with nothing selected at the top level. With nothing copied, or text selected on the page, the browser's own copy and paste |
