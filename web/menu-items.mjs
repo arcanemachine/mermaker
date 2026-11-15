@@ -63,14 +63,14 @@ export const GLOBAL_KEYS = {
 };
 
 export const NO_EDGE_MATCH = "The drawn edges don't match the file's text (no edge match), so deleting could change the wrong "
-  + 'edge. Delete it in the file.';
+  + 'edge. Delete the edge in the file.';
 
 /** Why a subgraph cannot be collapsed or expanded: Mermaid's subgraphs are not the ones merma reads in the text. */
 export const NO_SUBGRAPH_MATCH = "merma can't match this diagram's subgraphs to its text, so they can't be collapsed or "
   + 'expanded here.';
 
 /** Why an edit does nothing while the code panel's draft holds the lock: the warning, and a grayed item's reason. */
-export const LOCKED = 'The code is being edited. Save or cancel it to edit the diagram.';
+export const LOCKED = 'The code is being edited. Save or cancel the code to edit the diagram.';
 
 /**
  * What a menu needs to know to gray its items.
@@ -124,12 +124,12 @@ export const whyNot = (/** @type {MenuItem} */ item, /** @type {MenuState} */ st
 
 /** Why an item that adds to a subgraph does nothing while it is collapsed: what it adds would be hidden. */
 /** Why an edge's animation cannot be turned off when its style, not its settings, animates it. */
-export const ANIMATED_BY_STYLE = 'A class or style in the file animates this edge. Change it in the code.';
+export const ANIMATED_BY_STYLE = 'A class or style in the file animates this edge. Change the class or style in the code.';
 /** Why a node cannot be inserted into an edge whose line is in a collapsed subgraph: the node would be hidden. */
-export const INSERT_COLLAPSED = 'This edge is inside a collapsed subgraph. Expand it first (H) to insert a node.';
-const EXPAND_FIRST = 'This subgraph is collapsed. Expand it first (H) to add to it.';
+export const INSERT_COLLAPSED = 'This edge is inside a collapsed subgraph. Expand the subgraph first (H) to insert a node.';
+const EXPAND_FIRST = 'This subgraph is collapsed. Expand the subgraph first (H).';
 /** Why a subgraph with no id in the file cannot be fitted as the part: the address names it by its id. */
-export const PART_UNNAMED = "This subgraph has no id in the file, so a link can't name it. Give it an id in the file first.";
+export const PART_UNNAMED = "This subgraph has no id in the file, so a link can't name the subgraph. Give the subgraph an id in the file first.";
 /** Open link and Open link in new tab: grayed with the reason a node's link is not followed, its address the title. */
 const linkItem = {
   applies: (/** @type {MenuState} */ s) => Boolean(s.link && !('why' in s.link)),

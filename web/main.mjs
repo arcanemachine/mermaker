@@ -475,7 +475,7 @@ function followAddress() {
   }
   if (editor && !editor.idle()) {
     // A save is over in a moment; a code draft can take minutes, so the page says why it has not followed yet.
-    if (!followWaiting && editor.codeLocked()) ui.notice('The code is being edited. The diagram changes when it is saved or canceled.', 'info');
+    if (!followWaiting && editor.codeLocked()) ui.notice('The code is being edited. The diagram changes when the code is saved or canceled.', 'info');
     followWaiting = true;
     followTimer = setTimeout(followAddress, 500);
     return;

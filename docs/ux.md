@@ -518,6 +518,9 @@ Mermaid's theme is the file's to set.
   addressed to the reader.
 - A message is made of full sentences, as a person would say them (the user): it names what it is about and says
   what happened, rather than a clipped label or a verb with nothing in front of it.
+- A message names its subject by its kind or its label, never "it" (the user: "This node is already in this
+  subgraph.", not "It is already in this subgraph."). A message is read on its own, and what you just did is not on
+  the screen to point back to. `test/messages.test.mjs` holds the page's and the server's text to this rule.
 - One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash (the user). Text
   merma did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
 - Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally (the

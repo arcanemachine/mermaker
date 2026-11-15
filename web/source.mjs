@@ -69,7 +69,7 @@ export function createSource(file, { onText, onError, onBuild = () => {} }) {
         text = null;
         version = null;
         queueMicrotask(poll);
-        return { ok: false, conflict: true, message: 'The file changed since this page last read it.' };
+        return { ok: false, conflict: true, message: 'The file changed since this page last read the file.' };
       }
       if (!res.ok) return { ok: false, message: await res.text() };
       version = res.headers.get('ETag');

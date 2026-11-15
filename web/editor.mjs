@@ -258,7 +258,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   const input = /** @type {HTMLTextAreaElement} */ (els.labelBox);
 
   /** What a press says while another edit is still saving. */
-  const BUSY = 'Another edit is still saving. Try again once it has saved.';
+  const BUSY = 'Another edit is still saving. Try again once that edit has saved.';
   /** The start of what a refused save says; the reason follows, as a sentence of its own. */
   const NOT_SAVED = 'Your change was not saved. ';
   /** Say why something was refused. Under the lock its notice already says why, so the refusal is shorter. */
@@ -722,7 +722,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const node = selection();
     const now = writtenLink(shownText, node.id);
     const current = now && now !== 'script' ? now.url : null;
-    const change = linkEdit(current, window.prompt(`Edit the link of ${named(node)}. Leave it empty to remove the link.`, current ?? ''));
+    const change = linkEdit(current, window.prompt(`Edit the link of ${named(node)}. Leave the box empty to remove the link.`, current ?? ''));
     if (!change) return;
     edit((text) => ({ text: setLink(text, node.id, change.link) }), {
       after: () => ({ item: node }),
@@ -745,7 +745,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       return "A subgraph can't be moved into itself.";
     }
     if (blockAround(item) !== to) return null;
-    return to === null ? 'It is already at the top level.' : 'It is already in this subgraph.';
+    return to === null ? `This ${cut.kind} is already at the top level.` : `This ${cut.kind} is already in this subgraph.`;
   }
 
   /**
@@ -774,9 +774,9 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** Why the selected subgraph cannot be turned on its own, or null when it can (turn.mjs turnable). */
   function turnWhy(/** @type {string} */ id) {
-    if (isBox({ kind: 'subgraph', id })) return 'This subgraph is collapsed. Expand it first (H) to turn it.';
+    if (isBox({ kind: 'subgraph', id })) return 'This subgraph is collapsed. Expand the subgraph first (H).';
     if (!collapse.subs.some((s) => s.id === id)) return NO_SUBGRAPH_MATCH;
-    return turnable(id, collapse.subs, edges(shownText)) ? null : "Mermaid ignores this subgraph's direction, because a node inside it links outside it.";
+    return turnable(id, collapse.subs, edges(shownText)) ? null : "Mermaid ignores this subgraph's direction, because a node inside the subgraph links outside the subgraph.";
   }
 
   // --- selection -----------------------------------------------------------------------------------------------
@@ -1263,7 +1263,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   function editDrawn(change, options = {}) {
     const drawnFrom = shownText;
     return edit((text) => {
-      if (text !== drawnFrom) throw new Error('The diagram changed. Select it again.');
+      if (text !== drawnFrom) throw new Error('The diagram changed. Select the item again.');
       return change(text);
     }, options);
   }
@@ -1276,7 +1276,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   function deleteSelected(contents = false) {
     const sel = selected;
     if (!sel || refuseLocked()) return;
-    if (sel.kind === 'title') { ui.notice("Removing the title isn't supported. Edit it in the file.", 'warning'); return; }
+    if (sel.kind === 'title') { ui.notice("Removing the title isn't supported. Edit the title in the file.", 'warning'); return; }
     if (!edgesOk) { ui.notice(NO_EDGE_MATCH, 'warning'); return; }
     // Named before the edit: once deleted, the node is no longer drawn.
     const name = sel.kind !== 'edge' && named(sel);
@@ -2226,7 +2226,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       ui.hideNotice();
       const base = source.snapshot();
       if (base.text !== added.entry.after) {
-        ui.notice(`The ${what} was kept, because the file has changed since it was added.`, 'warning');
+        ui.notice(`The ${what} was kept, because the file has changed since the ${what} was added.`, 'warning');
         select(added);
         return;
       }
@@ -2486,7 +2486,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     } catch (e) {
       const error = e.message || String(e);
       if (limitOf(error) === 'edges') ui.notice(limitSentence('edges', limits, true), 'error');
-      else ui.notice((says.invalid ?? 'Your change was not saved, because it would make the diagram invalid.') + '\n' + error, 'error');
+      else ui.notice((says.invalid ?? 'Your change was not saved, because the change would make the diagram invalid.') + '\n' + error, 'error');
       return false;
     }
     const saved = await source.save(text, base);
@@ -2667,8 +2667,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       let ok = false;
       await exclusively(async () => {
         if (!(await save(text, base.version, {
-          invalid: 'The code was not saved, because it is not valid Mermaid.',
-          conflict: 'The code was not saved, because the file changed after you pressed Edit. Cancel shows the file as it is now.',
+          invalid: 'The code was not saved, because the code is not valid Mermaid.',
+          conflict: 'The code was not saved, because the file changed after you pressed Edit. Cancel shows the current file.',
         }))) return;
         ok = true;
         history.record(base.text, text, null);
@@ -2702,7 +2702,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     /** Why another file cannot be opened now, or null: it would lose what is under way here. */
     switchRefused() {
       if (busy) return BUSY;
-      if (locked) return 'The code is being edited. Save or cancel it to open another diagram.';
+      if (locked) return 'The code is being edited. Save or cancel the code to open another diagram.';
       if (labelling || picking) return 'Finish editing the diagram first.';
       return null;
     },

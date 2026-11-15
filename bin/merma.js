@@ -42,7 +42,7 @@ else {
 function skill() {
   process.stdout.write(stamped());
   if (process.stdout.isTTY) {
-    console.error('\nSave it as merma/SKILL.md in the folder your agent reads skills from:\nmerma skill > <skills folder>/merma/SKILL.md');
+    console.error('\nSave the skill as merma/SKILL.md in the folder your agent reads skills from:\nmerma skill > <skills folder>/merma/SKILL.md');
   }
 }
 

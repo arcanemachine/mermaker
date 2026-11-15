@@ -2,7 +2,7 @@
 
 export const NO_LINK = 'No link on this node.';
 /** A callback, or a `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
-export const SCRIPT_LINK = 'This link runs a script; merma does not run it.';
+export const SCRIPT_LINK = 'This link runs a script. merma does not run scripts.';
 export const NOT_MMD = 'merma opens only .mmd files from a link to a path.';
 
 /**

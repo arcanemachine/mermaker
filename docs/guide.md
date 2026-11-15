@@ -152,7 +152,7 @@ another click on it closes it.
   lines change. To move it out of the subgraph it is in, press O until the subgraph around that one is selected (or
   nothing, for the top level), then Ctrl+V. One edit, one undo; the node stays selected.
   Undo leaves the node cut again, to move it somewhere else; Redo moves it and drops the cut.
-  Grayed where it already is ("It is already in this subgraph."). Escape drops the cut, before it lets go of the
+  Grayed where it already is ("This node is already in this subgraph."). Escape drops the cut, before it lets go of the
   selection. A cut and a copy replace each other: there is one clipboard. Nothing in the file changes until the move.
 - **Delete node** (D) removes the node from every statement, with its edges, its `style` and `click` lines and its name in
   `class` lines. Grayed without an edge match. Reached by the arrows, the item you came from is selected after it
@@ -425,7 +425,7 @@ here does just what it does in the selected item's menu:
 | R or Shift+R with a subgraph selected | Rotate, or Flip, its inside (this tab only) |
 | . (or the menu key, or Shift+F10) | Open the selection's menu; with nothing selected, the empty-space menu |
 | F | Fit the whole diagram to the window (in any diagram, not only flowcharts), leaving a part; with an item selected, center it instead (the title fits) |
-| Shift+F with a node, an edge or a subgraph selected | Fit it to the window: Fit to node, Fit to edge, or Fit to subgraph (the part) |
+| Shift+F with a node, an edge or a subgraph selected | Fit the selection to the window: Fit to node, Fit to edge, or Fit to subgraph (the part) |
 | Arrows with nothing selected | Move the diagram a tenth of the view; with Ctrl (Option on a Mac) half of it, with Shift a fiftieth (in any diagram) |
 | + (or =) and - | Zoom in and out, keeping the middle of the view where it is (in any diagram) |
 | 0 | Zoom to actual size, keeping the middle of the view where it is (in any diagram) |

@@ -323,7 +323,7 @@ test('with a node or a subgraph cut, the paste items read Move … here, gray by
       // On an edge a node's move leaves its own edges behind, deleted, and says so.
       assert.equal(label(item, base), menu === 'edge' && kind === 'node' ? 'Move node here without edges' : `Move ${kind} here`, menu);
       assert.equal(applies(item, base), true, menu);
-      assert.equal(whyNot(item, { ...base, cutWhy: 'It is already in this subgraph.' }), 'It is already in this subgraph.', menu);
+      assert.equal(whyNot(item, { ...base, cutWhy: 'This node is already in this subgraph.' }), 'This node is already in this subgraph.', menu);
     }
   }
   const edge = MENUS.edge.find((i) => i.action === 'paste-node');

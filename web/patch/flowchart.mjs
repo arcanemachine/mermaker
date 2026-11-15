@@ -126,7 +126,7 @@ export function setTitle(/** @type {string} */ text, /** @type {string} */ title
   const k = ls.findIndex((l, i) => i > 0 && i < end && /^title:/.test(l));
   if (k < 0) throw new Error('This diagram has no title in its frontmatter.');
   const m = /^title:[ \t]*(.*?)(\r?\n)?$/.exec(ls[k]);
-  if (!m || /^[|>]/.test(m[1])) throw new Error('This title is written over several lines. Edit it in the file.');
+  if (!m || /^[|>]/.test(m[1])) throw new Error('This title is written over several lines. Edit the title in the file.');
   // Plain when it cannot be read as anything else: no leading or trailing space, no quote, indicator or comment, and
   // not a number, a boolean or null (a null title is not drawn at all).
   const plain = /^[^\s'"#|>&*!%@`{}[\],?:-][^#]*$/.test(title) && !/:\s|:$|\s$/.test(title)
@@ -414,7 +414,7 @@ function endpoint(/** @type {string} */ text, /** @type {string} */ id) {
 export function subgraphRefusal(/** @type {string} */ text, /** @type {string} */ id) {
   const sg = subgraphBlock(text, id);
   if (!sg || sg.written || !mentions(text, id).length) return null;
-  return `This subgraph has no id in the file, and lines there name it ${id}. Give it an id in the file first.`;
+  return `This subgraph has no id in the file, and lines there name the subgraph ${id}. Give the subgraph an id in the file first.`;
 }
 
 /** Give id-less subgraph `sg` an id of its own (`subgraph "A b"` → `subgraph s1 ["A b"]`), with `title` if given. */
@@ -492,7 +492,7 @@ export function relabel(/** @type {string} */ text, /** @type {string} */ id, /*
   }
 
   const bare = found.find(({ line }) => !NOT_A_STATEMENT.test(ls[line]));
-  if (!bare) throw new Error(`Node ${id} appears only in style or class lines, so there is no place to label it.`);
+  if (!bare) throw new Error(`Node ${id} appears only in style or class lines, so there is no place to write a label.`);
   const s = ls[bare.line];
   const at = bare.col + id.length;
   ls[bare.line] = s.slice(0, at) + `[${quoted}]` + s.slice(at);
@@ -585,7 +585,7 @@ export function setShape(/** @type {string} */ text, /** @type {string} */ id, /
     }
     // These edits read `@{ … }` as ending at its first `}`, quoted or not; and Mermaid 12.2.0 draws a Markdown string
     // in `label:` as plain text, backticks and all.
-    if (label.includes('}')) throw new Error('The node\'s label has a } in it, which a shape with no brackets cannot hold here.');
+    if (label.includes('}')) throw new Error('The node\'s label has a }, which a shape with no brackets cannot hold here.');
     if (/^"`/.test(label.trim())) throw new Error('The node\'s label is Markdown, which Mermaid does not draw in a shape with no brackets.');
     // An unquoted label is quoted as written, entity codes and markup kept; only a `"` (valid in `[/a"b/]`) is coded.
     const quoted = /^".*"$/s.test(label.trim()) ? label.trim() : `"${label.trim().replaceAll('"', '#quot;')}"`;
@@ -594,7 +594,7 @@ export function setShape(/** @type {string} */ text, /** @type {string} */ id, /
     return { text: ls.join('') };
   }
   const bare = mentions(text, id).find(({ line }) => !NOT_A_STATEMENT.test(ls[line]));
-  if (!bare) throw new Error(`Node ${id} appears only in style or class lines, so there is no place to give it a shape.`);
+  if (!bare) throw new Error(`Node ${id} appears only in style or class lines, so there is no place to write a shape.`);
   const s = ls[bare.line];
   let after = bare.col + id.length;
   if (!to) after += CLASS_AT.exec(s.slice(after))?.[0].length ?? 0;
@@ -1096,7 +1096,7 @@ export function animationRefusal(/** @type {string} */ text, /** @type {string} 
   const { e, s } = locate(text, svgId);
   const userId = e.userId && e.svgId === e.userId ? e.userId : null;
   // Another edge has the id written on its connector: an earlier one, or one drawn from the same `&` group.
-  if ((e.userId || s.links[e.step].userId) && !userId) return "This edge shares its id with another edge. Give it an id of its own in the file first.";
+  if ((e.userId || s.links[e.step].userId) && !userId) return "This edge shares its id with another edge. Give this edge an id of its own in the file first.";
   if (userId && new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRe(userId)}@\\{[^}]*$`, 'mu').test(text)) {
     return "This edge's settings are written over several lines. Change them in the code.";
   }
@@ -1345,7 +1345,7 @@ function checkBlocks(/** @type {string} */ text, /** @type {string} */ out, /** 
     const want = n === moved ? to : blockKey(text, blockOf(text, n, before));
     if (blockKey(out, blockOf(out, n, after)) !== want) {
       if (n === moved) throw new Error('This edit could not be made safely, so nothing was changed.');
-      throw new Error(`Moving it there would move ${name(n)} as well. Move ${name(n)} first.`);
+      throw new Error(`This move would move ${name(n)} as well. Move ${name(n)} first.`);
     }
   }
 }
@@ -1387,7 +1387,7 @@ export function moveNode(/** @type {string} */ text, /** @type {string} */ id, /
   const starts = new Set(alone.map((st) => st.start));
   const left = statements(text).find((st) => !st.keyword && !starts.has(st.start) && st.groups.flat().some((r) => r.id === id)
     && givingUp(text, st.line));
-  if (left) throw new Error(`Line ${left.line + 1} is not one this editor can change. Edit it in the file.`);
+  if (left) throw new Error(`Line ${left.line + 1} is not one this editor can change. Edit the line in the file.`);
   const carried = alone.map((st) => text.slice(st.start, st.end)).find((t) => t.trim() !== id) ?? id;
   text = apply(text, alone.map((st) => ({ s: st, parts: [] })));
   if (target) {
@@ -1952,7 +1952,7 @@ function transform(text, { at = -1, pairs = new Map(), gone = null, removed = []
   const changes = [];
   const touched = all.filter((s) => s.start === at || (gone && !s.keyword && s.groups.flat().some((r) => r.id === gone)));
   for (const s of touched) {
-    if (!s.complete) throw new Error(`Line ${s.line + 1} is not one this editor can change. Edit it in the file.`);
+    if (!s.complete) throw new Error(`Line ${s.line + 1} is not one this editor can change. Edit the line in the file.`);
   }
 
   // A node left out of a rewritten statement is kept as a bare statement if dropping it would lose it, or lose its

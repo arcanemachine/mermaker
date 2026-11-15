@@ -96,7 +96,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
     if (!files.allowed(f)) return send(res, 403, notServed(files, f));
     const base = req.headers['if-match'];
-    if (!base) return send(res, 428, 'The edit must say in If-Match which version (ETag) it was based on.');
+    if (!base) return send(res, 428, 'The edit must say in If-Match which version (ETag) the edit was based on.');
 
     const chunks = [];
     let size = 0;
@@ -115,7 +115,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     const result = files.writeIfVersion(f, base, text);
     if (result === 'missing') return send(res, 404, `There is no file at ${f}.`);
     if (result === 'conflict') {
-      return send(res, 409, 'The file changed since the page read it. Reload and edit again.', 'text/plain',
+      return send(res, 409, 'The file changed since the page last read the file. Reload and edit again.', 'text/plain',
         { ETag: version(files.read(f) ?? '') });
     }
     return send(res, 200, 'saved', 'text/plain', { ETag: version(text) });
@@ -127,7 +127,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
 /** Why a file is refused, and how to start merma so that it is served. */
 function notServed(/** @type {ReturnType<typeof import('./files.js').createFiles>} */ files, /** @type {string | null} */ f) {
   if (!f) return 'No file was given. Open the page as /?f=<absolute path to a .mmd file>.';
-  return `This server does not serve ${f}. It serves only .mmd files in or at ${files.roots.join(', ')}.\n` +
+  return `This server does not serve ${f}. This server serves only .mmd files in or at ${files.roots.join(', ')}.\n` +
     `To open this file, run merma ${shellQuote(f)}`;
 }
 
