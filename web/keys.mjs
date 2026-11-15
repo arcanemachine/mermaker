@@ -77,8 +77,24 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
       return { next: hit ? { kind: hit.kind, id: hit.id } : null, cursor: FRESH };
     }
     const at = /** @type {import('./navigate.mjs').Target} */ (here);
-    // Ctrl+Shift skips the node between two edges; from a node or a box it is a plain arrow.
-    if (mod === 'ctrl+shift' && at.kind !== 'edge') mod = 'plain';
+    // An edge reached any other way than by an arrow (a click, a find) counts from its source, the way it leaves it.
+    const came = () => {
+      const e = at.kind === 'edge' ? graph.edges.find((x) => x.id === at.id) : null;
+      return cursor.came ?? (e ? { id: e.from, key: heading(e.start, e.startOut) } : null);
+    };
+    // Ctrl+Shift along an edge skips the node between it and the next edge; across an edge, and from a node or a box,
+    // it is the plain arrow.
+    if (mod === 'ctrl+shift' && at.kind === 'edge') {
+      const undone = back(cursor, at, key, mod);
+      if (undone) return { next: undone.to, cursor: undone.cursor };
+      const plain = walk(graph, at, key, came());
+      if (plain?.to.kind !== 'edge') {
+        const went = plain ? jump(graph, at.id, key, came()) : null;
+        if (!went) return { next: null, cursor };
+        return { next: went.to, cursor: moved(cursor, { from: at, to: went.to, key, mod }, null, went.fan) };
+      }
+    }
+    if (mod === 'ctrl+shift') mod = 'plain';
     // The opposite key takes back the latest move into here, before any rule: a box's crossing edge can head one way
     // where it leaves the node inside and another where it crosses the border, so walk() is no guide to which arrow
     // goes back along it.
@@ -104,21 +120,12 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
     let next = null;
     /** @type {import('./navigate.mjs').Fan | null} after a step across: the fan the edge reached counts as reached from */
     let fan = null;
-    /** @type {import('./navigate.mjs').Fan | null} after a jump: the item passed, which the edge reached counts as reached from */
-    let passed = null;
-    if (mod === 'ctrl+shift') {
-      const went = jump(graph, at.id, key, cursor.came);
-      next = went?.to ?? null;
-      passed = went?.fan ?? null;
-    } else if (mod === 'ctrl') {
+    if (mod === 'ctrl') {
       // Ctrl skips the edge plain would select; with none that way, it goes by place.
       next = (state.edgesOk() ? skip(graph, at, key) : null) ?? placed();
     } else if (at.kind === 'edge') {
-      // Across an edge, among the edges of the fan it was reached from; reached any other way (a click, a find), its
-      // source's, the way it leaves it.
-      const e = graph.edges.find((x) => x.id === at.id);
-      const came = cursor.came ?? (e ? { id: e.from, key: heading(e.start, e.startOut) } : null);
-      const went = walk(graph, at, key, came);
+      // Across an edge, among the edges of the fan it was reached from.
+      const went = walk(graph, at, key, came());
       next = went?.to ?? null;
       fan = went?.fan ?? null;
     } else {
@@ -136,7 +143,7 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
     }
     if (next.kind === 'title') return { next, cursor: FRESH };
     const to = /** @type {import('./navigate.mjs').Target} */ (next);
-    return { next, cursor: moved(cursor, { from: at, to, key, mod }, fan, passed) };
+    return { next, cursor: moved(cursor, { from: at, to, key, mod }, fan) };
   }
 
   /**

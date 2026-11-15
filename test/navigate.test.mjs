@@ -617,16 +617,20 @@ test('steps across are forgotten after any other move, and after Space', () => {
   assert.deepEqual(stepBack(cursor, at('edge', 'order-wait'), 'ArrowLeft')?.to, at('edge', 'order-check'));
 });
 
-test("Ctrl+Shift jumps past the edge's far end (the end it does not count from) to that end's first edge that way", () => {
-  const fromOrder = { id: 'order', key: 'ArrowDown' }, fromWait = { id: 'wait', key: 'ArrowUp' };
+test("Ctrl+Shift along an edge goes past the end the plain arrow reaches, to that end's first edge that way", () => {
+  const fromOrder = { id: 'order', key: 'ArrowDown' }, fromWait = { id: 'wait', key: 'ArrowUp' }, fromPaid = { id: 'paid', key: 'ArrowUp' };
   assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown', fromOrder), { to: at('edge', 'wait-paid'), fan: { id: 'wait', key: 'ArrowDown' } });
   // Clicked: it counts from its source.
   assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown')?.to, at('edge', 'wait-paid'));
-  // Counted from wait, the far end is order, whichever way the key points; the edge itself is passed over.
-  assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown', fromWait)?.to, at('edge', 'order-check'));
+  // The key picks the end, not the tick: Down passes wait, Up passes wait from the edge below it, wherever it counts from.
+  assert.deepEqual(jump(graph, 'order-wait', 'ArrowDown', fromWait)?.to, at('edge', 'wait-paid'));
+  assert.deepEqual(jump(graph, 'wait-paid', 'ArrowUp', fromPaid)?.to, at('edge', 'order-wait'));
+  assert.deepEqual(jump(graph, 'wait-paid', 'ArrowUp', fromWait)?.to, at('edge', 'order-wait'));
+  // Nothing that way past order: nothing, never the next thing by place.
   assert.equal(jump(graph, 'order-wait', 'ArrowUp', fromOrder), null);
-  // A dead end.
   assert.equal(jump(graph, 'paid-retry', 'ArrowDown', { id: 'paid', key: 'ArrowDown' }), null);
+  // Across an edge it is no jump: the caller steps across, as the plain arrow does.
+  assert.equal(jump(graph, 'paid-ship', 'ArrowRight', { id: 'paid', key: 'ArrowDown' }), null);
 });
 
 test("Ctrl+Shift past a subgraph's box takes the box's own edges, never one inside it", () => {

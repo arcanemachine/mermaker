@@ -2,7 +2,7 @@
 // docs/ux.md gives the rules and why. The arrows are screen directions. Plain arrows walk edges: from a node or a
 // subgraph's box, an arrow selects an edge leaving it that way; on an edge, the arrow along it goes to that end and the
 // other two step to the edges beside it. Ctrl+Arrows skip the edge, or jump by place when there is none that way;
-// Ctrl+Shift+Arrows, on an edge, skip the node.
+// Ctrl+Shift+Arrows, along an edge, skip the node to the next edge.
 
 /** @typedef {{ x: number, y: number }} Point */
 /**
@@ -248,10 +248,12 @@ export function skip(graph, at, key) {
 }
 
 /**
- * Where Ctrl+Shift+Arrow `key` goes from edge `id`: past the item at its far end (the end it does not count as reached
- * from, `came`; null: its source), to that item's first edge heading `key`, as selecting it and pressing `key` would.
- * A subgraph's box there is not entered: its own edges count, those crossing its border included. The edge itself is
- * passed over. Returns the edge reached and the fan it counts as reached from (the item passed), or null: a dead end.
+ * Where Ctrl+Shift+Arrow `key` along edge `id` goes: the plain arrow twice, skipping the item between (the user: edge
+ * navigation that hops the node). The plain arrow's step (walk(), `came` the end it counts from) reaches an end; from
+ * there, the first edge heading `key`, as selecting it and pressing `key` would. A subgraph's box there is not entered:
+ * its own edges count, those crossing its border included. The edge itself is passed over. Returns the edge reached
+ * and the fan it counts as reached from (the item passed), or null: the plain step goes nowhere or across (the caller
+ * steps across as plain does), or no edge leaves that way. Never by place, so it never jumps across the screen.
  * @param {{ boxes: Box[], edges: Edge[] }} graph boxes from nest()
  * @param {string} id
  * @param {string} key
@@ -259,9 +261,9 @@ export function skip(graph, at, key) {
  * @returns {{ to: Target, fan: Fan } | null}
  */
 export function jump(graph, id, key, came = null) {
-  const far = otherEnd(graph, id, came);
-  const box = far && graph.boxes.find((b) => b.id === far.id);
-  if (!far || !box) return null;
+  const end = walk(graph, { kind: 'edge', id }, key, came)?.to;
+  const box = end && end.kind !== 'edge' ? graph.boxes.find((b) => b.id === end.id) : null;
+  if (!box) return null;
   const inside = box.kind === 'subgraph' ? within(graph.boxes, box.id) : undefined;
   const next = leaving(graph.edges, box.id, key, inside).find((e) => e !== id);
   return next ? { to: { kind: 'edge', id: next }, fan: { id: box.id, key } } : null;

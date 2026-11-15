@@ -424,7 +424,7 @@ here does just what it does in the selected item's menu:
 | Enter with nothing selected | Select again what Escape cleared, else the node nearest the middle of the view |
 | Arrows with something selected | Walk the edges: an edge leaving that way, then on along it; across an edge, step to the next; with no edge, the next thing straight that way; the opposite arrow goes back (below) |
 | Ctrl+Arrows (Option on a Mac) with something selected | Skip the edge to the node at its far end; with none, the next thing straight that way (below) |
-| Ctrl+Shift+Arrows (Option+Shift on a Mac) with an edge selected | Skip the node at its far end (the end without the tick) to that node's first edge that way (below) |
+| Ctrl+Shift+Arrows (Option+Shift on a Mac) with an edge selected | The plain arrow, skipping the node: past the end that way to its next edge; across, as plain (below) |
 | / (wherever it is on your keyboard) | Find in the whole diagram (below) |
 | ` (the key left of 1, or whichever key types it) | Go to the code panel, opening it if it is closed; on the panel, back to the diagram (in any diagram) |
 | Space with an edge selected | Walk the other end's edges: the cross arrows step that end's fan (the tick moves there) |
@@ -507,10 +507,11 @@ box at the far end of the edge the plain arrow would select, else the next thing
 inside subgraphs you are not in lands on the outermost of their boxes, so Ctrl goes in a level a press. From an edge,
 Ctrl+Arrow goes to the end that way. On Windows and Linux, Alt+Left and Alt+Right are the browser's Back and Forward.
 
-**Ctrl+Shift+Arrows skip the node** (Option+Shift+Arrows on a Mac), from an edge to the next edge: they select the first
-edge that way at the edge's far end, the end without the tick, as selecting that end and pressing the arrow would. The
-tick moves to the end passed. A subgraph's box there is skipped past, not entered. From a node or a subgraph they are
-plain arrows; with nothing selected they do nothing. The opposite Ctrl+Shift arrow goes back.
+**Ctrl+Shift+Arrows skip the node** (Option+Shift+Arrows on a Mac), from an edge to the next edge. Along the edge, they go
+past the end the plain arrow reaches and select its first edge that way, as selecting that end and pressing the arrow
+would. The tick moves to the end passed. With no edge that way, nothing happens. Across the edge, they step to the
+next edge as the plain arrows do. A subgraph's box passed is not entered. From a node or a subgraph they are plain
+arrows; with nothing selected they do nothing. The opposite Ctrl+Shift arrow goes back.
 
 **O and I** go out of and into subgraphs: O selects the subgraph the selection is in; I, on a subgraph, selects the
 item you last left it by with O or an arrow, else its top-left one. A click, a find or an edit forgets that. O from a
