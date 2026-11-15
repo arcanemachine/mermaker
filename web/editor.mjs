@@ -611,7 +611,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
    * lasts.
    */
   function pickNotice() {
-    const what = picking === 'merge' ? `node to merge ${named(selection())} into`
+    const what = picking === 'merge' ? 'node to merge this node into'
       : PICKED[picking ?? 'connect'];
     ui.mode(`Pick the ${what}. Press Escape or click away to cancel.`);
   }
@@ -770,7 +770,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const node = selection();
     const now = writtenLink(shownText, node.id);
     const current = now && now !== 'script' ? now.url : null;
-    const change = linkEdit(current, window.prompt(`Edit the link of ${named(node)}. Leave the box empty to remove the link.`, current ?? ''));
+    const change = linkEdit(current, window.prompt('Edit the link of this node. Leave the box empty to remove the link.', current ?? ''));
     if (!change) return;
     edit((text) => ({ text: setLink(text, node.id, change.link) }), {
       after: () => ({ item: node }),

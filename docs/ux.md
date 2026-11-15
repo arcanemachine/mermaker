@@ -537,7 +537,10 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   Accessibility).
 - A toast is only for a result you cannot see on screen ("Copied!", "SVG downloaded"), and fades; it never says what
   to do. A notice says what to do next, or why something was not done, and stays. An error is never a toast.
-- A message names a node by its label as drawn, in quotes, never by its id in the file, which the page does not show.
+- A message on screen names the selected item as "this node", "this edge" or "this subgraph", never by its label: the
+  selection shows which, and a quoted label makes the message long. Any other item is named by its label as drawn, in
+  quotes. Never by its id in the file, which the page does not show. What a screen reader hears names the item by
+  its label, since the listener cannot see the selection.
 - A message is not a tutorial: it says what is happening, and at most how to leave it. How
   to do things is Help's and the guide's. The one exception is the **welcome**, an empty state rather than a message
   (a short introduction): over a flowchart that draws no node and no subgraph, with no
