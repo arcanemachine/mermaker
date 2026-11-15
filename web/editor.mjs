@@ -770,7 +770,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const node = selection();
     const now = writtenLink(shownText, node.id);
     const current = now && now !== 'script' ? now.url : null;
-    const change = linkEdit(current, window.prompt('Edit the link of this node. Leave the box empty to remove the link.', current ?? ''));
+    const change = linkEdit(current, window.prompt('Edit the link of this node. Leave the box empty to unset this link.', current ?? ''));
     if (!change) return;
     edit((text) => ({ text: setLink(text, node.id, change.link) }), {
       after: () => ({ item: node }),
