@@ -9,7 +9,7 @@ and where the two differ, the local file wins.
 
 `GLOSSARY.md` holds the words merma uses. Use them as written there, in the page, the docs, merma's code and messages
 about the work; when a new word comes in, add it there in the same commit. Where Mermaid has a word for something
-(node, edge, shape, subgraph, title), use Mermaid's word, never one of our own. Menu labels are in sentence case. American spelling throughout (color, center, behavior, gray), in the page, the docs and merma's code (the user).
+(node, edge, shape, subgraph, title), use Mermaid's word, never one of our own. Menu labels are in sentence case. American spelling throughout (color, center, behavior, gray), in the page, the docs and merma's code.
 
 `docs/ux.md` holds the rules the page follows, and why. Read it before changing anything the user sees, and update it
 in the same commit when a rule changes. `docs/guide.md` says what each control does, and Help in `web/index.html` is a
@@ -30,12 +30,12 @@ how to write a diagram merma edits). A change to any of those updates it in the 
   meet.
 - **The `.mmd` file is the only source of truth.** An edit changes only the bytes it must, and nothing the page adds
   (positions, state) is ever written into the file or beside it.
-- **Stay inside Mermaid's paradigm (the user).** merma is a tool for working with Mermaid diagrams, so it uses
+- **Stay inside Mermaid's paradigm.** merma is a tool for working with Mermaid diagrams, so it uses
   Mermaid's own syntax and features as far as they go. Everything the page draws is what Mermaid draws from the file,
   or from the file with lines in Mermaid's own syntax appended (as collapse does). merma never draws an element the
-  file does not hold. merma's own metadata in the file is the last resort, and only with the user's agreement.
-- **The diagram looks as Mermaid draws it (the user).** A change to how the diagram looks with nothing selected is
-  added to the list in `docs/ux.md`, "The diagram looks as Mermaid draws it", and needs the user's agreement.
+  file does not hold. merma's own metadata in the file is the last resort, and only with the maintainer's agreement.
+- **The diagram looks as Mermaid draws it.** A change to how the diagram looks with nothing selected is
+  added to the list in `docs/ux.md`, "The diagram looks as Mermaid draws it", and needs the maintainer's agreement.
 - **Tests ship with the code, in the same commit.** `npm test` runs `test/*.test.mjs` with Node's own runner.
 - **No bullshit tests.** A test exists to fail when the behavior it names breaks:
   - it checks what its name and comments say, no less (an assertion that cannot fail is worse than none);
@@ -52,6 +52,9 @@ how to write a diagram merma edits). A change to any of those updates it in the 
   `checks/README.md`, "Accessibility"). After a change to
   `web/patch/`, run the browser parse check as well.
 - Say why in a comment when a reader new to merma's code could not work it out; nothing more.
+- **State the rule and its reason, never who decided it.** Docs, comments, tests and commit messages carry no credits
+  ("the user wants", "(the reviewer)"), no quotes of anyone and no story of how a rule was settled. "The user"
+  meaning whoever uses the page is fine.
 - Conventional commits (`feat:`, `fix:`, `docs:`…), one commit per feature, with a short subject (at most 72
   characters).
 

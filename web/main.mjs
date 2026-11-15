@@ -652,8 +652,8 @@ exportButton.addEventListener('click', () => {
   exportMenu.open(exportButton.getBoundingClientRect(), { edgesOk: true, selfLoop: false, nameWhy: null }, { gap: 4 });
   exportButton.setAttribute('aria-expanded', 'true');
 });
-// A click anywhere else closes it and Help, the diagram included, as for the diagram's own menus; a drag does not
-// (the user). In the diagram only the viewer's click counts: the browser's own fires after a drag as well.
+// A click anywhere else closes it and Help, the diagram included, as for the diagram's own menus; a drag does not.
+// In the diagram only the viewer's click counts: the browser's own fires after a drag as well.
 function clickedAway(/** @type {Node} */ at) {
   if (exportMenu.isOpen() && !exportMenu.contains(at) && !exportButton.contains(at)) exportMenu.close();
   if (help.matches(':popover-open') && !help.contains(at) && !helpButton.contains(at)) help.hidePopover();

@@ -15,7 +15,7 @@ const natural = { useMaxWidth: false };
 
 const PAD = 24;
 // A fit shows the whole diagram at actual size at most; a part (hooks.fitTo) up to twice that, so a small subgraph
-// fills the window (the user approved it so).
+// fills the window.
 const FIT_MAX = 1;
 const PART_MAX = 2;
 // A press that moves less than this many pixels before release is a click; more is a move.
@@ -59,7 +59,7 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
   mermaid.initialize(config);
   const { onClick = () => {}, onDoubleClick = () => false, onContextMenu = () => false, onViewChange = () => {}, fitTo = () => null } = hooks;
   // A scale and offset applied to the stage. The first render is fitted to the window (never enlarged); after that the
-  // view is kept across re-renders (the user), so an edit moves nothing under the pointer. Until the user zooms or
+  // view is kept across re-renders, so an edit moves nothing under the pointer. Until the user zooms or
   // drags, a change in the window's size fits it again.
   const view = { x: 0, y: 0, k: 1 };
   let size = { w: 0, h: 0 };
@@ -306,8 +306,7 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
     /**
      * Move the view the least it takes to bring `rect` (client coordinates) inside the diagram area, a margin in from
      * its edges and clear of its top padding, where the notice lies; nothing moves when it is inside already. A rect
-     * too big to fit at this zoom is shown whole, framed as find frames its matches: centered, zoomed out just enough
-     * (the user).
+     * too big to fit at this zoom is shown whole, framed as find frames its matches: centered, zoomed out just enough.
      */
     reveal(/** @type {DOMRect} */ rect) {
       const box = diagram.getBoundingClientRect();

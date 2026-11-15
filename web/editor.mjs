@@ -76,7 +76,7 @@ const END_RUN = 3;
  */
 export function createEditor({ source, file, viewer, parse, limits, display, ui, els }) {
   // What is drawn may be selected and edited (a flowchart that rendered). While the code panel holds the lock (its code
-  // being edited) it may still be selected, walked and found, but not edited (the user). Both set only by setEditable().
+  // being edited) it may still be selected, walked and found, but not edited. Both set only by setEditable().
   let drawnEditable = false;
   let locked = false;
   let selectable = false;
@@ -170,7 +170,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
    * @type {Cut | null}
    */
   let cut = null;
-  /** The cut each move of a cut item used: undoing the move cuts it again, redoing it drops that cut (the user). */
+  /** The cut each move of a cut item used: undoing the move cuts it again, redoing it drops that cut. */
   const cutsMoved = /** @type {WeakMap<import('./history.mjs').Entry, Cut>} */ (new WeakMap());
   let swallowClick = false;   // a click away from the label box that could not save it: the click does nothing
   let keptClick = false;      // a click away that kept an emptied label: its notice outlasts the click
@@ -290,7 +290,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   const movingEnd = () => (picking === 'start' || picking === 'end' ? picking : null);
   /**
    * Reassign end… or Reassign start… on the selected edge: it moves the end `end`, the one its key names. The candidate starts on the edge
-   * itself, as Connect to…'s does on its item (the user), the arrows going on from that end.
+   * itself, as Connect to…'s does on its item, the arrows going on from that end.
    */
   function startMove(/** @type {'start' | 'end'} */ end) {
     if (!shownEdge(selection().id)) return;
@@ -310,7 +310,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const id = selection().id;
     if (candidate && same(candidate, selection())) moves.candidateFrom(to === 'end' ? otherEnd(layout(), id, null) : null);
     markSource();
-    // The notice stays (the user), and the tick is only seen: a screen reader hears which end moves now.
+    // The notice stays, and the tick is only seen: a screen reader hears which end moves now.
     ui.announce(`Reassigning the edge's ${to}`);
   }
 
@@ -322,7 +322,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     pickNotice();
   }
 
-  /** Connect to… or Connect from…: the candidate starts on the item itself (the user): Enter at once makes a self-loop. */
+  /** Connect to… or Connect from…: the candidate starts on the item itself: Enter at once makes a self-loop. */
   function startConnect(/** @type {'connect' | 'connect-from'} */ way) {
     picking = way;
     moves.forgetCandidate();
@@ -331,7 +331,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /**
    * Insert node on the selected edge: a new node in its middle, its label box open. The node goes in on the tick's
-   * side of the label, which stays on the other new edge (the user: the tick lies between the label and that end).
+   * side of the label, which stays on the other new edge (the tick lies between the label and that end).
    */
   function startInsert() {
     const id = selection().id;
@@ -390,7 +390,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** @type {string | null} the action of the menu item with focus, while a menu is open */
   let menuFocus = null;
   /**
-   * A cut node's edges are drawn thicker while it is cut, as a pick's moving edges are (the user), under a mark of
+   * A cut node's edges are drawn thicker while it is cut, as a pick's moving edges are, under a mark of
    * their own, since a pick's goes with each selection. A pale red glow lies under them where the paste would delete
    * them: on an edge, where the move applies; with "Move node here without edges" focused or hovered in a menu, where
    * that applies. A cut subgraph's edges never change in its move, so they are not marked.
@@ -651,7 +651,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // Page-only (collapse.mjs): the file is not written, and no undo step is made.
     'collapse-subgraph': () => { const { id } = selection(); ui.setView(id, 'collapsed').then(() => ui.announce(`Collapsed ${named({ kind: 'subgraph', id })}`)); },
     'expand-subgraph': () => { const { id } = selection(); ui.setView(id, 'expanded').then(() => ui.announce(`Expanded ${named({ kind: 'subgraph', id })}`)); },
-    // The whole diagram, leaving a part (main.mjs) if one is shown: F is the way back (the user).
+    // The whole diagram, leaving a part (main.mjs) if one is shown: F is the way back.
     'fit-view': () => ui.showPart(null),
     // Page-only, as the address's part (main.mjs): every refit fits it, until F fits the whole diagram.
     'fit-subgraph': () => ui.showPart(selection().id),
@@ -659,11 +659,11 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'fit-node': () => viewer.fitRects(elsOf(selection()).map((e) => e.getBoundingClientRect()).filter((r) => r.width || r.height)),
     'fit-edge': () => viewer.fitRects(elsOf(selection()).map((e) => e.getBoundingClientRect()).filter((r) => r.width || r.height)),
     // Page-only (turn.mjs), as collapse is: the whole diagram, or the selected subgraph on its own. A turn is for
-    // fitting the window (the user), so it fits after.
+    // fitting the window, so it fits after.
     'rotate': () => turnIt('rotate'),
     'flip': () => turnIt('flip'),
     'find': () => openFind(),
-    // The selection in the middle of the view, at the zoom it has (the user).
+    // The selection in the middle of the view, at the zoom it has.
     'center-view': () => {
       const sel = selection();
       let at = null;
@@ -856,7 +856,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     queueMicrotask(() => { bandsQueued = false; drawBands(); });
   };
   /**
-   * Mark each marked node and subgraph by a band (the user: its own fill, border and text always show): a copy of its
+   * Mark each marked node and subgraph by a band (its own fill, border and text always show): a copy of its
    * shapes with a wide stroke, under all of them, so only the outline of the whole shows, a compound shape's inner
    * parts hidden under its fill. The SVG export leaves the bands out.
    */
@@ -889,7 +889,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     candidate = null;
   };
   /**
-   * During a pick, what it will change (the user: solid is where the keys are, and what changes is drawn thicker):
+   * During a pick, what it will change (solid is where the keys are, and what changes is drawn thicker):
    * the selected node or subgraph with its own outline thicker in place of its selection, and each edge that will move
    * with its own line thicker, its dashes and colors kept; in the reassign pick, the tick dashed at the end that moves.
    * A collapsed box's thick edges are only its own, the ones that move.
@@ -943,8 +943,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** Whether the edge leaves that end up or down, so its tick lies flat (else upright). */
   let endFlat = true;
   /**
-   * Mark the end the selected edge counts as reached from, whose edges the cross arrows step (the user): the end
-   * tick, a short bar across the way the edge leaves its node there (the user), flat or upright, never tilted, in the
+   * Mark the end the selected edge counts as reached from, whose edges the cross arrows step: the end
+   * tick, a short bar across the way the edge leaves its node there, flat or upright, never tilted, in the
    * stage so it moves with the diagram, sized in the diagram's units with a floor on screen, and slid along the line
    * to where it runs that way, clear of any text. `measure`: work out which end again (a new selection, a click, or
    * Space); else the same end, redrawn for a new zoom.
@@ -967,7 +967,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const screen = (/** @type {DOMPoint} */ p) => ({ x: p.x * m.a + p.y * m.c + m.e, y: p.x * m.b + p.y * m.d + m.f });
     const texts = drawn('g.edgeLabel, .cluster-label, g.node .label, .flowchartTitleText')
       .map((e) => e.getBoundingClientRect()).filter((r) => r.width);
-    // In the diagram's units, as the line and its arrowhead are, so it grows and shrinks with them (the user); never
+    // In the diagram's units, as the line and its arrowhead are, so it grows and shrinks with them; never
     // smaller on screen than END_TICK_MIN by END_STROKE_MIN.
     const width = Math.max(END_STROKE, END_STROKE_MIN / k), h = Math.max(END_TICK, END_TICK_MIN / k) / 2;
     /** The tick `d` in from the counted end, in the path's own units. */
@@ -980,7 +980,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const tick = (/** @type {number} */ d) => {
       const s = Math.min(len, d), at = endSide === 'start' ? s : len - s;
       const p = path.getPointAtLength(at);
-      // Across the way the edge leaves its node (the user): flat for up or down, upright for sideways, never tilted.
+      // Across the way the edge leaves its node: flat for up or down, upright for sideways, never tilted.
       // `straight` where the line runs that way for the tick's width on both sides, so it crosses the line clear of
       // any bend rather than lying along it.
       const [nx, ny] = endFlat ? [h, 0] : [0, h];
@@ -993,7 +993,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       const r = { left: Math.min(u.x, v.x) - 3, right: Math.max(u.x, v.x) + 3, top: Math.min(u.y, v.y) - 3, bottom: Math.max(u.y, v.y) + 3 };
       return !texts.some((t) => r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top);
     };
-    // Just past the arrowhead (or the node, at a plain end: the user wants it close, to be seen), then on along the
+    // Just past the arrowhead (or the node, at a plain end: kept close so it is seen), then on along the
     // line, up to its middle, until it runs the way the edge leaves its node and no text is under it.
     const start = markerReach(path, endSide) + END_GAP + width / 2;
     // Zoomed out, a straight stretch can be shorter than the tick is wide: then straight for END_RUN either side will
@@ -1006,7 +1006,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       return null;
     };
     // No stretch that way before the middle (the last one hides under the arrowhead, before a bend): at the
-    // arrowhead's base, still across the way the edge leaves its node (the user).
+    // arrowhead's base, still across the way the edge leaves its node.
     const ends = find('straight') ?? find('centered') ?? tick(start).ends;
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     for (const [a, v] of Object.entries({ x1: ends[0].x, y1: ends[0].y, x2: ends[1].x, y2: ends[1].y })) el.setAttribute(a, String(v));
@@ -1015,8 +1015,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (movingEnd()) { el.setAttribute('stroke-dasharray', String((2 * h) / 7)); el.setAttribute('data-page-moving', ''); }
     el.setAttribute('data-page-end', '');
     el.setAttribute('data-page-only', '');
-    // Among the edges, so nodes paint over it: where a line starts inside a node's box, part of it hides. The user
-    // prefers that to a tick over the node or slid clear of it.
+    // Among the edges, so nodes paint over it: where a line starts inside a node's box, part of it hides. That reads
+    // better than a tick over the node or slid clear of it.
     /** @type {Element} */ (path.parentNode).append(el);
   }
 
@@ -1034,7 +1034,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * After a click on an edge's line at (`x`, `y`): it counts from the end on the click's side (the user: every click
+   * After a click on an edge's line at (`x`, `y`): it counts from the end on the click's side (every click
    * decides, so it is the same each time), split at its label where it has one, else at its middle, along the line.
    * A click on the label itself counts from its source.
    */
@@ -1153,7 +1153,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       else pick(item?.kind === 'edge' ? null : item);
       return;
     }
-    // Said aloud as the keys' selection is (the user: screen readers within reason); a click away, only when it let go.
+    // Said aloud as the keys' selection is (screen readers within reason); a click away, only when it let go.
     if (item) {
       select(item);
       if (!Number.isNaN(x)) countFromClick(target, x, y);
@@ -1302,7 +1302,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * Shift+D, Shift+Delete or Shift+Backspace (the user): on a subgraph or a node whose Shift delete takes more than D
+   * Shift+D, Shift+Delete or Shift+Backspace: on a subgraph or a node whose Shift delete takes more than D
    * would, the first press marks what would go pale red and asks for the same key again, which deletes it; a key
    * repeat never does. Anything else deletes at once, as D.
    */
@@ -1341,7 +1341,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (!edgesOk) { ui.notice(NO_EDGE_MATCH, 'warning'); return; }
     // Named before the edit: once deleted, the node is no longer drawn.
     const name = sel.kind !== 'edge' && named(sel);
-    // Where the keyboard goes after (the user: it keeps its place): back along the trail to the first item still
+    // Where the keyboard goes after (it keeps its place): back along the trail to the first item still
     // drawn; with no trail, an edge's source (a node clicked: nothing). Taken now: the edit starts the trail afresh.
     const back = moves.fallback(sel);
     const source = sel.kind === 'edge' ? shownEdge(sel.id)?.from : null;
@@ -1407,7 +1407,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** Select again what Escape or O let go of, as it was, or the box it is hidden in since. Whether there was one. */
   function bringBack() {
     if (cleared && elsOf(cleared).length) {
-      // As it was (the user: an edge kept its counted end), so the keys go on from where they were.
+      // As it was (an edge kept its counted end), so the keys go on from where they were.
       if (clearedCursor) moves.restore(clearedCursor);
       selectByKey(cleared, undefined, Boolean(clearedCursor));
       return true;
@@ -1448,7 +1448,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       return true;
     },
     // C starts Connect to… on a selected node or subgraph, as their menus' C does, refused as it is grayed there. While
-    // picking it does nothing: Escape or a click away is the way out of every pick (the user), as the notice says.
+    // picking it does nothing: Escape or a click away is the way out of every pick, as the notice says.
     // C on an edge is Reassign end…: what the edge goes to, as C on a node picks what a new edge goes to.
     c: () => {
       if (picking) return true;
@@ -1487,7 +1487,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     f2: () => selected && !picking && (editLabelOrTitle(selected), true),
     delete: () => selected && !picking && (deleteSelected(), true),
     backspace: () => selected && !picking && (deleteSelected(), true),
-    // D deletes as Delete does (the user: the home row). With Shift, a subgraph goes with everything in it, and a node
+    // D deletes as Delete does (the home row). With Shift, a subgraph goes with everything in it, and a node
     // with its children, in two presses; an edge goes as with D.
     d: () => selected && !picking && (deleteSelected(), true),
     'shift+d': () => shiftDelete(),
@@ -1508,7 +1508,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       openSpaceMenu(r.left + r.width / 2, r.top + r.height / 2);
       return true;
     },
-    // F fits the diagram; with an item selected, it centers it at the zoom it has instead (the user). The title, at
+    // F fits the diagram; with an item selected, it centers it at the zoom it has instead. The title, at
     // the diagram's top, is fitted with it.
     f: () => {
       if (!selected || selected.kind === 'title') handlers['fit-view'](); else handlers['center-view']();
@@ -1563,7 +1563,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       return true;
     },
     '+': () => { viewer.zoom(ZOOM_STEP); return true; },
-    // 0 is actual size, as a browser's Ctrl+0 is (the user): the digits are the pickers' only.
+    // 0 is actual size, as a browser's Ctrl+0 is: the digits are the pickers' only.
     0: () => { viewer.zoomTo(1); return true; },
     '=': () => { viewer.zoom(ZOOM_STEP); return true; },
     '-': () => { viewer.zoom(1 / ZOOM_STEP); return true; },
@@ -1810,7 +1810,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /**
    * Close the box: select `pick`, or put back what was selected before; `restore` (Escape) puts
    * back the view as well, unless the user has moved it since. Inside a pick, `pick` takes the candidate instead
-   * (the user: Enter in find points, a second Enter picks), and without one the outline goes back where it was.
+   * (Enter in find points, a second Enter picks), and without one the outline goes back where it was.
    */
   function closeFind(/** @type {Item | null} */ pick, restore = false) {
     const was = finding;
@@ -1841,7 +1841,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (!at) return;
       // The candidate never rests on the title: the find stays open.
       if (picking && at.kind === 'title') { ui.notice('The title cannot be picked.', 'warning'); return; }
-      // A jump to a match is to its middle (the user), so it is not left at the edge; one on screen stays put. The
+      // A jump to a match is to its middle, so it is not left at the edge; one on screen stays put. The
       // candidate brings its own into view.
       if (!at.on && !picking) viewer.center((at.box.left + at.box.right) / 2, (at.box.top + at.box.bottom) / 2);
       closeFind(at);
@@ -1857,7 +1857,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (!finding) return;
     const n = finding.matches.length;
     if (!n) return;
-    // One move, then none (the user): with any match off screen, show them all, which counts them again.
+    // One move, then none: with any match off screen, show them all, which counts them again.
     if (finding.matches.some((m) => !m.on)) viewer.frame(finding.matches.map((m) => m.box), underBar());
     finding.at = (finding.at + dir + n) % n;
     markMatches(true);
@@ -1880,7 +1880,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (finding) { closeFind(null); return; }
     openFind();
   });
-  // A drag is never a cancel (the user): a press in the diagram may become a pan or a pinch, so it ends nothing, and
+  // A drag is never a cancel: a press in the diagram may become a pan or a pinch, so it ends nothing, and
   // only the viewer's click (a release without a drag) does (ended()). Outside the diagram a press is a click in
   // practice, and its focus move still blurs the label box, which saves it (commit).
   document.addEventListener('pointerdown', (e) => {
@@ -1976,7 +1976,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (key === 'c' || key === 'x') {
       if (e.shiftKey || !selected) return false;
       clearRefusal();
-      // Said, not left to the browser's copy, which would copy nothing (the user wants a message).
+      // Said, not left to the browser's copy, which would copy nothing (a message says why).
       if (selected.kind !== 'node' && selected.kind !== 'subgraph') {
         refuse(`Only a node or a subgraph can be ${key === 'c' ? 'copied' : 'cut'}.`);
         return true;
@@ -2026,7 +2026,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   // The panel's pickers: under the label box, the shape picker on a node and the arrow type picker on an edge; above
   // it, the color picker on a node and a subgraph. Down from the box's last line goes into the one under it, Up from
-  // its first line into the one above; Tab does nothing (the user: Up and Down are the way). In a picker the arrows move focus; a digit, a click, or Enter on the focused entry selects it (Enter also
+  // its first line into the one above; Tab does nothing (Up and Down are the way). In a picker the arrows move focus; a digit, a click, or Enter on the focused entry selects it (Enter also
   // goes back to the box); the arrow back toward the box or Escape goes back to it, keeping what was selected. Enter in
   // the box writes the label and the pickers' choices as one change. Nothing is drawn until then (docs/ux.md, the
   // preview rule).
@@ -2115,7 +2115,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
 
   /**
-   * Bring the item into view with its label box and the pickers by it (the user), so all of it can be used: on an add,
+   * Bring the item into view with its label box and the pickers by it, so all of it can be used: on an add,
    * and when the colors above and the picker below do not both fit. Each picker counts where it would lie, not where
    * the window's edge has pushed it; once in view, they are placed afresh.
    */
@@ -2290,7 +2290,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (why) ui.notice(why, 'warning'); else boxPickers.color.picker.focus();
       return;
     }
-    // Tab does nothing: it neither saves nor leaves (the user).
+    // Tab does nothing: it neither saves nor leaves.
     if (e.key === 'Tab') { e.preventDefault(); return; }
     if (!target || !(e.key === 'Enter' && !e.shiftKey)) return;
     e.preventDefault();
@@ -2469,7 +2469,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       const was = selected;
       const wasCame = was?.kind === 'edge' ? moves.came() : undefined;
       ui.hideNotice();
-      // After an edit there is no trail back, and I forgets where you were (the user), even with the same item selected.
+      // After an edit there is no trail back, and I forgets where you were, even with the same item selected.
       moves.forget();
       clickedMeanwhile = null;
       const base = source.snapshot();
@@ -2519,7 +2519,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       history.redone();
       const moved = entry && cutsMoved.get(entry);
       if (moved && cut?.kind === moved.kind && cut.id === moved.id) cut = null;
-      // Redo selects what its edit did only if you have not moved since (the user: it does not pull you away); else
+      // Redo selects what its edit did only if you have not moved since (it does not pull you away); else
       // your selection stays, or, when the redo takes it away, goes where the edit's would.
       const sel = entry && selections.get(entry)?.after;
       const was = selected;

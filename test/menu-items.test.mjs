@@ -60,7 +60,7 @@ test('an item with no key is one that Enter runs outside menus, so a quicker key
   for (const { item } of items) if (item.key === undefined) assert.ok(GLOBAL_KEYS.enter.includes(item.action) || item.setting, item.action);
 });
 
-test('a setting has no key (the user), and only a setting has a label that is not a verb', () => {
+test('a setting has no key, and only a setting has a label that is not a verb', () => {
   for (const { item } of items) if (item.setting) assert.equal(item.key, undefined, item.action);
 });
 

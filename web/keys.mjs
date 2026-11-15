@@ -30,7 +30,7 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
   let candidateCursor = FRESH;
   /**
    * subgraph → the item last selected inside it, for I; while picking, where the candidate was. Kept only while
-   * keys select: a click, a find or an edit forgets it (the user). Never pruned: I checks an entry against what is
+   * keys select: a click, a find or an edit forgets it. Never pruned: I checks an entry against what is
    * drawn inside now.
    * @type {Map<string, string>}
    */
@@ -182,7 +182,7 @@ export function createKeys({ layout, select, markCandidate, notice, titleEl, sta
   }
 
   /**
-   * Space: a selected edge counts as reached from its other end, so the cross arrows step that end's edges (the user).
+   * Space: a selected edge counts as reached from its other end, so the cross arrows step that end's edges.
    * Not a move: the arrival into the edge leaves the trail, as after a step across, and the steps across are cleared,
    * since what they counted from no longer holds. Returns the end it now counts
    * from, or null when there is no edge selected or no other end.

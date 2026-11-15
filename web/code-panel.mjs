@@ -121,7 +121,7 @@ export function createCodePanel(els, hooks) {
   // reports another code (ISO keyboards on a Mac).
   const isTick = (/** @type {KeyboardEvent} */ e) => e.code === 'Backquote' || e.key === '`';
   const plain = (/** @type {KeyboardEvent} */ e) => !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
-  // Shift+` closes the panel from anywhere but a text field (the user: Escape on the diagram takes a pick and the
+  // Shift+` closes the panel from anywhere but a text field (Escape on the diagram takes a pick and the
   // selection first). The same key by place or by what it types, as ` is.
   /** Shift+` taken: the panel closed, or asked to. */
   function closeKey(/** @type {KeyboardEvent} */ e) {
@@ -151,8 +151,8 @@ export function createCodePanel(els, hooks) {
     else toggle.click();
     panel.focus({ preventScroll: true });
   });
-  // The panel's keys, by keyboard a round trip with the diagram (the user): ` flips between the two, Escape steps out a
-  // level (the code to the panel, a draft to the read-only code, the panel to closed), Enter goes in, and the arrows scroll the code (the user: the
+  // The panel's keys, by keyboard a round trip with the diagram: ` flips between the two, Escape steps out a
+  // level (the code to the panel, a draft to the read-only code, the panel to closed), Enter goes in, and the arrows scroll the code (the
   // panel is where you read it; ` is one key to the diagram), with a modifier doing nothing rather than panning. Every
   // other key goes on to the page. The Dock select keeps its own keys, and the handle its arrows.
   const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'];
@@ -170,7 +170,7 @@ export function createCodePanel(els, hooks) {
       if (e.target === handle) return false;
       if (plain(e)) scrollCode(e.key);
     } else if (e.key === 'Escape' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      // One level out a press (the user): from a control in the bar to the panel; on the panel, a draft is cancelled
+      // One level out a press: from a control in the bar to the panel; on the panel, a draft is cancelled
       // first, the panel staying open (a keyboard way to cancel without closing); then out to the diagram, the panel
       // still open, where the next Escape closes it.
       if (e.target !== panel) panel.focus({ preventScroll: true });
@@ -227,7 +227,7 @@ export function createCodePanel(els, hooks) {
   });
   code.addEventListener('scroll', () => { scroll = { top: code.scrollTop, left: code.scrollLeft }; placeBand(); });
 
-  // Follow selection (the user: on by default, the browser's for every file): the selected item's lines, banded, the
+  // Follow selection (on by default, the browser's for every file): the selected item's lines, banded, the
   // caret at their start and scrolled into view when the selection changes. Never while the code has focus: the
   // caret there is the user's, and marks the place itself.
   const followKey = 'merma:code-follow';
@@ -428,7 +428,7 @@ export function createCodePanel(els, hooks) {
   });
 
   return {
-    /** Escape from the diagram, its last step: close the panel (the user: it offers to save a changed draft first). */
+    /** Escape from the diagram, its last step: close the panel (it offers to save a changed draft first). */
     escape: closePanel,
     /** How many questions the panel has asked. */
     questions: () => asked,

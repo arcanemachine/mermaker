@@ -82,7 +82,7 @@ test('the edges leaving a node one way run left to right (top to bottom sideways
 test("a diamond's corner edges count as down: Down, then Right steps through all four, and Up goes back", () => {
   assert.deepEqual(run(at('node', 'paid'), ['ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowUp']),
     ['edge paid-retry', 'edge paid-ship', 'edge paid-mail', 'edge paid-receipt', null, 'node paid']);
-  // Stepping across never lands on a node (the user): Retry has no other edge at its top, so Left finds nothing.
+  // Stepping across never lands on a node: Retry has no other edge at its top, so Left finds nothing.
   assert.deepEqual(run(at('node', 'paid'), ['ArrowDown', 'ArrowLeft']), ['edge paid-retry', null]);
 });
 
@@ -178,7 +178,7 @@ test('by place: straight ahead only, however far; nothing straight, nothing', ()
   // A far node straight right beats a near one up and to the right.
   const row = nest([node('here', 0, 0, 40, 20), node('near', 60, -40, 40, 20), node('far', 400, 0, 40, 20)]);
   assert.deepEqual(byPlace(row, 'here', 'ArrowRight'), at('node', 'far'));
-  // Nothing straight ahead: nothing, however near something off to the side is (the user).
+  // Nothing straight ahead: nothing, however near something off to the side is.
   const off = nest([node('here', 0, 0, 40, 20), node('near', 60, -40, 40, 20), node('far', 400, 60, 40, 20)]);
   assert.equal(byPlace(off, 'here', 'ArrowRight'), null);
   // Weigh parcel, Left: its own subgraph's border is straight ahead and nearer than Print label outside it.
@@ -230,7 +230,7 @@ test("a self-loop belongs to its node's edges at its ends; on it, along goes bac
   const corner = { boxes: nest([node('q', 0, 0), node('r', -40, -100)]),
     edges: [edge('q', 'q', [30, 0], 'R', [10, -15], 'U'), edge('q', 'r', [-10, -15], 'U', [-40, -85], 'D')] };
   assert.deepEqual(go(corner, at('edge', 'q-q'), 'ArrowLeft', { id: 'q', key: 'ArrowUp' }), at('edge', 'q-r'));
-  // Back on the box from its own loop, which frames it: by the arrow, as if gone round it that way (the user), and that
+  // Back on the box from its own loop, which frames it: by the arrow, as if gone round it that way, and that
   // arrow goes in; with no trail (the box clicked), the way its contents flow (none here: Down).
   const box = at('subgraph', 's'), loopEdge = at('edge', 's-s');
   const round = (/** @type {string} */ key) => [{ from: box, to: loopEdge, key: 'ArrowDown', mod: 'plain' },
@@ -239,7 +239,7 @@ test("a self-loop belongs to its node's edges at its ends; on it, along goes bac
   assert.equal(enter(round('ArrowUp'), sg, box, 'ArrowDown'), null);
   assert.deepEqual(enter(round('ArrowDown'), sg, box, 'ArrowDown'), at('node', 'in'));
   assert.deepEqual(enter([], sg, box, 'ArrowDown'), at('node', 'in'));
-  // Across a loop with nothing more to page: nothing, as on any edge (the user: not back to its node).
+  // Across a loop with nothing more to page: nothing, as on any edge (not back to its node).
   assert.equal(go(sg, at('edge', 's-s'), 'ArrowLeft', { id: 's', key: 'ArrowUp' }), null);
   // Ctrl has no far end on a loop to skip to: past it, a-b's.
   assert.deepEqual(skip(g, at('node', 'a'), 'ArrowLeft'), at('node', 'b'));
@@ -343,14 +343,14 @@ function press(/** @type {{ kind: any, id: string }} */ from, /** @type {string[
 }
 
 test('the opposite arrow goes back the way you came, past steps across, which it never undoes', () => {
-  // Stepped across to paid-ship, then up and down again: back on paid-ship every time (the user found the second time
-  // went to paid-retry, when coming back onto an edge restarted the trail).
+  // Stepped across to paid-ship, then up and down again: back on paid-ship every time (coming back onto an
+  // edge must not restart the trail, or the second time goes to paid-retry).
   assert.deepEqual(press(at('node', 'paid'), ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'ArrowUp', 'ArrowDown']),
     ['edge paid-retry', 'edge paid-ship', 'node paid', 'edge paid-ship', 'node paid', 'edge paid-ship', 'node paid', 'edge paid-ship']);
   // Back up a step across to the edge first reached in that fan, then on back the way you came.
   assert.deepEqual(press(at('node', 'wait'), ['ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'ArrowUp', 'ArrowUp']),
     ['edge wait-paid', 'node paid', 'edge paid-retry', 'edge paid-ship', 'node paid', 'edge paid-ship', 'edge paid-retry', 'node paid', 'edge wait-paid', 'node wait']);
-  // An edge reached by a step has no way back of its own: from its end and back onto it, Up walks on (the user: back
+  // An edge reached by a step has no way back of its own: from its end and back onto it, Up walks on (back
   // from Order log, you are in its fan).
   assert.deepEqual(press(at('node', 'paid'), ['ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowUp']),
     ['edge paid-retry', 'edge paid-ship', 'edge paid-mail', 'node mail', 'edge paid-mail', 'node paid']);
@@ -368,7 +368,7 @@ test("stepping past the last edge at one end carries on among those at the edge'
   const g = { boxes: nest([node('p', 100, 0), node('c', 0, 0), node('r', 50, 100), node('x', 150, 100)]), edges: [
     edge('r', 'c', [40, 85], 'U', [0, 15], 'D'), edge('p', 'r', [95, 15], 'D', [60, 85], 'U'),
     edge('p', 'x', [105, 15], 'D', [150, 85], 'U')] };
-  // The user: Paid, Down, Left → Retry's edge to Charge card; Right → back; Right → Paid's next; Right: nothing.
+  // Paid, Down, Left → Retry's edge to Charge card; Right → back; Right → Paid's next; Right: nothing.
   assert.deepEqual(run(at('node', 'p'), ['ArrowDown', 'ArrowLeft', 'ArrowLeft', 'ArrowRight', 'ArrowRight', 'ArrowRight'], g),
     ['edge p-r', 'edge r-c', null, 'edge p-r', 'edge p-x', null]);
   // From Retry: Up, Right → p-r; Right carries on into p's fan.

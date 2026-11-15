@@ -285,7 +285,7 @@ export function nest(/** @type {Box[]} */ boxes) {
  * The next thing that way from box `at`, by place, for an arrow with no edge that way and for Ctrl's jump: the nearest
  * node or subgraph box lying wholly that way (going right, its left edge past `at`'s right edge), at any depth,
  * measured box to box, straight ahead only (overlapping `at` across the arrow: straight below, going down; nothing
- * off to the side, the user); the topmost wins a tie going sideways, the leftmost going up or down. The subgraphs `at`
+ * off to the side); the topmost wins a tie going sideways, the leftmost going up or down. The subgraphs `at`
  * is drawn in count by their border on that side, which is always straight ahead, so with nothing nearer inside it,
  * the arrow reaches its subgraph's box.
  * Nothing that way: null; nothing wraps. To go from something with no box (an edge), pass a box of no size at its
@@ -344,7 +344,7 @@ export function nearest(/** @type {Box[]} */ boxes, /** @type {number} */ x, /**
 
 /**
  * The way the level subgraph box `at` sits on flows as drawn, as an arrow: the way a box selected otherwise than by an
- * arrow (a click, a find, O) goes in, as if walked to from before it (the user: in a TD diagram a click is like coming
+ * arrow (a click, a find, O) goes in, as if walked to from before it (in a TD diagram a click is like coming
  * in from the top). The way most of the edges between the boxes beside it (its parent's direct contents, itself
  * included) head as they leave their source, by axis first, then by sign along it; with none, or a tie (a back edge
  * against a forward one), the same a level up; at the top with none, Down. Never its own contents, which may run
@@ -381,9 +381,9 @@ const INTO = /** @type {Record<string, { axis: 'x' | 'y', sign: 1 | -1 }>} */ ({
 });
 
 /**
- * Where plain arrow `key` goes from subgraph box `at` into it: the arrow that brought you to the box goes on in (the
- * user), the opposite one when it brought you out from inside, and a box reached any other way (a click, a find, O,
- * an edit; with no move ending here) goes in the way its level flows (flow()). It goes in to the item nearest the side
+ * Where plain arrow `key` goes from subgraph box `at` into it: the arrow that brought you to the box goes on in, the
+ * opposite one when it brought you out from inside, and a box reached any other way (a click, a find, O, an edit;
+ * with no move ending here) goes in the way its level flows (flow()). It goes in to the item nearest the side
  * it enters by, first in reading order along that side: from the top the leftmost, from the left the topmost, and
  * backwards from the bottom (the rightmost) and from the right (the lowest), like reading a page backwards. Null for
  * any other key (the box walks its edges), and for an empty box. The items along a side are those overlapping the one
@@ -444,7 +444,7 @@ export function enter(trail, graph, at, key) {
 export const FRESH = /** @type {Cursor} */ (Object.freeze({ trail: [], came: null }));
 
 /**
- * The opposite arrow takes back the latest move into `at` (the user: you go back the way you came, past any steps
+ * The opposite arrow takes back the latest move into `at` (you go back the way you came, past any steps
  * across): when `key` is that move's opposite, with the same modifiers, it goes to where that move came from, and the trail
  * is cut to before it; else null, and the rules decide. Back on an edge, it counts as reached from `at`, the item just
  * left: its fan is the one the cross arrows step (from Order log, Left steps Order log's edges); back from a jump, it
@@ -465,7 +465,7 @@ export function back({ trail }, at, key, mod) {
 }
 
 /**
- * The opposite cross arrow takes back the latest step across (the user: Right then Left puts you back exactly where you
+ * The opposite cross arrow takes back the latest step across (Right then Left puts you back exactly where you
  * were): when `at` is where that step went and `key` is its opposite, back to the edge it left, counting from the fan
  * it counted from then. An edge where two fans meet lies in both, so only this memory can tell which you were in.
  * Else null, and the rules decide.

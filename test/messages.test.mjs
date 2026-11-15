@@ -1,5 +1,5 @@
 // Tests for what the page and the server say (docs/ux.md, Messages): a message never says "it" for something it has
-// not named (the user). Two shapes of that are caught: a message that starts with "It", and "it" right after a verb
+// not named. Two shapes of that are caught: a message that starts with "It", and "it" right after a verb
 // in -ing ("Moving it there"), both read with nothing named before them. The words are string literals spread across
 // modules, so the source itself is read, a line at a time: a template literal running over several lines is checked
 // on its first line only.

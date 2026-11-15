@@ -241,7 +241,7 @@ export const MENUS = {
     { action: 'insert-node', label: 'Insert node', key: 'n', applies: (s) => !s.insertWhy, why: (s) => s.insertWhy ?? null },
     { action: 'edit-edge', label: 'Edit edge' },
     { action: 'reverse-edge', label: 'Reverse edge', key: 'r', applies: (s) => !s.selfLoop, why: () => 'A self-loop has no direction to reverse.' },
-    // A toggle: the label says what choosing it does now (docs/ux.md). A, menu-only (the user).
+    // A toggle: the label says what choosing it does now (docs/ux.md). A, menu-only.
     { action: 'toggle-edge-animation', label: 'Enable edge animation', labelBack: 'Disable edge animation',
       back: (s) => Boolean(s.animated), key: 'a', applies: (s) => !s.animateWhy, why: (s) => s.animateWhy ?? null },
     { action: 'reassign-end', label: 'Reassign end…', key: 'c', mode: true },

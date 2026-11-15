@@ -116,4 +116,4 @@ note where merma had to make one up.
 | **fixture** | A hand-written test diagram in `test/fixtures/`. |
 | **browser check** | A check that needs Mermaid itself, run in a browser (`checks/README.md`). |
 | **mutation check** | Breaking merma's code on purpose to see a test fail (`checks/mutate.sh`). |
-| **UAT** | Acceptance testing: by Haiku agents for behavior, by the user for look and feel. |
+| **UAT** | Acceptance testing: by Haiku agents for behavior, by a person for look and feel. |

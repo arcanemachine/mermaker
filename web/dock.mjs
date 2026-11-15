@@ -12,7 +12,7 @@ export const DIAGRAM_SHARE = 0.4;
 /** The panel's share of main before it has been resized. */
 export const START_SHARE = 1 / 3;
 
-/** The dock Default means for main at this size: left when wider than tall, else bottom (the user: "wide", "tall"). */
+/** The dock Default means for main at this size: left when wider than tall, else bottom. */
 export function defaultDock(/** @type {number} */ width, /** @type {number} */ height) {
   return width > height ? 'left' : 'bottom';
 }

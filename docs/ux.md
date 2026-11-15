@@ -1,6 +1,6 @@
 # UX rules
 
-How the page behaves, and why. Read before changing anything the user sees. What goes here: rules that hold across
+How the page behaves, and why. Read before changing anything the page shows. What goes here: rules that hold across
 the page, each with its reason. What does not: what each control does (`docs/guide.md`), what words mean
 (`GLOSSARY.md`), what is planned.
 
@@ -9,7 +9,7 @@ the page, each with its reason. What does not: what each control does (`docs/gui
 - Every action is one small text edit to the `.mmd` file, and one undo step. Nothing the page adds (positions,
   selection, the view: fit, center, zoom and move, collapse, rotate and flip, find) is written into the file. The file
   is shared with editors and agents; the page is a view of it.
-- Collapsing a subgraph is view state, the page's by design (the user: a collapse in the page never affects the file):
+- Collapsing a subgraph is view state, the page's by design (a collapse in the page never affects the file):
   the page draws the file with Mermaid's own `id@{ view: collapsed }` (or `expanded`) lines after its last byte, so no
   offset moves, and keeps them for the tab (sessionStorage), not for the file. It is no undo step. The default state is
   the file's, changed by editing the file (the code panel). The code panel and Download Mermaid show the file;
@@ -20,13 +20,13 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   that loads it raise them. Over one, the last good render stays, and the error names the setting, not Mermaid's
   advice to call `mermaid.initialize`. The text limit counts what the page draws, so the lines collapse and turn
   append can take a file just under it over; the page then draws the file as written, with a warning.
-- Rotate and flip are view state too (the user: for fitting a wide or a tall window), drawn as collapse is: each
+- Rotate and flip are view state too (for fitting a wide or a tall window), drawn as collapse is: each
   direction in the text Mermaid gets (the header's, every subgraph's `direction`) is swapped in place, two letters for
   two, so no offset moves; a header with none gets one, since Mermaid ignores a top-level `direction` line. Kept for
   the tab with the file's direction then; a change to the file's own direction drops them, so an agent turning the file
-  is not turned back. One toggle each, not a choice of four (the user may ask for more after trying). The whole turn
-  turns every subgraph with it (the user: the picture turns as a whole), and a subgraph can be turned on its own as
-  well, on top of that (the user: "a la carte"): its own line turned, or, with none, a `direction` line of its own in
+  is not turned back. One toggle each, not a choice of four. The whole turn
+  turns every subgraph with it (the picture turns as a whole), and a subgraph can be turned on its own as
+  well, on top of that: its own line turned, or, with none, a `direction` line of its own in
   the drawn text (on its own line: on the `subgraph` line it does not parse). Only where Mermaid draws it in a direction
   of its own, seen in 12.2.0: none of its nodes linked to a node outside it, nor its own nodes to one in a subgraph
   inside it (edges to a subgraph's box do not count). That is most subgraphs grayed, all of the "Simple" demo's; it is
@@ -36,12 +36,12 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   an edge written inside a subgraph block when its new end is named outside that block: an edge line pulls both its ends
   into its block, so the line moves out, after the last edge, and its `linkStyle` number goes with it (the others after
   it move down one).
-- Colors are presets only (the user: a few things done well), each a `classDef` of merma's own name (`merma-blue`)
+- Colors are presets only (a few things done well), each a `classDef` of merma's own name (`merma-blue`)
   and a `class` line at the end, so the node's own lines are untouched and a file's own class names are never taken.
   Mermaid draws a node's last class over the others, whatever order the `classDef`s are in, so a color is always its
   node's last class: changed in place when merma's line already is, else moved to the end. merma writes a `classDef`
   only where the file has none by that name, and removes only its own, once nothing names it and it is exactly as
-  merma wrote it, so a color the user changed by hand stays theirs. A paste writes the `classDef` its colors need,
+  merma wrote it, so a color changed by hand stays as it was. A paste writes the `classDef` its colors need,
   since a class with none draws plain. A `style` line setting a fill, border or text color draws over any class, so
   the colors are grayed there, with the reason, and merma never removes the file's `style` line. One set serves both
   page themes, each with its text color set: a per-theme set would mean drawing the file other than as Mermaid draws
@@ -55,26 +55,25 @@ the page, each with its reason. What does not: what each control does (`docs/gui
 
 ## The diagram looks as Mermaid draws it
 
-A design goal (the user): with nothing selected, the diagram looks as Mermaid draws it from the file, and merma's own
+A design goal: with nothing selected, the diagram looks as Mermaid draws it from the file, and merma's own
 differences are kept few. Each one is listed here:
 
 - A linked node's label is underlined, and blue unless the diagram colors it (Links between diagrams, below).
-- The welcome over an empty flowchart (Messages, below): page text over the canvas, which the user asked for.
+- The welcome over an empty flowchart (Messages, below): page text over the canvas.
 - The diagram is drawn at its natural size and fitted to the window, not scaled to the page's width (Mermaid's
   `useMaxWidth` is off).
 - With the Dark page theme, a diagram whose file sets no theme is drawn with the dark counterpart of the theme Mermaid
   would draw it with: `redux-dark-color` for a type whose own default is `redux-color` (a flowchart, whose subgraphs
-  each get a color), else `dark`, on a dark canvas (the user); otherwise it is drawn on white. A file's own theme
+  each get a color), else `dark`, on a dark canvas; otherwise it is drawn on white. A file's own theme
   always wins. The Light page theme names no theme, so each type keeps Mermaid's own default.
 
-The page theme: System, the default, follows the system's setting; Light and Dark override it (the user: auto alone
-"will eventually annoy me"), kept by the browser for every tab. Dark darkens the page's own parts and draws the diagram
-with Mermaid's dark themes, which merma asks for and never writes into the file. The marks keep their colors, chosen to
-read on either: a selected node or subgraph is marked by a band around it that keeps its own fill, border and text
-(the user: an edit's colors show after it), find's current match brings its own dark text with its fill, and a
-link's blue follows the node's fill. The label
-box, the notices and the find bar (amber, as find's marks are) keep their light colors. "Page theme", not "Theme":
-Mermaid's theme is the file's to set.
+The page theme: System, the default, follows the system's setting; Light and Dark override it (following the system
+alone would eventually annoy), kept by the browser for every tab. Dark darkens the page's own parts and draws the
+diagram with Mermaid's dark themes, which merma asks for and never writes into the file. The marks keep their colors,
+chosen to read on either: a selected node or subgraph is marked by a band around it that keeps its own fill, border and
+text (an edit's colors show after it), find's current match brings its own dark text with its fill, and a link's blue
+follows the node's fill. The label box, the notices and the find bar (amber, as find's marks are) keep their light
+colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 
 ## Words
 
@@ -83,8 +82,8 @@ Mermaid's theme is the file's to set.
   and the case is named on the left ("Double-click empty space", "N on node"). One action whatever the target ("Open
   menu": the target's own menu) is one row, and so is a key that backs out of whatever is open ("Cancel or deselect").
   Keys that depend on the selection go under "Keys with nothing selected" and "Keys with something selected": the
-  page names the two cases, never a mode the user must keep track of (the user).
-- Help's keys go by the key within each section, so a key is found by its letter (the user): punctuation and digits,
+  page names the two cases, never a mode the reader must keep track of.
+- Help's keys go by the key within each section, so a key is found by its letter: punctuation and digits,
   then letters, then named keys (Arrows, Backspace, Delete, Down, Enter, Esc, F2, F10, Space, Up), each key's forms
   together, plain, Shift, Ctrl, Ctrl+Shift. One row per shortcut ("Delete" and "Backspace" are two rows), each saying
   what it does in at most 45 characters, so every row fits on one line; the panel is as wide as its rows, and at most
@@ -94,7 +93,7 @@ Mermaid's theme is the file's to set.
 
 - Mermaid's word wherever it has one: node, edge, label, shape, subgraph, title, direction, arrow type, length. A word
   of merma's own needs a reason, given in `GLOSSARY.md`. Readers who know Mermaid should not have to translate.
-- No em dashes in the page's text (the user): a colon or parentheses instead ("Current: Diamond (Decision)").
+- No em dashes in the page's text: a colon or parentheses instead ("Current: Diamond (Decision)").
 - Menu labels are in sentence case and read verb + noun, from a fixed set of verbs, so one label predicts the next:
 
   | Verb | Means | Examples |
@@ -115,148 +114,145 @@ Mermaid's theme is the file's to set.
 - An ellipsis (…) means "then you do something" (click a node, type), nothing else. ▸ opens a submenu. ▴ on
   a button opens a menu above it (Export ▴): the footer's other buttons act at once.
 - A submenu or picker is titled with the noun alone ("Shape"); the verb is on the item that opens it.
-- A setting of the page's own, not an action, is named by its noun and has no key (the user): Page theme ▸.
+- A setting of the page's own, not an action, is named by its noun and has no key: Page theme ▸.
 
 ## Gestures and keys
 
 - One gesture, one kind of outcome. A gesture that adds never deletes; removing is always a deliberate Delete. When
   there is nothing to add, it shows what exists instead of changing anything.
-- A key's Shift form shows its extra cost before it acts (the user, "a rule emerging here"): where it deletes what the
+- A key's Shift form shows its extra cost before it acts: where it deletes what the
   plain form keeps (Ctrl+Shift+V a cut node's edges, Shift+D a subgraph's contents or a node's children), what would
   go glows pale red while that item is in focus or under the pointer in the menu, or after a first press that asks
-  for a second. Holding Shift shows nothing: the glow flashed under every Shift key (Ctrl+Shift+Arrows, Shift+F).
-  Shift+D, Shift+Delete and Shift+Backspace outside menus take two presses (the user): the first marks what would go
+  for a second. Holding Shift shows nothing: the glow would flash under every Shift key (Ctrl+Shift+Arrows, Shift+F).
+  Shift+D, Shift+Delete and Shift+Backspace outside menus take two presses: the first marks what would go
   and says what it is in a notice; the same key again (any of the three) deletes it. Escape, a click, any other key
   or a redraw cancels; a key's repeat never confirms, and pressing Shift never cancels. When the Shift form would
   take no more than the plain one (a node with no children, an empty subgraph), the first press deletes. The menu
   item deletes at once, since its focus already showed the cost. On an edge, Shift+D does what D does. What is hidden
   in a collapsed box gets no mark; the notice and the announcement count it.
-- Deleting a subgraph (the user wants two): Delete subgraph (D, Delete, Backspace) takes the box alone, unwrapping
+- Deleting a subgraph, two ways: Delete subgraph (D, Delete, Backspace) takes the box alone, unwrapping
   it: its `subgraph`, own `direction` and `end` lines go, and so do the edges to the subgraph itself; what it held
   keeps its lines and is drawn where Mermaid then draws it (the block around it, or another block that also names a
   node). Delete subgraph and contents (Shift+D, Shift+Delete, Shift+Backspace) takes every node Mermaid draws in it,
   each with its edges as Delete node takes them, then the boxes; a line inside it naming only nodes drawn elsewhere
   stays. Both are one edit, one undo, and work on a collapsed box.
-- Delete node and children (the user): the node goes with every node it leads to, down the chain, except those a
+- Delete node and children: the node goes with every node it leads to, down the chain, except those a
   node that stays still leads to, so a loop only the node feeds goes too. Edges count as the file writes them, start
   to end, whatever the arrow (`---`, `<-->` and `~~~` too). An edge to a subgraph leads to no node in it, as
   Ctrl+Shift+Arrows skip past a box: it names no node, and the delete takes less. A subgraph the delete leaves with
-  nothing in it goes too, by Delete subgraph's own edit (the user), so no empty box is left with edges still reaching
+  nothing in it goes too, by Delete subgraph's own edit, so no empty box is left with edges still reaching
   it; one already empty stays, and so does the subgraph around it. Plain D and a cut never do this: D takes one thing,
   and a cut node comes back.
-- A letter outside a menu does exactly what it does in the selected item's menu (the user): R reverses a selected
+- A letter outside a menu does exactly what it does in the selected item's menu: R reverses a selected
   edge, as the edge menu's R does. So a letter never means two things. And a letter works outside menus only when no
-  other key does the job (the user): R, C, N and M have no other key. A, Enable edge animation, is the exception the
-  other way (the user): it works in the edge menu only, not on the diagram. D is the exception (the user: the home row): it
+  other key does the job: R, C, N and M have no other key. A, Enable edge animation, is the exception the
+  other way: it works in the edge menu only, not on the diagram. D is the exception (the home row): it
   deletes outside menus as Delete and Backspace do, on a node, an edge or a subgraph. A key is a
   letter of its label where one fits: M is Merge into… on a node. A letter keeps one meaning across kinds: C picks what
   an edge goes to and Shift+C what it comes from, on a node (Connect to…, Connect from…) and on an edge (Reassign end…,
-  Reassign start…) alike (the user). The Edit items have no menu key at all (the user): Enter and F2 already edit the
+  Reassign start…) alike. The Edit items have no menu key at all: Enter and F2 already edit the
   selection, quicker than opening a menu, and in an open menu Enter runs the item in focus. So E is free. S is Add
   subgraph, inside a selected subgraph or at the top level; on a node it is left for wrapping it in a subgraph.
-- The selection's menu opens with . (period), the menu key or Shift+F10 (the user wanted M back for a letter; "." is
+- The selection's menu opens with . (period), the menu key or Shift+F10 (M is kept for a letter; "." is
   Gmail's key for its "More" menu). Keys are matched by the character typed, so on AZERTY . is Shift+;.
-- Reassign end… (C) and Reassign start… (Shift+C) move the end their key names, whatever the tick (the user, in place
-  of one Reassign edge… on E that moved the end at the tick): "end" and "start" are the text's (`A --> B`: start A,
+- Reassign end… (C) and Reassign start… (Shift+C) move the end their key names, whatever the tick (not one Reassign edge… that moves the end at the tick): "end" and "start" are the text's (`A --> B`: start A,
   end B). Their candidate starts on the edge itself, as Connect to…'s does on its item. Space, wherever the candidate
-  is, or a click on the edge's line nearer the other end moves that one instead (the user; with several edges, later,
+  is, or a click on the edge's line nearer the other end moves that one instead (with several edges, later,
   Space would swap only the one the candidate is on). The tick stays through the pick, dashed at the end that moves;
   the notice stays as it was. Outside a pick the tick only says which end's edges the
   cross arrows step.
-- Merge into… (the user, after trying it as three moves): a node's edges move to another node (the end at it moves),
-  and the node goes. The user expected moving a node's edges to swing their far ends (a redirect: "Start" now leads to
-  "In stock?"), and read every label for the near-end move backwards, so it is named for what it is for: merging a
+- Merge into…, one edit rather than three moves: a node's edges move to another node (the end at it moves),
+  and the node goes. Moving a node's edges reads as swinging their far ends (a redirect: "Start" now leads to
+  "In stock?"), and every label for the near-end move reads backwards, so it is named for what it is for: merging a
   duplicate, replacing a node. Not "Swap" (two nodes trading edges) nor "Merge with" (which one stays?). An edge
   between the two goes, as it would mean nothing after; a self-loop comes along as one of the other node; an edge
   that comes out the same as one the other node already has (same ends, arrow type and label) goes, unless it has an
   edge id or a `linkStyle` of its own. Nodes only: a subgraph cannot take a node's place. Escape, or a
   click away, is the one way out of every pick; C while connecting does nothing. A find opened inside a pick (Connect
-  to…, a move) is a step of it (the user): Enter in the find only moves the candidate, Escape closes the find
+  to…, a move) is a step of it: Enter in the find only moves the candidate, Escape closes the find
   first and the pick after, so the candidate stays the one thing Enter picks.
-- Shift with an item's letter does its counterpart: the other way round, or the same thing further (the user; the
-  reviewer's wording). Shift+C is Connect from…, C's edge the other way; Shift+R flips the diagram as R rotates it;
+- Shift with an item's letter does its counterpart: the other way round, or the same thing further . Shift+C is Connect from…, C's edge the other way; Shift+R flips the diagram as R rotates it;
   Shift+F fits the selection, which F only centers; Shift+D deletes a subgraph with its contents, which D takes alone,
   and a node with its children (on an edge, Shift+D does what D does, with no item of its own). A Shift key
   exists only beside its plain letter in the same menu, shown as ⇧ and the letter, as the shape picker shows Shift with a digit, and is read from the Shift key held,
-  never from the letter's case, so Caps Lock does not count. Ctrl+Shift+L (Show link, the user's pick) sits beside L,
+  never from the letter's case, so Caps Lock does not count. Ctrl+Shift+L (Show link) sits beside L,
   its letter, as Ctrl+Shift+V does beside Ctrl+V; on a Mac ⌘⇧L works too, since the menus show Ctrl as ⌘ there.
-- In a pick, solid is where the keys are and marked is what will change (the user). The candidate, which the arrows
+- In a pick, solid is where the keys are and marked is what will change. The candidate, which the arrows
   move, Enter picks and which is selected after, is drawn as the selection is. What the pick will change is drawn
   with its own lines thicker instead: the node or subgraph it starts from, and each edge that will move or go.
-- What is about to change is drawn with its own lines thicker, in its own colors (the user: thicker reads as "about
+- What is about to change is drawn with its own lines thicker, in its own colors (thicker reads as "about
   to change"): a pick's source and moving edges, and a cut item and a cut node's edges. No color of its own, so it
   never competes with the selection's blue, which shows over it: a selected cut item has its band and its thicker
   border. Not dashed: a dashed edge reads as Mermaid's dotted arrow, and dashes break up on shapes drawn as several
-  outlines. Not a pale glow, tried and set aside (the user: a new color with a meaning of its own, weak on the dark
+  outlines. Not a pale glow (a new color with a meaning of its own, weak on the dark
   canvas). What has no line of its own (an invisible edge, `~~~`) shows no mark.
-- The diagram comes first in Tab order, whatever the dock (the user): the diagram, the code panel's handle, the panel,
+- The diagram comes first in Tab order, whatever the dock: the diagram, the code panel's handle, the panel,
   its bar, the code, then the footer, and round to the diagram. The diagram has no focus ring (Accessibility), so the
   one stop without a ring is where focus starts and rests, and the cycle never seems to stall on it.
-- A toggle in a menu is one item whose label says what choosing it does now (the user): Collapse subgraph and Expand
+- A toggle in a menu is one item whose label says what choosing it does now: Collapse subgraph and Expand
   subgraph, Rotate and Rotate back, Enable edge animation and Disable edge animation. A check mark is for one choice
   among several, as a setting's submenu holds them (a setting is named by its noun: Page theme ▸). A box is for a
   setting kept in a panel (Follow selection).
 - No hidden affordances. A shortcut is shown where its item is: a menu item's key at its right, as most apps show
-  them (the user: one system, no underlined letters), and a digit in a picker. A key is a letter of its label where
+  them (one system, no underlined letters), and a digit in a picker. A key is a letter of its label where
   one fits, for the memory, but need not be (Center in window, F: F is the view key everywhere; Find…, /). Names
   show as text: a picker's line names the focused entry (the outline), else the current one. On touch, which has no
   hover, that is the current one only (a known trade: the picker stays open after a pick, so a tap shows it).
-- Not every key needs a hint on the page (the user). A hint goes on the page only where it fits and is worth its
+- Not every key needs a hint on the page. A hint goes on the page only where it fits and is worth its
   space; the guide holds the rest. A little friction while learning is fine when what the page shows leads the way:
   a picker's digits say there is a way in, and Down from the label box is it.
-- Nothing moves under the pointer: a menu or picker never changes its items while it is open, and a notice lies over
-  the top of the diagram instead of pushing it down (a fitted diagram leaves room for one line of it), since a diagram
-  that moved as Connect to… asked for a click would put another node under the click aimed at.
-  For the same reason an edit keeps the view (the user): the diagram is fitted when the page opens, and again only on
-  Fit to window or, until the view is zoomed or moved, a change in the window's size. A diagram that grows can run
-  past the edge; that is the price of nodes staying put. An add is the one exception, since its label box must be
-  in view to be used (the user): the view moves the least that shows the new item, its label box and the pickers
-  centered by it, zoomed out only if they cannot fit, and not again while the box grows. The colors above a box are
-  the other: opening a panel whose colors or shapes would be cut off by the window's edge moves the view the same
-  way; Escape, which takes the
-  add back, puts the view back as it was, unless you moved it since. An open menu keeps its place across renders too, so after
-  someone else's edit it can sit apart from its node until it is reopened: following the node would move it under the
-  pointer whenever a pick resizes the node. On a pan or zoom an open menu moves with the diagram: an item's menu with
-  its item, the empty-space menu with the point it was opened at, the label box and its picker with their item. It keeps the side it opened on (the user: it jumped
-  across its item as it neared the edge), so at the window's edge it stops there, over its item if need be, and stays
-  on that side even when the other has room again. Its submenu and the label box's picker do the same.
+- Nothing moves under the pointer: a menu or picker never changes its items while it is open, and a notice lies over the
+  top of the diagram instead of pushing it down (a fitted diagram leaves room for one line of it), since a diagram that
+  moved as Connect to… asked for a click would put another node under the click aimed at. For the same reason an edit
+  keeps the view: the diagram is fitted when the page opens, and again only on Fit to window or, until the view is
+  zoomed or moved, a change in the window's size. A diagram that grows can run past the edge; that is the price of nodes
+  staying put. An add is the one exception, since its label box must be in view to be used: the view moves the least
+  that shows the new item, its label box and the pickers centered by it, zoomed out only if they cannot fit, and not
+  again while the box grows. The colors above a box are the other: opening a panel whose colors or shapes would be cut
+  off by the window's edge moves the view the same way; Escape, which takes the add back, puts the view back as it was,
+  unless you moved it since. An open menu keeps its place across renders too, so after someone else's edit it can sit
+  apart from its node until it is reopened: following the node would move it under the pointer whenever a pick resizes
+  the node. On a pan or zoom an open menu moves with the diagram: an item's menu with its item, the empty-space menu
+  with the point it was opened at, the label box and its picker with their item. It keeps the side it opened on (else it
+  would jump across its item as it nears the edge), so at the window's edge it stops there, over its item if need be,
+  and stays on that side even when the other has room again. Its submenu and the label box's picker do the same.
 - Menus open on click (right-click, long-press, or their key) and stay open until clicked away or Escape. Submenus open
   on click too, never on hover.
-- Escape held for three quarters of a second clears everything at once (the user: not a step at a time), as if Escape were pressed
+- Escape held for three quarters of a second clears everything at once (not a step at a time), as if Escape were pressed
   until nothing was left: Help, a menu, the label box, find, a pick, a cut, the selection and the code panel. The
   press does Escape's first step as always, and the rest follows once the time is up if Escape is still down; the key's
   own repeats do nothing, so a hold never steps one level at a time. Letting go, another key, a click, or the page
   losing focus before then cancels it. A changed draft still asks, once Escape is let go, since a question opened
   under a held Escape would take its repeats as Cancel; if the first press itself asked, the hold does nothing more.
-  No chord was free: Ctrl+Esc, Shift+Esc and Alt+Esc belong to the system or the browser.
-- A drag is never a cancel (the user: it had bitten more than once). In the diagram, where a press can become a pan
+  No chord is free: Ctrl+Esc, Shift+Esc and Alt+Esc belong to the system or the browser.
+- A drag is never a cancel (a pan that cancels loses work by accident). In the diagram, where a press can become a pan
   or a pinch, a press-and-drag, a pinch or the wheel closes nothing and cancels nothing: not a menu, Help, the label
   box, find or Connect to…; only a click (a release without a drag, as the viewer's slop decides) does. Outside the
   diagram there is nothing to drag, so a press there is a click in practice, and its focus move saves the label box.
   While a menu, the label box or find is open, a press in the diagram moves no focus, so a drag leaves the keys with
   what is open; the click decides.
 - A click away is a click anywhere else on the page, header and footer included. Whatever waits for a click (a menu,
-  Connect to…, Help, find) ends on one, as on Escape. The label box is the exception (the user): a click or tap away
+  Connect to…, Help, find) ends on one, as on Escape. The label box is the exception: a click or tap away
   keeps what you typed (it saves, as Enter does); only Escape discards it. In the box an add opened, Escape takes the
-  add back too (the user): it cancels what was started, and what was started is the add. Undo takes a save back, which
+  add back too: it cancels what was started, and what was started is the add. Undo takes a save back, which
   is what makes saving on a click away safe, and a touch screen has no other sure way to save. A press on Undo or Redo
   that started that save, as its click away, does not wait for it: it says the save is still going and to press again,
   rather than doing nothing silently or two things at once. An emptied node label or title (which cannot be saved) is
-  kept as it was, with a notice (the user), and the click goes on as after any save (the reviewer): a click away is not the
+  kept as it was, with a notice, and the click goes on as after any save: a click away is not the
   deliberate save Enter is, so it does not hold you in the box. Enter on one is refused with an error. What cannot be
   saved for any other reason (a shape the label cannot take, another edit still saving) keeps the box open with its
   error, and the click that left it does nothing. A click away onto another item selects that item once the save is
   drawn.
 - No hover styling on the diagram, where a highlight would say something is selectable when it is not. The pointer
-  says what a click does instead (the user): the pointing finger on anything a click selects (a node, an edge with
+  says what a click does instead: the pointing finger on anything a click selects (a node, an edge with
   the band around its line, a subgraph, the title), the browser's own hand everywhere else, where a drag moves the
   diagram. Menu and picker items do highlight under the pointer, as every menu
   does, and the item under the pointer is the focused one, so there is only ever one highlight and Enter runs it.
 - A picker lies by the label box, filled by what is edited: under it, the shape picker for a node and the arrow type
-  picker for an edge (the user: an edge is edited as a node is, one system for both); above it, the color picker for
-  a node and a subgraph (the user: one panel, not a submenu). There is no other way to a picker, no key and no submenu
-  (the user: consistency over a shorter way to the arrow type).
-- Tab does nothing in the label box and its pickers (the user: Up and Down already reach the pickers, and Tab adds
+  picker for an edge (an edge is edited as a node is, one system for both); above it, the color picker for
+  a node and a subgraph (one panel, not a submenu). There is no other way to a picker, no key and no submenu
+  (consistency over a shorter way to the arrow type).
+- Tab does nothing in the label box and its pickers (Up and Down already reach the pickers, and Tab adds
   nothing). It never saves: Enter in the label saves, Escape cancels, a click away saves. Up into grayed colors says
   why instead.
 - A double-tap opens the box as the finger lifts, and the browser's click for that tap follows on whatever is under
@@ -266,19 +262,19 @@ Mermaid's theme is the file's to set.
   start, Down at the bottom to the top of the same column. So a key always moves along one line of the grid. The one
   exception: the arrow toward the label box from the row nearest it goes back to the box (Up from the shapes' top row,
   Down from the colors' bottom row).
-- A picker's short last row is centered under the rest (the user: the arrow type picker's last two, under the dotted
+- A picker's short last row is centered under the rest (the arrow type picker's last two, under the dotted
   and thick columns). Its keys take it as starting at column floor((columns − its length) / 2): exact at ten columns,
   half a column left of where it is drawn at five, where the drawing stays centered (mostly used by touch). Down from a
   column over one of its entries goes there, and Up goes back; a column it lacks wraps from one row higher.
 - A picker has ten columns, so a digit and its Shift form sit one above the other, and five on a narrow screen: below
   480px for the shape picker, and 600px for the arrow type picker, whose icons are wider.
-- In a picker, selected and focused are apart (the user): the fill is the selected entry, moved only by a click, a
+- In a picker, selected and focused are apart: the fill is the selected entry, moved only by a click, a
   digit, Space or Enter; the outline is keyboard focus, moved by the arrows. While focus is not in the grid, the
-  outline stays where the arrows go on from (the user): Up or Escape back to the label leaves it on the entry last
+  outline stays where the arrows go on from: Up or Escape back to the label leaves it on the entry last
   focused, and Down returns there; a pick moves it to the picked entry. Enter in the grid selects and goes back to the
   label; only Enter in the label saves, so each Enter has one meaning. Escape in the grid keeps what was selected
   there.
-- Mouse and keyboard share one focus in a picker (the user: they cooperate, as in a menu): whichever moved last, a key
+- Mouse and keyboard share one focus in a picker (they cooperate, as in a menu): whichever moved last, a key
   or the pointer, has the outline, and the line names it. With focus in the grid, the pointer moving onto an entry
   focuses it. With focus in the label box, it moves only the outline (where Down goes), never the caret. Either
   way the pointer previews: when it leaves the grid, the outline (and focus, in the grid) goes back to where it was,
@@ -288,122 +284,119 @@ Mermaid's theme is the file's to set.
   nothing else for them. The code panel is the exception: there they scroll the code (below). While Help is open, every key is its own (arrows scroll it, Escape closes it), and the page
   answers none.
 - An item reached by keys that is off screen is brought into view, the least move that shows it with a margin; one in
-  view moves nothing (the user), for the same reason an edit keeps the view. One too big for the window at this zoom
-  (a long edge, a large subgraph) is shown whole, zoomed out just enough and centered, as find frames its matches
-  (the user: part of a line is neither the line nor the end that matters). An edge is shown with its label. A view moved that way counts as yours, as
+  view moves nothing, for the same reason an edit keeps the view. One too big for the window at this zoom (a long edge,
+  a large subgraph) is shown whole, zoomed out just enough and centered, as find frames its matches (part of a line is
+  neither the line nor the end that matters). An edge is shown with its label. A view moved that way counts as yours, as
   after a drag: a change in the window's size no longer refits it.
-- The view is yours: merma moves it on its own only to bring something into view, and once you move it yourself,
-  nothing merma does afterwards puts it back. Find (/) is the case in point. It matches the whole diagram, on screen
-  or not, and typing never moves the view: the current match is the best one wholly on screen, else the best, and the
-  count says how many are not ("2 of 5, 3 off screen"). Tab and Shift+Tab step; the first of them with any match off
-  screen also moves the view once to show them all, as a fit puts the diagram: centered at the zoom it has, or zoomed
-  out just enough, never in (the user: a find that jumped on some Tabs and not others was confusing; one move, then
-  none). Enter on a match off screen centers it (the user). Moving by keys keeps the least move, since there each step
-  is one item. Escape puts back the selection and
-  the view from before the find, unless you moved the view
-  since (a drag, the wheel, a pinch, a zoom key); a click away keeps the view where it is (the user: Tab to a match
-  off screen, then click it, and the view stays put). Enter selects the current match; with no match, or nothing
-  typed, it does nothing, and the box stays. / again shows the last query, selected.
+- The view is yours: merma moves it on its own only to bring something into view, and once you move it yourself, nothing
+  merma does afterwards puts it back. Find (/) is the case in point. It matches the whole diagram, on screen or not, and
+  typing never moves the view: the current match is the best one wholly on screen, else the best, and the count says how
+  many are not ("2 of 5, 3 off screen"). Tab and Shift+Tab step; the first of them with any match off screen also moves
+  the view once to show them all, as a fit puts the diagram: centered at the zoom it has, or zoomed out just enough,
+  never in (a find that jumps on some Tabs and not others confuses; one move, then none). Enter on a match off screen
+  centers it. Moving by keys keeps the least move, since there each step is one item. Escape puts back the selection and
+  the view from before the find, unless you moved the view since (a drag, the wheel, a pinch, a zoom key); a click away
+  keeps the view where it is (Tab to a match off screen, then click it, and the view stays put). Enter selects the
+  current match; with no match, or nothing typed, it does nothing, and the box stays. / again shows the last query,
+  selected.
 - Find's current match blinks when it becomes current (typing, Tab, reopening; not a drag or a redraw that keeps it),
-  a third of a second on and off, the user's rate, seven times, then stays on (Accessibility says why it stops): a
+  a third of a second on and off, seven times, then stays on (Accessibility says why it stops): a
   blink as the current match changes is when it helps. Off is the plain match mark, so the current never leaves the
   set of matches. An edge blinks by its line's color (near-black amber), not its width, which would jitter, and not its
-  label (the user: a blinking label distracts).
+  label (a blinking label distracts).
   Its colors stay amber, never the selection's blue: a blue phase would read as the match being selected, and a
   selected match would not blink at all.
-- Moving by keyboard, as one model (the user settled each rule in UAT, case by case, as "press X, get Y"):
+- Moving by keyboard, as one model:
   - The arrows are screen directions: Up is up, Right is right, wherever you are. Plain arrows walk the edges, two
-    presses a step, node, edge, node, so the edge is where you choose (the user found jumping straight to "the next
-    node" picked far-off nodes and trapped you in loops). An edge belongs to both its ends, and arrowheads play no part
-    (the user: an edge is an edge); a self-loop too belongs to its node at both its ends.
+    presses a step, node, edge, node, so the edge is where you choose (jumping straight to "the next node" would pick
+    far-off nodes and trap you in loops). An edge belongs to both its ends, and arrowheads play no part (an edge is an
+    edge); a self-loop too belongs to its node at both its ends.
   - An edge heads the way it goes just after it leaves a node, measured 20 px along its line, not where on the outline
     it starts: the edges out of a diamond's lower corners head down, and Down from it offers all of them, left to right.
     Twenty pixels, because a curve leaving a corner has turned by then, and a short edge has not yet reached its next
     bend. A box's edges leaving one way are its fan that way.
-  - On an edge, the cross arrows step across, and never land on a node (the user: "when I'm at an edge, I'm paging
-    between edges"): to the edge beside it in the fan at the end you came from, then on into the fan at its other end,
-    from its place there, so every edge sharing a node with it is reachable sideways. An edge clicked (or right-clicked,
-    or long-pressed: its menu then acts where you pointed) on its line counts as reached from the end on the click's side, split at its label where it has one, else at its middle, along the line
-    (the user: every click decides, the same each time); clicked on its label, or found, from its source (the node
-    the file writes first: every edge has one). The counted end is marked with the
-    tick, so the fan the cross arrows step shows before you press: a short bar across the way the edge leaves that
-    end's node, flat or upright, never tilted (the user: noticeable, not in the way; a dot read as Mermaid's circle
-    end). It is sized in the diagram's units, as the line and its arrowhead are, so it grows and shrinks with them (the
-    user: a fixed size hid under the line zoomed in), with a floor on screen; it sits just past the arrowhead (the user:
-    a gap made it hard to see, and an end whose last stretch hides under the arrowhead pushed it past the bend, lying
-    along the line), and slides along the line to where it runs that way, off any bend and clear of any text. Where no
-    stretch runs that way before the middle, it sits at the arrowhead's base. It always lies across the arrow at its
-    end, whatever the line does before it and at any zoom (the user: no exceptions; an upright tick beside a bend was
-    built and taken out). Space switches an edge to its other end (the user), so the cross arrows step that end's fan.
-    It is not a move: the arrival into the edge leaves the trail, as after a step across. The cross arrows stop at the
-    last edge rather than wrap: Right always means right. An earlier version went on to the end node past the last edge;
-    the user tried it and chose stepping across.
+  - On an edge, the cross arrows step across, and never land on a node (on an edge, you are paging between edges): to
+    the edge beside it in the fan at the end you came from, then on into the fan at its other end, from its place there,
+    so every edge sharing a node with it is reachable sideways. An edge clicked (or right-clicked, or long-pressed: its
+    menu then acts where you pointed) on its line counts as reached from the end on the click's side, split at its label
+    where it has one, else at its middle, along the line (every click decides, the same each time); clicked on its
+    label, or found, from its source (the node the file writes first: every edge has one). The counted end is marked
+    with the tick, so the fan the cross arrows step shows before you press: a short bar across the way the edge leaves
+    that end's node, flat or upright, never tilted (noticeable, not in the way; a dot would read as Mermaid's circle
+    end). It is sized in the diagram's units, as the line and its arrowhead are, so it grows and shrinks with them (a
+    fixed size would hide under the line zoomed in), with a floor on screen; it sits just past the arrowhead (a gap
+    would make it hard to see, and an end whose last stretch hides under the arrowhead would push it past the bend,
+    lying along the line), and slides along the line to where it runs that way, off any bend and clear of any text.
+    Where no stretch runs that way before the middle, it sits at the arrowhead's base. It always lies across the arrow
+    at its end, whatever the line does before it and at any zoom (no exceptions, not even an upright tick beside a
+    bend). Space switches an edge to its other end, so the cross arrows step that end's fan. It is not a move: the
+    arrival into the edge leaves the trail, as after a step across. The cross arrows stop at the last edge rather than
+    wrap: Right always means right. Nor do they go on to the end node past the last edge.
   - With no edge leaving that way, an arrow goes to the nearest box (node or subgraph) straight that way, else nothing
-    (the user tried nearest-anywhere and edges-by-place, and disliked both: Boxing, Down reached Send, off to the side;
-    Shipping, Right reached Wait for stock, far up). A subgraph you are in counts by its border, always straight ahead,
-    so with nothing nearer inside you reach its box. The price: a node off every row and column, with no edges, is
-    reached only by a click or a find.
+    (nearest-anywhere and edges-by-place both go wrong: from Boxing, Down would reach Send, off to the side; from
+    Shipping, Right would reach Wait for stock, far up). A subgraph you are in counts by its border, always straight
+    ahead, so with nothing nearer inside you reach its box. The price: a node off every row and column, with no edges,
+    is reached only by a click or a find.
   - A subgraph's box walks its own edges like a node, including those crossing its border from a node inside it, so no
-    way out of a subgraph is hidden from its box. Into a subgraph (the user): the arrow that brought you to its box goes
-    on in, and the other three walk its edges; Ctrl+Arrow is the way past. So a left-right diagram is walked by Right
-    as a top-down one is by Down (the user tried left-right flowcharts, where only Down went in, at the top, and Right
-    walked past everything inside). It goes in to the item nearest the side it enters by, first in reading order along
-    that side: from the top the leftmost, from the left the topmost, and backwards from the bottom (the rightmost) and
-    from the right (the lowest), like reading a page backwards. What lies along a side is what overlaps the item
-    nearest it, so a few pixels never decide it. Going back out keeps the arrow that first brought you, so in, out and
-    in again is the same arrow each time; back from the box's own self-loop, it is the arrow you went round it by.
-    Reaching the box from inside it (an arrow to its border) is coming out: that arrow walks on, and only the opposite
-    goes back in (Retry, Down reaches the Payment box; Down again goes on to its edges, not back in).
-  - A box selected any other way (a click, a find, O, an edit, Enter) goes in as if you had walked to it (the user: in
-    a top-down diagram a click is like coming in from the top): the way the boxes beside it run as drawn, by most of
-    the edges between them, else a level up, else Down. Never by its own contents, which may run another way (a
-    `direction LR` subgraph in a top-down diagram still goes in by Down, as when walked to), and never by the file's
-    `direction` line, which Mermaid ignores when a node inside links outside. The user weighed a click's position, and
-    chose not: nothing on screen would show the line.
-  - The opposite arrow goes back the way you came (the user): it takes back the latest move into where you are, past
+    way out of a subgraph is hidden from its box. Into a subgraph: the arrow that brought you to its box goes on in, and
+    the other three walk its edges; Ctrl+Arrow is the way past. So a left-right diagram is walked by Right as a top-down
+    one is by Down (otherwise, on a left-right flowchart, only Down would go in, at the top, and Right would walk past
+    everything inside). It goes in to the item nearest the side it enters by, first in reading order along that side:
+    from the top the leftmost, from the left the topmost, and backwards from the bottom (the rightmost) and from the
+    right (the lowest), like reading a page backwards. What lies along a side is what overlaps the item nearest it, so a
+    few pixels never decide it. Going back out keeps the arrow that first brought you, so in, out and in again is the
+    same arrow each time; back from the box's own self-loop, it is the arrow you went round it by. Reaching the box from
+    inside it (an arrow to its border) is coming out: that arrow walks on, and only the opposite goes back in (Retry,
+    Down reaches the Payment box; Down again goes on to its edges, not back in).
+  - A box selected any other way (a click, a find, O, an edit, Enter) goes in as if you had walked to it (in a top-down
+    diagram a click is like coming in from the top): the way the boxes beside it run as drawn, by most of the edges
+    between them, else a level up, else Down. Never by its own contents, which may run another way (a `direction LR`
+    subgraph in a top-down diagram still goes in by Down, as when walked to), and never by the file's `direction` line,
+    which Mermaid ignores when a node inside links outside. Nor by a click's position: nothing on screen would show the
+    line.
+  - The opposite arrow goes back the way you came: it takes back the latest move into where you are, past
     any steps across, which it never undoes, and what came after that move is gone. Every other key follows the rules
     from where you are; a click, a find, O, I, an edit or Escape starts afresh. An edge counts as reached from the item
-    you just left, by an arrow or going back, and the cross arrows step that item's fan (the user: from Order log,
+    you just left, by an arrow or going back, and the cross arrows step that item's fan (from Order log,
     Left should step through Order log's edges, not undo an earlier step).
   - The way back belongs to the fan you are in. An edge reached by stepping across has no way back of its own, so the
     arrow along it walks to its end, the node (Paid?, not the Payment box it crosses out of), and the trail behind the
-    fan you left is not retraced (the user: back from Order log you are in its fan, and going up to Payment "would not
-    make sense there"). The opposite cross arrow steps back, though: it retraces steps across as the opposite arrow
-    retraces moves (the user: Right then Left puts you back exactly where you were), counting from the fan you were in
+    fan you left is not retraced (back from Order log you are in its fan, and going up to Payment would make no
+    sense there). The opposite cross arrow steps back, though: it retraces steps across as the opposite arrow
+    retraces moves (Right then Left puts you back exactly where you were), counting from the fan you were in
     then, which only this memory can tell where two fans share the edge. Any other move, Space, a click or a find
     forgets it.
-  - Ctrl+Arrows skip the edge, like Ctrl+Arrow jumping a word (the user); with no edge that way they go straight that
-    way by place. A far end inside subgraphs you are not in lands on the outermost of their boxes (the user: from
+  - Ctrl+Arrows skip the edge, like Ctrl+Arrow jumping a word; with no edge that way they go straight that
+    way by place. A far end inside subgraphs you are not in lands on the outermost of their boxes (from
     Shipping, Ctrl+Up should be Payment, as from In stock, Ctrl+Down is), so Ctrl goes in a level a press; I and O go in
     and out.
-  - Ctrl+Shift+Arrows on an edge skip the node, as Ctrl skips the edge (the user): to the first edge that way at the
+  - Ctrl+Shift+Arrows on an edge skip the node, as Ctrl skips the edge: to the first edge that way at the
     edge's far end, the end without the tick, as selecting that end and pressing the arrow would; the tick lands at the
     end passed. A subgraph's box there is skipped past, not entered: its own edges count. Not Shift+Arrows, which
     multi-select keeps to extend a selection. From a node or a box they are plain arrows; with nothing selected, or in
     a pick, they do nothing, and in the label box, find and the code panel they select words as usual. The opposite
     Ctrl+Shift arrow takes a jump back.
-  - I goes back to the item you last left a subgraph by, while keys select; a click, a find or an edit forgets it (the
-    user: keeping it across a click was backwards). It is not the trail: one item per subgraph, not a list of steps.
-    O from a top-level item, the title included, selects nothing (the user: O is out a level, and above the top level
-    is the diagram), and says so; it lets go as Escape does, so Enter or I brings it back. In a pick, the candidate
-    stays.
+  - I goes back to the item you last left a subgraph by, while keys select; a click, a find or an edit forgets it (a
+    click starts afresh). It is not the trail: one item per subgraph, not a list of steps. O from a top-level item, the
+    title included, selects nothing (O is out a level, and above the top level is the diagram), and says so; it lets go
+    as Escape does, so Enter or I brings it back. In a pick, the candidate stays.
   - Escape clears the selection, and Enter (or I) brings it back as it was, an edge with its counted end and the trail
-    with it (the user: the tick moved); a click on empty space forgets it (the user: you lose your place
+    with it (the tick moved); a click on empty space forgets it (you lose your place
     otherwise). With nothing to bring back, Enter selects the middle node.
   - After a delete, the keyboard keeps its place: the item you came from by the arrows, the first still drawn; an edge's
     source for an edge clicked; nothing for a node clicked. Undo selects what was selected before the edit, an edge with
     its tick where it was, so you see what came back; redo selects what the edit selected only if you have not moved
-    since (the user: it should not pull you away).
-  - F fits the diagram; with an item selected it centers it at the zoom it has (the user), the title excepted, as
-    Center in window does in its menu. A fit is a true reset (the user): F with nothing selected, Fit to window and a double-click
-    on empty space always fit the whole diagram, whatever the view was, and leave a part. Shift+F fits the selection
-    instead (the user): a subgraph as the part, a node or an edge zoomed to it, up to twice actual size, the address
-    unchanged and the view kept as the user's, so a window resize does not undo it. 0 zooms to actual size, as a browser's Ctrl+0 does; not =, which is the unshifted + on
-    a US keyboard.
-  - Connect to… moves its outline by these same rules, through edges, which Enter refuses (the user); it starts on the
+    since (it should not pull you away).
+  - F fits the diagram; with an item selected it centers it at the zoom it has, the title excepted, as Center in window
+    does in its menu. A fit is a true reset: F with nothing selected, Fit to window and a double-click on empty space
+    always fit the whole diagram, whatever the view was, and leave a part. Shift+F fits the selection instead: a
+    subgraph as the part, a node or an edge zoomed to it, up to twice actual size, the address unchanged and the view
+    kept as yours, so a window resize does not undo it. 0 zooms to actual size, as a browser's Ctrl+0 does; not =, which
+    is the unshifted + on a US keyboard.
+  - Connect to… moves its outline by these same rules, through edges, which Enter refuses; it starts on the
     item itself, so Enter at once makes a self-loop.
-- Movement that finds nothing does nothing, like the end of a list: no notice, I and O at their limit included (the
-  user: a notice there is clutter).
+- Movement that finds nothing does nothing, like the end of a list: no notice, I and O at their limit included (a
+  notice there is clutter).
 - Keys never depend on the keyboard layout or fight the browser: Ctrl/Alt + digit are taken by browsers for tabs, so
   pickers use plain digits. A digit is read by its key's place on the number row, so it is the same key on every
   layout; Shift+digit (the second ten shapes) is that key with Shift held, whatever it types. On AZERTY, where the
@@ -411,49 +404,49 @@ Mermaid's theme is the file's to set.
   (the code panel) is likewise the key left of 1, or whichever key types it, and Shift+` likewise by `~` (that place reports another key on ISO
   keyboards on a Mac); where it is a dead key, it waits for no accent. Option stands in for Ctrl on a Mac only, where
   macOS keeps Ctrl+Arrows; on Windows and Linux Alt is left to the browser, so Alt+Left and Alt+Right go back and
-  forward, through links between diagrams too (the user). Which system is Help's choice, the one its key labels show.
+  forward, through links between diagrams too. Which system is Help's choice, the one its key labels show.
 - The selection is kept per file for the tab (sessionStorage, as the view is), so Back, Forward, a link and a reload
-  select again what was selected there, if it is still drawn, and say nothing: it is not the user's act. An edge is
+  select again what was selected there, if it is still drawn, and say nothing: it is not your act. An edge is
   kept by Mermaid's id for it, so after the file changes it may be gone, and then nothing is selected.
 - A part (Fit to subgraph, Shift+F) is a place, not a mode: the address holds it, so a link, a reload and an embed
-  agree, and entering or leaving one is a history entry, so Back leaves it. F with nothing selected leaves it: one
-  plain way back to the whole (the user), with no key of its own. Nothing is hidden or redrawn for it (the user picked
-  zooming over collapsing the rest or drawing the part alone): it changes only what a fit fits, so every edit and key
-  works as in the whole. No Escape step. It may zoom in up to twice actual size, the whole diagram never past actual
-  size, so a small subgraph fills the window.
-- Links between diagrams (the user: a dev tool, usefulness over security, "nothing ridiculous"). Open link reads a
+  agree, and entering or leaving one is a history entry, so Back leaves it. F with nothing selected leaves it: one plain
+  way back to the whole, with no key of its own. Nothing is hidden or redrawn for it (it zooms, rather than collapsing
+  the rest or drawing the part alone): it changes only what a fit fits, so every edit and key works as in the whole. No
+  Escape step. It may zoom in up to twice actual size, the whole diagram never past actual size, so a small subgraph
+  fills the window.
+- Links between diagrams (a dev tool: usefulness over security, within reason). Open link reads a
   node's link from Mermaid's own reading of the file, so merma keeps Mermaid's strict security level (loose would
   allow HTML labels), and it opens only http, https and vscode addresses and paths to `.mmd` files. A click never
   follows a link, since a click selects. A `.mmd` link opens in place as a history entry, so the browser's Back and
-  Forward are the jump list (the user, over merma keys such as Ctrl+I and Ctrl+O). The page switches only once the
+  Forward are the jump list (rather than merma keys such as Ctrl+I and Ctrl+O). The page switches only once the
   server has given the new file's text, so the address never names a file that is not shown. A link is refused,
   rather than waiting, while an edit is under way, since a jump minutes after the press reads as broken. Back and
   Forward cannot be refused, since the address has already changed, so they wait, with a notice when a code draft
   holds them. Shift+L opens a new tab without asking the server first: the browser allows a new tab only straight
   from the key or the click, and the new tab says itself if the file cannot be served. An app's link (`vscode://`)
   goes to the system, not to a new tab, which would be left blank.
-- Show link puts the address in the info notice, as the file writes it (the user: a notice's text can be selected
+- Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
   and copied, a hover tip's cannot), and selecting a linked node says it aloud ("…selected, links to …"), so the
-  keyboard and a screen reader learn what the mouse sees. No hover tip on the node: the user preferred the notice.
-- Edit link asks in the browser's own prompt (the user: keep it simple), not a box of merma's: a link is one line of
+  keyboard and a screen reader learn what the mouse sees. No hover tip on the node: the notice does the job.
+- Edit link asks in the browser's own prompt (keep it simple), not a box of merma's: a link is one line of
   text, rarely changed. Emptying it removes the link, as an emptied edge label does, so there is no Remove link
   item. It edits the link as the file writes it, never Mermaid's sanitized reading, so a `javascript:` link can be
   fixed; only a callback line is left to the code, which a link would overwrite. In an embedded page from another
   site the browser shows no prompt, and Edit link does nothing (accepted: an embed is for viewing).
-- A linked node looks like a link (the user: "we should have something"), by a stylesheet rule only, nothing drawn:
-  its label underlined, since WCAG asks a link to differ by more than color, and blue where the diagram gives the
-  label no color of its own, so the diagram's styling always wins. The blue is chosen by the node's own fill, light
-  or dark, each keeping 4.5:1. A callback (Mermaid's `clickable` too) gets no look: merma never runs it. A label the
-  diagram underlines itself looks the same (accepted with the user: rare, and L says which). A mark beside the label
-  (↗) was tried: after the text it was clipped on snug labels, and nothing can be added to SVG text labels.
+- A linked node looks like a link, by a stylesheet rule only, nothing drawn: its label underlined, since WCAG asks a
+  link to differ by more than color, and blue where the diagram gives the label no color of its own, so the diagram's
+  styling always wins. The blue is chosen by the node's own fill, light or dark, each keeping 4.5:1. A callback
+  (Mermaid's `clickable` too) gets no look: merma never runs it. A label the diagram underlines itself looks the same
+  (accepted: rare, and L says which). No mark beside the label (↗): after the text it is clipped on snug labels, and
+  nothing can be added to SVG text labels.
 - Copy and paste are the system's own keys, Ctrl+C and Ctrl+V (⌘ on a Mac, as undo is; Option does not stand in,
   as it does for the arrows, since Option+C and Option+V are no copy or paste). The page takes them only when it acts, on the diagram
   with no text selected: Ctrl+C with a node or a subgraph selected, Ctrl+V with something copied or cut. Otherwise the browser's own copy and
   paste go on. Moving a node or a subgraph into or out of a subgraph is cut and paste, with no move items of its own
-  (the user: V for a move reads as paste). Cut (Ctrl+X) is a pick spread over time: the node or subgraph is drawn
-  thicker while you select where it goes, a cut node's edges thicker as a pick's moving edges are (the user), with a
+  (V for a move reads as paste). Cut (Ctrl+X) is a pick spread over time: the node or subgraph is drawn
+  thicker while you select where it goes, a cut node's edges thicker as a pick's moving edges are, with a
   pale red glow under them wherever the paste would delete them, so Ctrl+Shift+V's cost shows before it is pressed; a click away keeps it (clicking around is how you get there), and Escape
-  drops it first, before the selection. Undoing the move cuts it again and redoing it drops the cut (the user), so a
+  drops it first, before the selection. Undoing the move cuts it again and redoing it drops the cut, so a
   move put in the wrong place is undone and pasted again. A move that would change nothing is grayed with its
   reason, never silent. The page's clipboard is its own, per tab: Copy also writes the item's Mermaid text to the
   system clipboard, but the page never reads it (no permission prompt, and no foreign text to make sense of).
@@ -465,33 +458,33 @@ Mermaid's theme is the file's to set.
 - It docks beside the diagram, never over it, so opening, closing or resizing it changes the diagram's size and the
   resize rule holds: a view you have not touched refits, yours stays. The notice and the find bar stay over the
   diagram.
-- Default docks it left on a window wider than tall, else below (the user: "wide", "tall"), and follows the window, so
+- Default docks it left on a window wider than tall, else below, and follows the window, so
   a window resized across square moves it. Left, Top or Bottom, once picked, holds.
 - The diagram always keeps 40% of the room, and the panel at least 160 px where that leaves room (the diagram wins).
   A window too small for the size you set draws the panel smaller, and your size comes back when the window grows.
 - Its dock and size are the person's, kept in the browser for every file (localStorage); whether it is open is the
   tab's, per file (sessionStorage), so the page's reload for a new build keeps it open.
 - It is a view, not a mode: opening it by the footer's Code leaves focus on the button. By keyboard it has two levels,
-  the code and the panel around it (the user, after trying one level): ` flips focus between the panel and the
-  diagram, the panel staying open, so you can move about the diagram and hop back, a draft and all; Escape steps out a
-  level, from the code or a control in the panel's bar to the panel (the panel is a Tab stop too, before the bar), from the panel with a draft open to the read-only code (Cancel, asking if it changed; the user: a
-  keyboard way to cancel without closing), from the panel to the diagram, the panel staying open, and from the
-  diagram to closed, as its outermost level (the user): after Connect to…, the selection and a notice, Escape closes
-  the panel. With a changed draft it asks first, "Save the code and close the panel? Cancel keeps editing.": the one
-  Escape in the page that saves (the user), worded so OK cannot read as discard; Cancel, or a reflexive Escape in the
-  question, keeps the draft, with focus back in the code where the cursor was (the user). The mouse reaches the same by Save, then Close;
-  Enter goes in, editing or back into the draft. Save and Cancel land on the panel, as Escape does. On the panel (its
-  buttons too) the arrows, Page Up, Page Down, Home and End scroll the code (the user: the panel is where you read it,
-  and ` is one key to the diagram); with a modifier they do nothing, so nothing on the panel pans. Every other key
-  there is the diagram's. In a draft, ` types a backtick (Mermaid's markdown strings use them), so Escape comes
-  first. ` into the panel is a click into it, and opening it the footer's Code pressed: each ends find and Connect
-  to… as the mouse's click does. Close puts focus back on the footer's Code.
-- Shift+` closes the panel from anywhere but a field you type in (the user: Escape on the diagram takes a pick and the
+  the code and the panel around it: ` flips focus between the panel and the diagram, the panel staying open, so you can
+  move about the diagram and hop back, a draft and all; Escape steps out a level, from the code or a control in the
+  panel's bar to the panel (the panel is a Tab stop too, before the bar), from the panel with a draft open to the
+  read-only code (Cancel, asking if it changed: a keyboard way to cancel without closing), from the panel to the
+  diagram, the panel staying open, and from the diagram to closed, as its outermost level: after Connect to…, the
+  selection and a notice, Escape closes the panel. With a changed draft it asks first, "Save the code and close the
+  panel? Cancel keeps editing.": the one Escape in the page that saves, worded so OK cannot read as discard; Cancel, or
+  a reflexive Escape in the question, keeps the draft, with focus back in the code where the cursor was. The mouse
+  reaches the same by Save, then Close; Enter goes in, editing or back into the draft. Save and Cancel land on the
+  panel, as Escape does. On the panel (its buttons too) the arrows, Page Up, Page Down, Home and End scroll the code
+  (the panel is where you read it, and ` is one key to the diagram); with a modifier they do nothing, so nothing on the
+  panel pans. Every other key there is the diagram's. In a draft, ` types a backtick (Mermaid's markdown strings use
+  them), so Escape comes first. ` into the panel is a click into it, and opening it the footer's Code pressed: each ends
+  find and Connect to… as the mouse's click does. Close puts focus back on the footer's Code.
+- Shift+` closes the panel from anywhere but a field you type in (Escape on the diagram takes a pick and the
   selection before the panel, and that order stays): focus goes to the diagram, the selection and a pick stay. With a
   changed draft it asks Escape's question first. In a field, the label box, find or a draft, it types. With the panel
   closed it does nothing; ` opens it.
 - It opens and closes at once, with no animation: the diagram refits as the panel appears, and would refit every frame.
-- Follow selection (the user: a box, checked by default, the browser's for every file): checked, it always follows,
+- Follow selection (a box, checked by default, the browser's for every file): checked, it always follows,
   reading or editing, so there is one rule to keep in mind; unchecked, never. Each new selection (click, tap, keys,
   find's Enter, undo's) bands the item's lines in the selection's pale blue behind the text, puts the caret at their
   start and scrolls them to the middle of the view, smoothly (Accessibility: reduced motion), unless they are in view
@@ -501,15 +494,15 @@ Mermaid's theme is the file's to set.
   leaves the code alone, Enter on a match follows. The lines: a node's first statement giving it a shape or label, an
   edge's statement, a subgraph's `subgraph` line, the title's `title:` line. Edit starts on them; with nothing to
   follow, on the first line in view.
-- Editing the code is a lock (the user: simple, built as a whole rather than gaps plugged): while a draft is open the
-  diagram can be looked through, not edited (the user: "just because I am editing doesn't mean I don't want to
-  navigate it"). Selecting, the keys that move about, and find work; every edit, Undo and Redo included, is refused
-  with a warning saying why, and a menu opens with its edits grayed for the same reason (Center in window, the fits
-  and Find… work). The diagram's background turns muted gray (the user), as the read-only code's is: whichever side is
-  read-only is gray, a second cue to the notice. The selection stays blue (the user chose the background alone over
-  a gray selection). Each edit mode is its own lock, so Edit waits for a label box, Connect to… or a save to finish. The lock is this page's only:
-  an agent, an editor or another tab can still write the file. That is what saving over the version Edit started from
-  is for: a change since is refused, never overwritten, and the draft kept; the header says so before you try.
+- Editing the code is a lock (simple, built as a whole rather than gaps plugged): while a draft is open the diagram can
+  be looked through, not edited (editing the code is no reason to stop moving about the diagram). Selecting, the keys
+  that move about, and find work; every edit, Undo and Redo included, is refused with a warning saying why, and a menu
+  opens with its edits grayed for the same reason (Center in window, the fits and Find… work). The diagram's background
+  turns muted gray, as the read-only code's is: whichever side is read-only is gray, a second cue to the notice. The
+  selection stays blue (the background alone turns gray, rather than the selection). Each edit mode is its own lock, so
+  Edit waits for a label box, Connect to… or a save to finish. The lock is this page's only: an agent, an editor or
+  another tab can still write the file. That is what saving over the version Edit started from is for: a change since is
+  refused, never overwritten, and the draft kept; the header says so before you try.
 - While editing, a new version of the file does not replace the draft, and the page does not reload itself for a new
   build of merma. Save and Cancel only: Ctrl+Z in the field takes back typing, and Cancel shows the file as it is now,
   so there is nothing for a Revert or a Reload to do. Cancel asks first only when the draft differs. Save and Cancel
@@ -541,30 +534,29 @@ Mermaid's theme is the file's to set.
 - A toast is only for a result you cannot see on screen ("Copied!", "SVG downloaded"), and fades; it never says what
   to do. A notice says what to do next, or why something was not done, and stays. An error is never a toast.
 - A message names a node by its label as drawn, in quotes, never by its id in the file, which the page does not show.
-- A message is not a tutorial (the user: "less is more"): it says what is happening, and at most how to leave it. How
+- A message is not a tutorial: it says what is happening, and at most how to leave it. How
   to do things is Help's and the guide's. The one exception is the **welcome**, an empty state rather than a message
-  (the user: "a little introductory helper thing"): over a flowchart that draws no node and no subgraph, with no
+  (a short introduction): over a flowchart that draws no node and no subgraph, with no
   error, quiet italic text in the canvas's muted gray says the diagram is empty and how to start (the menu, the code
-  panel). It names the gesture for the main pointer only (the user): right-click for a mouse, touch and hold for a
+  panel). It names the gesture for the main pointer only: right-click for a mouse, touch and hold for a
   finger. Every click and touch passes through it to the diagram, it goes as soon as anything is drawn, and a screen
   reader hears it as the diagram's description.
-- A message is written the way a person would write it (the user): plain words, and what to do in the imperative mood,
+- A message is written the way a person would write it: plain words, and what to do in the imperative mood,
   addressed to the reader.
-- A message is made of full sentences, as a person would say them (the user): it names what it is about and says
+- A message is made of full sentences, as a person would say them: it names what it is about and says
   what happened, rather than a clipped label or a verb with nothing in front of it.
-- A message never says "it" for something the message has not named (the user: "This node is already in this
+- A message never says "it" for something the message has not named ("This node is already in this
   subgraph.", not "It is already in this subgraph."). A message is read on its own, and what you just did is not on
   the screen to point back to. Once the message has named the thing, "it" is fine ("This subgraph is collapsed.
   Expand it first (H)."). `test/messages.test.mjs` catches the usual shapes of the mistake.
-- One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash (the user). Text
+- One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash. Text
   merma did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
-- Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally (the
-  user).
+- Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally.
 - merma refuses only what it cannot write correctly, or what would break the file (a subgraph with no id that the file
-  already names by Mermaid's name for it, `style subGraph1 …`, which an edge would have to name); a legal edit that Mermaid draws badly is yours to make, with Undo as the net (the
-  user: "is it really our place to refuse legitimate actions?"). A subgraph connected to itself is allowed, though
-  Mermaid draws it as a frame round the box and may rearrange what is inside.
-- A mode's notice (a pick's, the code panel's while the code is being edited) stays while the mode lasts (the user);
+  already names by Mermaid's name for it, `style subGraph1 …`, which an edge would have to name); a legal edit that
+  Mermaid draws badly is yours to make, with Undo as the net (a legal edit is not merma's to refuse). A subgraph
+  connected to itself is allowed, though Mermaid draws it as a frame round the box and may rearrange what is inside.
+- A mode's notice (a pick's, the code panel's while the code is being edited) stays while the mode lasts;
   what is refused in it shows in a row under it, one at most, a second replacing the first, and goes with the next key
   the page answers or click on the diagram (another key, a drag or the wheel leaves it); Escape in a pick ends the pick, both rows going. That row says only what was
   refused, since the notice above says what to do ("An edge cannot be connected to."). Find's bar lies where the
@@ -573,7 +565,7 @@ Mermaid's theme is the file's to set.
 - A notice is one of three kinds, by what it means for you; each fits one case only:
   - **info** (blue): nothing you asked for was refused: what to do next ("Pick the node or subgraph to connect to."),
     or nothing to do ("There is nothing to undo.").
-  - **warning** (amber): you asked, and it was refused, or kept back, with nothing lost (the user: trying something
+  - **warning** (amber): you asked, and it was refused, or kept back, with nothing lost (trying something
     not allowed is not just information): a grayed item's key or click, Enter on an edge in Connect to…, "Deleting a
     subgraph isn't supported yet.", an emptied label kept on a click away, a node kept because the file changed;
     merma unable to match the edges, so an edit could hit the wrong one (the file at risk).
@@ -586,15 +578,14 @@ Mermaid's theme is the file's to set.
 
 - The target is WCAG 2.2 AA throughout the page. The diagram's own markup is Mermaid's: its findings are recorded as
   Mermaid's, never fixed here (`checks/README.md`, "Accessibility", says how the page is checked).
-- Mouse and keyboard are equals (the user): every action can be done by keyboard alone and by pointer alone, and by
+- Mouse and keyboard are equals: every action can be done by keyboard alone and by pointer alone, and by
   touch where the gesture exists. As a general rule both are first-class; where an action's nature makes one way less
   flexible than the other, each still reaches the result.
-- The diagram shows no focus ring (the user): it is where focus rests (Escape and a click put it there), and every
-  other place focus can be (the code panel, its buttons, the footer, menus) shows its own ring, so focus is known to be
-  on the diagram when no ring shows. The selection shows where the keys act. WCAG 2.4.7 (Focus Visible) is met by that
-  inference rather than a ring; the user chose it over a ring shown only with nothing selected, so an accessibility
-  sweep should not reopen it without them (asked again, they kept it: a ring shown on Tab only, and not on a click,
-  confused more than it helped).
+- The diagram shows no focus ring: it is where focus rests (Escape and a click put it there), and every other place
+  focus can be (the code panel, its buttons, the footer, menus) shows its own ring, so focus is known to be on the
+  diagram when no ring shows. The selection shows where the keys act. WCAG 2.4.7 (Focus Visible) is met by that
+  inference rather than a ring. It is preferred to a ring shown only with nothing selected, so an accessibility sweep
+  should not reopen it without a new reason (a ring shown on Tab only, and not on a click, confuses more than it helps).
 - Help takes focus as it opens, as a dialog does, so its arrows scroll it, and the open panel itself shows where focus
   is.
 - Text reads on its background: each notice kind and the toasts have a background and a text color chosen as a pair

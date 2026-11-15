@@ -49,7 +49,7 @@ html, body { height: 100%; }
   --select: #0969da; --on-select: #1f2328;
   /* Find's marks: amber, apart from the selection's blue. */
   --find-bg: #fff1b8; --find-fg: #222; --find-mark: #bf8700;
-  /* The current match: strong against the plain match mark, so its blink reads at a glance (the user). */
+  /* The current match: strong against the plain match mark, so its blink reads at a glance. */
   --find-current-bg: #ffd33d; --find-current: #4d2d00;
   /* A linked node's label (editor.mjs picks one by the node's fill), each keeping 4.5:1 on Mermaid's fills of its kind. */
   --link: #1d4ed8; --link-on-dark: #60a5fa;
@@ -70,7 +70,7 @@ main[data-dock="bottom"] { grid-template: "diagram" minmax(0, 1fr) "handle" 6px 
 header { padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; gap: 16px; }
 header h1 { margin: 0; font-size: 16px; white-space: nowrap; align-self: center; }
 header .paths { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-/* One line, cut at the start so the file name stays in view (the user); the path itself is a <bdi>, so it reads left to
+/* One line, cut at the start so the file name stays in view; the path itself is a <bdi>, so it reads left to
    right inside the right-to-left box that puts the ellipsis on the left. */
 header .path { font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                direction: rtl; text-align: left; }
@@ -127,7 +127,7 @@ header .status { color: var(--text-muted); white-space: nowrap; }
 #welcome p:last-child { margin-bottom: 0; }
 footer { grid-row: 4; padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: center;
          font-size: 13px; }
-/* One width for every button, the widest label's (the user): equal columns in a grid only as wide as its content. */
+/* One width for every button, the widest label's: equal columns in a grid only as wide as its content. */
 footer .buttons { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 footer button { font: inherit; padding: 6px 12px; border: 1px solid var(--frame-border); border-radius: 6px;
                 background: var(--control-bg); color: var(--text); cursor: pointer; }
@@ -241,7 +241,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
                color: inherit; cursor: pointer; }
 #find button:hover { background: var(--field-hover); }
 /* What find finds: every match marked amber (a node or a subgraph by its band, below), the one Enter picks filled
-   (the user: easier to see), an edge's line darker (brighter on the dark canvas). The current one blinks: while the
+   (easier to see), an edge's line darker (brighter on the dark canvas). The current one blinks: while the
    stage has data-page-blink-off (editor.mjs), it shows as a plain match. */
 #stage:not([data-page-blink-off]) g.node[data-page-current] :is(rect, polygon, circle, ellipse, path):not(.label *, .collapsed-indicator, [data-page-only]),
 #stage:not([data-page-blink-off]) g.cluster[data-page-current] > rect:not([data-page-only]) { fill: var(--find-current-bg) !important; }
@@ -251,7 +251,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #stage:not([data-page-blink-off]) :is(g.node[data-page-current] .label, g.cluster[data-page-current] .cluster-label) text {
   fill: var(--on-select) !important; }
 /* An edge is marked by its line alone, as the selection's (below) in blue; never its label: a border would cut into a
-   short label's text, and a blinking fill distracts (the user). The current one shows by its line's near-black amber. */
+   short label's text, and a blinking fill distracts. The current one shows by its line's near-black amber. */
 #stage path.edge-thickness-normal[data-page-edge][data-page-match]:not([data-page-only]) {
   stroke: var(--find-mark) !important; stroke-width: 3px !important; }
 #stage path.edge-thickness-thick[data-page-edge][data-page-match]:not([data-page-only]) {
@@ -270,7 +270,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 #notice .error { background: var(--error-bg); color: var(--error-fg); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Flowchart nodes, edges and subgraphs can be clicked to select; the selected one is outlined in blue, whatever its
-   shape. A node or a subgraph keeps its own fill, border and text, so an edit's colors show (the user): it is marked by
+   shape. A node or a subgraph keeps its own fill, border and text, so an edit's colors show: it is marked by
    a band, a copy of its shapes under them with a wide stroke (editor.mjs drawBands), whose outer half shows. A stroke,
    not a drop shadow: Chrome's GPU drawing of a drop-shadow filter over a large area in the scaled stage leaves stray
    fragments around it. !important wins over the colors Mermaid writes inline from classDef and style. */
@@ -281,7 +281,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 /* Find's, wider when a blue band lies over it, so both show. */
 #stage [data-page-band][data-page-band="match"] { stroke: var(--find-mark) !important; }
 #stage [data-page-band][data-page-under] { stroke-width: 18px !important; }
-/* What is about to change is drawn with its own lines thicker, its colors kept (the user): in a pick, the node or
+/* What is about to change is drawn with its own lines thicker, its colors kept: in a pick, the node or
    subgraph it starts from and each edge that will move; a cut node or subgraph, and a cut node's edges. The widths
    are here, to make heavier or lighter in one place. */
 #diagram { --changing-border: 4px; --changing-edge: 4px; --changing-edge-thick: 6px; }
@@ -382,7 +382,7 @@ main:has(#find:not([hidden])) #notice { display: none; }
 /* The digits Shift does not pick are gray, still readable (at least 4.5:1 on the pressed fill); holding Shift swaps. */
 .picker-grid .digit.shift, :root[data-shift] .picker-grid .digit { color: var(--text-muted); }
 :root[data-shift] .picker-grid .digit.shift { color: var(--text); }
-/* Focus is the outline only, and the fill only what is selected (the user): two marks that never look alike. With
+/* Focus is the outline only, and the fill only what is selected: two marks that never look alike. With
    focus elsewhere (in the label box above the picker), the outline stays where the arrows start from. */
 .menu .picker-grid button:focus,
 .menu .picker-grid:not(:focus-within) button[data-start] { outline: 2px solid var(--focus); outline-offset: -2px; }
