@@ -18,8 +18,8 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   never expands.
 - Mermaid's size limits (`maxEdges`, `maxTextSize`) are merma's settings, never the file's: Mermaid lets only the page
   that loads it raise them. Over one, the last good render stays, and the error names the setting, not Mermaid's
-  advice to call `mermaid.initialize`. The text limit counts what the page draws, so the lines collapse and turn
-  append can take a file just under it over; the page then draws the file as written, with a warning.
+  advice to call `mermaid.initialize`. The text limit counts what the page draws, so the lines that collapse and turn
+  append can push a file just under the limit over it; the page then draws the file as written, with a warning.
 - Rotate and flip are view state too (for fitting a wide or a tall window), drawn as collapse is: each
   direction in the text Mermaid gets (the header's, every subgraph's `direction`) is swapped in place, two letters for
   two, so no offset moves; a header with none gets one, since Mermaid ignores a top-level `direction` line. Kept for
@@ -391,8 +391,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
     does in its menu. A fit is a true reset: F with nothing selected, Fit to window and a double-click on empty space
     always fit the whole diagram, whatever the view was, and leave a part. Shift+F fits the selection instead: a
     subgraph as the part, a node or an edge zoomed to it, up to twice actual size, the address unchanged and the view
-    kept as yours, so a window resize does not undo it. 0 zooms to actual size, as a browser's Ctrl+0 does; not =, which
-    is the unshifted + on a US keyboard.
+    kept as yours, so a window resize does not undo it. 0 zooms to actual size, as a browser's Ctrl+0 does. It is not =,
+    which is the unshifted + on a US keyboard.
   - Connect to… moves its outline by these same rules, through edges, which Enter refuses; it starts on the
     item itself, so Enter at once makes a self-loop.
 - Movement that finds nothing does nothing, like the end of a list: no notice, I and O at their limit included (a
@@ -400,8 +400,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - Keys never depend on the keyboard layout or fight the browser: Ctrl/Alt + digit are taken by browsers for tabs, so
   pickers use plain digits. A digit is read by its key's place on the number row, so it is the same key on every
   layout; Shift+digit (the second ten shapes) is that key with Shift held, whatever it types. On AZERTY, where the
-  number row types digits only with Shift, the key marked 1 picks shape 1 unshifted and shape 11 with Shift. `
-  (the code panel) is likewise the key left of 1, or whichever key types it, and Shift+` likewise by `~` (that place reports another key on ISO
+  number row types digits only with Shift, the key marked 1 picks shape 1 unshifted and shape 11 with Shift.
+  `` ` `` (the code panel) is likewise the key left of 1, or whichever key types it, and Shift+`` ` `` likewise by `~` (that place reports another key on ISO
   keyboards on a Mac); where it is a dead key, it waits for no accent. Option stands in for Ctrl on a Mac only, where
   macOS keeps Ctrl+Arrows; on Windows and Linux Alt is left to the browser, so Alt+Left and Alt+Right go back and
   forward, through links between diagrams too. Which system is Help's choice, the one its key labels show.
@@ -477,7 +477,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   panel, as Escape does. On the panel (its buttons too) the arrows, Page Up, Page Down, Home and End scroll the code
   (the panel is where you read it, and ` is one key to the diagram); with a modifier they do nothing, so nothing on the
   panel pans. Every other key there is the diagram's. In a draft, ` types a backtick (Mermaid's markdown strings use
-  them), so Escape comes first. ` into the panel is a click into it, and opening it the footer's Code pressed: each ends
+  them), so Escape comes first. ` into the panel is a click into it, and opening it is the footer's Code pressed: each ends
   find and Connect to… as the mouse's click does. Close puts focus back on the footer's Code.
 - Shift+` closes the panel from anywhere but a field you type in (Escape on the diagram takes a pick and the
   selection before the panel, and that order stays): focus goes to the diagram, the selection and a pick stay. With a
@@ -558,7 +558,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   connected to itself is allowed, though Mermaid draws it as a frame round the box and may rearrange what is inside.
 - A mode's notice (a pick's, the code panel's while the code is being edited) stays while the mode lasts;
   what is refused in it shows in a row under it, one at most, a second replacing the first, and goes with the next key
-  the page answers or click on the diagram (another key, a drag or the wheel leaves it); Escape in a pick ends the pick, both rows going. That row says only what was
+  the page answers or a click on the diagram (another key, a drag or the wheel leaves it); Escape in a pick ends the pick, both rows going. That row says only what was
   refused, since the notice above says what to do ("An edge cannot be connected to."). Find's bar lies where the
   notice does, so the notice yields while find is open and comes back as it closes. A screen reader hears each
   refusal, a repeat too, and not the mode's notice again when the row goes.
@@ -568,7 +568,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   - **warning** (amber): you asked, and it was refused, or kept back, with nothing lost (trying something
     not allowed is not just information): a grayed item's key or click, Enter on an edge in Connect to…, "Deleting a
     subgraph isn't supported yet.", an emptied label kept on a click away, a node kept because the file changed;
-    merma unable to match the edges, so an edit could hit the wrong one (the file at risk).
+    merma is unable to match the edges, so an edit could hit the wrong one (the file is at risk).
   - **error** (red): something you tried did not happen: "Your change was not saved. …", an undo refused because the file changed, an
     empty label on Enter, a press while another edit saves.
 - The colors come in pairs, a background and a text color that reads on it (Accessibility: contrast), one pair per
