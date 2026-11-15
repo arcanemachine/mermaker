@@ -414,7 +414,7 @@ function endpoint(/** @type {string} */ text, /** @type {string} */ id) {
 export function subgraphRefusal(/** @type {string} */ text, /** @type {string} */ id) {
   const sg = subgraphBlock(text, id);
   if (!sg || sg.written || !mentions(text, id).length) return null;
-  return `This subgraph has no id in the file, and lines there name the subgraph ${id}. Give the subgraph an id in the file first.`;
+  return `This subgraph has no id in the file, and lines there name it ${id}. Give it an id in the file first.`;
 }
 
 /** Give id-less subgraph `sg` an id of its own (`subgraph "A b"` → `subgraph s1 ["A b"]`), with `title` if given. */

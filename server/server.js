@@ -96,7 +96,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
     if (!files.allowed(f)) return send(res, 403, notServed(files, f));
     const base = req.headers['if-match'];
-    if (!base) return send(res, 428, 'The edit must say in If-Match which version (ETag) the edit was based on.');
+    if (!base) return send(res, 428, 'The edit must say in If-Match which version (ETag) it was based on.');
 
     const chunks = [];
     let size = 0;
@@ -115,7 +115,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     const result = files.writeIfVersion(f, base, text);
     if (result === 'missing') return send(res, 404, `There is no file at ${f}.`);
     if (result === 'conflict') {
-      return send(res, 409, 'The file changed since the page last read the file. Reload and edit again.', 'text/plain',
+      return send(res, 409, 'The file changed since the page read it. Reload and edit again.', 'text/plain',
         { ETag: version(files.read(f) ?? '') });
     }
     return send(res, 200, 'saved', 'text/plain', { ETag: version(text) });

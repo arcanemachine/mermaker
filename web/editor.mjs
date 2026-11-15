@@ -774,9 +774,9 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** Why the selected subgraph cannot be turned on its own, or null when it can (turn.mjs turnable). */
   function turnWhy(/** @type {string} */ id) {
-    if (isBox({ kind: 'subgraph', id })) return 'This subgraph is collapsed. Expand the subgraph first (H).';
+    if (isBox({ kind: 'subgraph', id })) return 'This subgraph is collapsed. Expand it first (H) to turn it.';
     if (!collapse.subs.some((s) => s.id === id)) return NO_SUBGRAPH_MATCH;
-    return turnable(id, collapse.subs, edges(shownText)) ? null : "Mermaid ignores this subgraph's direction, because a node inside the subgraph links outside the subgraph.";
+    return turnable(id, collapse.subs, edges(shownText)) ? null : "Mermaid ignores this subgraph's direction, because a node inside it links outside it.";
   }
 
   // --- selection -----------------------------------------------------------------------------------------------
@@ -2226,7 +2226,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       ui.hideNotice();
       const base = source.snapshot();
       if (base.text !== added.entry.after) {
-        ui.notice(`The ${what} was kept, because the file has changed since the ${what} was added.`, 'warning');
+        ui.notice(`The ${what} was kept, because the file has changed since it was added.`, 'warning');
         select(added);
         return;
       }
@@ -2486,7 +2486,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     } catch (e) {
       const error = e.message || String(e);
       if (limitOf(error) === 'edges') ui.notice(limitSentence('edges', limits, true), 'error');
-      else ui.notice((says.invalid ?? 'Your change was not saved, because the change would make the diagram invalid.') + '\n' + error, 'error');
+      else ui.notice((says.invalid ?? 'Your change was not saved, because it would make the diagram invalid.') + '\n' + error, 'error');
       return false;
     }
     const saved = await source.save(text, base);
@@ -2667,8 +2667,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       let ok = false;
       await exclusively(async () => {
         if (!(await save(text, base.version, {
-          invalid: 'The code was not saved, because the code is not valid Mermaid.',
-          conflict: 'The code was not saved, because the file changed after you pressed Edit. Cancel shows the current file.',
+          invalid: 'The code was not saved, because it is not valid Mermaid.',
+          conflict: 'The code was not saved, because the file changed after you pressed Edit. Cancel shows the file as it is now.',
         }))) return;
         ok = true;
         history.record(base.text, text, null);

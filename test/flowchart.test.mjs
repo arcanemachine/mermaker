@@ -215,9 +215,9 @@ test('setSubgraphTitle rewrites only the title, keeping the id, in every form', 
 
 test('a subgraph with no id is not given one when the file already names it by Mermaid\'s id', () => {
   const src = 'flowchart TD\n  subgraph "A b"\n    x\n  end\n  style subGraph0 fill:#eee\n';
-  assert.match(subgraphRefusal(src, 'subGraph0'), /name the subgraph subGraph0/);
-  assert.throws(() => setSubgraphTitle(src, 'subGraph0', 'X'), /name the subgraph subGraph0/);
-  assert.throws(() => connect(src, 'x', 'subGraph0'), /name the subgraph subGraph0/);
+  assert.match(subgraphRefusal(src, 'subGraph0'), /name it subGraph0/);
+  assert.throws(() => setSubgraphTitle(src, 'subGraph0', 'X'), /name it subGraph0/);
+  assert.throws(() => connect(src, 'x', 'subGraph0'), /name it subGraph0/);
   assert.equal(subgraphRefusal(fixture('12-subgraph-ids.mmd'), 'subGraph1'), null);
   assert.equal(subgraphRefusal(fixture('12-subgraph-ids.mmd'), 'pay'), null);
 });
