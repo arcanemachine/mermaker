@@ -116,6 +116,24 @@ export function isFlowchart(/** @type {string} */ text) {
 }
 
 /**
+ * True for a file with no diagram in it yet: nothing but blank lines, comments and a closed frontmatter. An unclosed
+ * frontmatter is not blank: it is a broken file, which Mermaid's error should show.
+ */
+export function isBlank(/** @type {string} */ text) {
+  const ls = lines(text);
+  return headerIndex(ls) === ls.length;
+}
+
+/**
+ * A blank file as an empty flowchart: `flowchart TD` appended, after any frontmatter and comments. The page draws
+ * this, and an edit starts from it, so the first edit writes the header. Any other text is returned as it is.
+ */
+export function withHeader(/** @type {string} */ text) {
+  if (!isBlank(text)) return text;
+  return text + (text === '' || text.endsWith('\n') ? '' : '\n') + 'flowchart TD\n';
+}
+
+/**
  * Give the diagram the title `title`: the frontmatter's `title:` line gets the new value, plain when YAML reads it as
  * written and as a string, else double-quoted; every other line stays. The old value goes to the end of its line, a
  * trailing `# comment` with it. A file with no title in its frontmatter, or one written over several lines, is refused.

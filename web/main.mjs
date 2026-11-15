@@ -8,7 +8,7 @@ import { createSource } from './source.mjs';
 import { createCodePanel } from './code-panel.mjs';
 import { drawnAs, prune, setView, viewText } from './collapse.mjs';
 import { baseDir, subgraphDir, turnText } from './turn.mjs';
-import { itemLines, subgraphs as scannedSubgraphs } from './patch/flowchart.mjs';
+import { isFlowchart, itemLines, subgraphs as scannedSubgraphs, withHeader } from './patch/flowchart.mjs';
 import { createViewer, parse } from './viewer.mjs';
 import { fileTheme, shownTheme, themeChoice, THEME_KEY } from './theme.mjs';
 import { limitSentence, readLimits } from './limits.mjs';
@@ -339,6 +339,18 @@ const codePanel = createCodePanel({
   save: async (text, base) => (await editor?.saveCode(text, base)) ?? false,
 });
 
+/** Show the welcome over an empty flowchart, or hide it; the diagram is described by it while it shows. */
+function welcome(/** @type {boolean} */ show) {
+  el('welcome').hidden = !show;
+  // Said for the main pointer: a finger's touch and hold, else a mouse's right-click (a touch-screen laptop's too).
+  const touch = matchMedia('(pointer: coarse)').matches;
+  for (const span of el('welcome').querySelectorAll('[data-pointer]')) {
+    /** @type {HTMLElement} */ (span).hidden = (span.getAttribute('data-pointer') === 'coarse') !== touch;
+  }
+  if (show) el('diagram').setAttribute('aria-describedby', 'welcome');
+  else el('diagram').removeAttribute('aria-describedby');
+}
+
 // Show a version of the file: a new one polled from the server, or one the editor just saved. The code panel shows
 // it whether or not it parses, so a broken file can be read there. One at a time, in the order asked, so an older
 // version never lands over a newer one.
@@ -350,10 +362,12 @@ function display(/** @type {string} */ text) {
   drawing = done.catch(() => {});
   return done;
 }
-async function draw(/** @type {string} */ text) {
+async function draw(/** @type {string} */ written) {
   // Another file opened while this was drawing: this file's drawing must not land on its stage, or fit it.
   const of = file;
-  codePanel.show(text);
+  codePanel.show(written);
+  // A blank file is drawn as an empty flowchart, which the welcome is shown over.
+  const text = withHeader(written);
   // The page's collapses are drawn only when Mermaid's subgraphs are the ones merma reads in the text: an id they
   // disagree on would collapse, or tag, the wrong one.
   let { subs, links } = await viewer.read(text);
@@ -391,6 +405,7 @@ async function draw(/** @type {string} */ text) {
     }
   }
   if (!shown.ok) {
+    welcome(false);
     showError(shown.limit ? limitSentence(shown.limit, limits, false)
       : 'The file has a syntax error, so the last good render is shown.\n' + shown.error);
     editor?.failed();
@@ -401,7 +416,10 @@ async function draw(/** @type {string} */ text) {
   if (!shownOnce) { shownOnce = true; restoreView(); }
   el('status').textContent = 'updated ' + new Date().toLocaleTimeString();
   shownSubs = subs;
-  editor?.rendered(text, { subs, overrides: agree ? overrides : new Map() }, links);
+  const stage = el('stage');
+  el('welcome').toggleAttribute('data-titled', Boolean(stage.querySelector('text.flowchartTitleText')));
+  welcome(isFlowchart(text) && !stage.querySelector('g.node, g.cluster'));
+  editor?.rendered(written, { subs, overrides: agree ? overrides : new Map() }, links);
   if (warning) ui.notice(warning, 'warning');
   checkPart();
 }
@@ -506,6 +524,7 @@ function showFile(/** @type {ReturnType<typeof createSource>} */ s, /** @type {s
   // Before the stage is cleared: the editor lets go of what is selected while it is still drawn.
   editor?.switchFile(s, f);
   viewer.clear();
+  welcome(false);
   codePanel.setFile();
   showHeader();
 }

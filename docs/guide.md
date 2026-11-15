@@ -260,6 +260,10 @@ Removing the title isn't supported. Delete or Backspace on it says so.
 
 ### Empty space
 
+A flowchart with nothing drawn in it shows a welcome, saying how to start: the empty-space menu, or the code panel. A
+blank file (nothing in it, or only comments and frontmatter) counts as an empty flowchart: the first thing you add
+writes `flowchart TD` into it, with the node or subgraph.
+
 Right-click empty space (or press . with nothing selected) for **Add node** (N) and **Add subgraph** (S), which add them at the
 top level, at the end of the file, and **Paste node** (Ctrl+V) and **Paste node without edges** (Ctrl+Shift+V), which
 add a new node (or, with a subgraph copied, a new subgraph) from the copy there, as the node menu's do. Mermaid lays the diagram out, so what you add lands where the layout puts it.

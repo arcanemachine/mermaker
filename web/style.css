@@ -37,7 +37,7 @@ html, body { height: 100%; }
 :root {
   /* What stands in for the drawing: the canvas (dark under Mermaid's dark theme, #diagram[data-dark]), the label box
      laid over a label, the marks on the drawing, which read on either, and the notices with their own pairs. */
-  --canvas: #fff; --canvas-text: #222;
+  --canvas: #fff; --canvas-text: #222; --canvas-muted: #636c76;
   /* The locked diagram: muted as the read-only code is. */
   --locked-bg: #f6f8fa;
   --delete: #cf222e;
@@ -111,11 +111,20 @@ header .status { color: var(--text-muted); white-space: nowrap; }
 #diagram.locked { background: var(--locked-bg); }
 /* With the Dark page theme, Mermaid draws the diagram with its dark theme, unless the file sets one: a dark canvas
    under it (main.mjs sets data-dark). */
-#diagram[data-dark] { --canvas: #0d1117; --canvas-text: #e6edf3; --locked-bg: #161b22;
+#diagram[data-dark] { --canvas: #0d1117; --canvas-text: #e6edf3; --canvas-muted: #848d97; --locked-bg: #161b22;
   /* Find's current edge and title stand apart from the plain matches' amber by a bright one here, not a near-black. */
   --find-current: #ffd33d; }
 #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; color: var(--canvas-text); color-scheme: light; }
 #stage svg { display: block; max-width: none; }
+/* The welcome over an empty flowchart: a quiet hint, which every click and right-click passes through to the diagram. */
+#welcome { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(35rem, calc(100% - 32px));
+  text-align: center; text-wrap: pretty; font-style: italic; line-height: 1.5; color: var(--canvas-muted); pointer-events: none; }
+#welcome code { color: var(--canvas-text); font-style: normal; font-size: 0.95em; padding: 0.1em 0.35em; border-radius: 4px;
+  background: color-mix(in srgb, var(--canvas-muted) 10%, transparent); }
+/* Under a diagram's title, which a fit draws at the canvas's center. */
+#welcome[data-titled] { top: calc(50% + 2.5em); transform: translateX(-50%); }
+#welcome p { margin: 0 0 1em; }
+#welcome p:last-child { margin-bottom: 0; }
 footer { grid-row: 4; padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: center;
          font-size: 13px; }
 /* One width for every button, the widest label's (the user): equal columns in a grid only as wide as its content. */

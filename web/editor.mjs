@@ -18,7 +18,7 @@ import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
   subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
-  colorRefusal, setColor,
+  colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
 import { linkEdit, linkTarget, linkTone } from './links.mjs';
@@ -2391,7 +2391,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (base.text === null || !base.version) return;
       let result;
       try {
-        result = change(base.text);
+        result = change(withHeader(base.text));
       } catch (e) {
         ui.notice(NOT_SAVED + (e.message || e), 'error');
         return;
@@ -2482,7 +2482,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
    */
   async function save(/** @type {string} */ text, base = source.version, /** @type {{ invalid?: string, conflict?: string }} */ says = {}) {
     try {
-      await parse(text);
+      // A blank file is valid: an undo back to one, or code emptied in the code panel.
+      await parse(withHeader(text));
     } catch (e) {
       const error = e.message || String(e);
       if (limitOf(error) === 'edges') ui.notice(limitSentence('edges', limits, true), 'error');
@@ -2540,12 +2541,14 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     rendered(/** @type {string} */ text, view = collapse, drawnLinks = links) {
       collapse = view;
       links = drawnLinks;
-      drawnEditable = isFlowchart(text);
+      // A blank file is drawn, and edited, as an empty flowchart; `text` stays the file's, as the edits' results are.
+      const drawnText = withHeader(text);
+      drawnEditable = isFlowchart(drawnText);
       setEditable();
       // Tagged while locked too, so unlocking finds the drawing ready.
       if (!drawnEditable) return;
-      const changed = text !== shownText;
-      shownText = text;
+      const changed = drawnText !== shownText;
+      shownText = drawnText;
       const renderId = /** @type {string} */ (viewer.renderId);   // what is on screen was rendered
       for (const g of drawn('g.node')) {
         const id = nodeIdFromSvgId(g.id, renderId);
@@ -2559,7 +2562,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         }
       }
       // A subgraph whose id merma cannot read (`subgraph a-b [X]`) is left unselectable, as such a node's edges are.
-      const known = new Set(subgraphs(text).map((s) => s.id));
+      const known = new Set(subgraphs(shownText).map((s) => s.id));
       // A collapsed subgraph is drawn as a node-like box, `<render id>-<subgraph id>` with no `flowchart-`.
       for (const g of drawn('g.cluster, g.node:has(> rect.collapsed-group)')) {
         const id = subgraphIdFromSvgId(g.id, renderId);
@@ -2567,7 +2570,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         g.dataset.pageSubgraph = id;
         if (g.matches('g.node')) g.dataset.pageCollapsed = '';
       }
-      tagEdges(text);
+      tagEdges(shownText);
       markCut();
       glowDoomed();
       // A new drawing while finding: find again in it, so no mark is left on what has gone.

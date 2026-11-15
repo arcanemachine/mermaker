@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  addConnected, addNode, connect, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
+  addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
   moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink,
@@ -169,6 +169,30 @@ test('edits refuse unknown nodes and odd ids', () => {
 test('isFlowchart sees through frontmatter, directives and comments', () => {
   for (const name of Object.keys(NODE_IDS)) assert.ok(isFlowchart(fixture(name)), name);
   assert.equal(isFlowchart(fixture('90-sequence.mmd')), false);
+});
+
+test('withHeader gives a blank file a flowchart header at its end, and leaves any other text as it is', () => {
+  const cases = [
+    ['', 'flowchart TD\n'],
+    ['\n  \n', '\n  \nflowchart TD\n'],
+    ['%% a note\n', '%% a note\nflowchart TD\n'],
+    ['%% a note', '%% a note\nflowchart TD\n'],
+    ['---\ntitle: Plan\n---\n', '---\ntitle: Plan\n---\nflowchart TD\n'],
+  ];
+  for (const [blank, drawn] of cases) {
+    assert.ok(isBlank(blank), JSON.stringify(blank));
+    assert.equal(withHeader(blank), drawn);
+    assert.ok(isFlowchart(withHeader(blank)));
+  }
+  // An unclosed frontmatter is a broken file, not a blank one.
+  for (const text of ['---\ntitle: Plan\n', 'flowchart TD\n', 'graph LR', 'sequenceDiagram\n', fixture('90-sequence.mmd')]) {
+    assert.equal(isBlank(text), false, JSON.stringify(text));
+    assert.equal(withHeader(text), text);
+  }
+});
+
+test('the first add on a blank file writes the header, then the node', () => {
+  assert.equal(addNode(withHeader('%% a note\n')).text, '%% a note\nflowchart TD\n  n1["New node"]\n');
 });
 
 test('freeId', () => {

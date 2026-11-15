@@ -46,6 +46,10 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   the colors are grayed there, with the reason, and merma never removes the file's `style` line. One set serves both
   page themes, each with its text color set: a per-theme set would mean drawing the file other than as Mermaid draws
   it, and Copy SVG differing from the file.
+- A blank file (nothing but blank lines, comments and a closed frontmatter) is an empty flowchart, not a syntax error:
+  the page draws it with `flowchart TD` after its last byte, and an edit starts from that text, so the first edit
+  writes the header with its own line. Undo gives back the blank file as it was. A new file starts blank, and the
+  welcome's ways to start (the menu, Add node) work there.
 - The page never redraws as a preview while you choose (a shape, an arrow type, a color): a redraw is a save, and agents
   watching the file would see each keypress. The choice is shown beside what you are editing, and saved on Enter.
 
@@ -55,6 +59,7 @@ A design goal (the user): with nothing selected, the diagram looks as Mermaid dr
 differences are kept few. Each one is listed here:
 
 - A linked node's label is underlined, and blue unless the diagram colors it (Links between diagrams, below).
+- The welcome over an empty flowchart (Messages, below): page text over the canvas, which the user asked for.
 - The diagram is drawn at its natural size and fitted to the window, not scaled to the page's width (Mermaid's
   `useMaxWidth` is off).
 - With the Dark page theme, a diagram whose file sets no theme is drawn with the dark counterpart of the theme Mermaid
@@ -513,7 +518,12 @@ Mermaid's theme is the file's to set.
   to do. A notice says what to do next, or why something was not done, and stays. An error is never a toast.
 - A message names a node by its label as drawn, in quotes, never by its id in the file, which the page does not show.
 - A message is not a tutorial (the user: "less is more"): it says what is happening, and at most how to leave it. How
-  to do things is Help's and the guide's.
+  to do things is Help's and the guide's. The one exception is the **welcome**, an empty state rather than a message
+  (the user: "a little introductory helper thing"): over a flowchart that draws no node and no subgraph, with no
+  error, quiet italic text in the canvas's muted gray says the diagram is empty and how to start (the menu, the code
+  panel). It names the gesture for the main pointer only (the user): right-click for a mouse, touch and hold for a
+  finger. Every click and touch passes through it to the diagram, it goes as soon as anything is drawn, and a screen
+  reader hears it as the diagram's description.
 - A message is written the way a person would write it (the user): plain words, and what to do in the imperative mood,
   addressed to the reader.
 - A message is made of full sentences, as a person would say them (the user): it names what it is about and says
