@@ -42,13 +42,14 @@ Mermaid syntax.
 | **collapsed** | A subgraph drawn as one box, its contents hidden, by Mermaid's `id@{ view: collapsed }`; **expanded** is the usual way. In the page, collapsing is view state, never written (`docs/ux.md`). |
 | **default state** | Whether the file itself has a subgraph collapsed or expanded: where a new tab starts. |
 | **contents** | What a subgraph holds: its nodes and nested subgraphs, as Mermaid draws them. Never "children": parent and child are words for edges. |
+| **children** | A node's children: every node it leads to, down the chain (not only one step), except those a node that stays still leads to. Edges are read as the file writes them, start to end, whatever the arrow; an edge to a subgraph leads to no node in it. What Delete node and children takes. |
 | **subgraph id** | The name a subgraph has in the file (`pay` in `subgraph pay [Payment]`, or `Payment` in `subgraph Payment`). One written with none (`subgraph "Order log"`) is `subGraph<k>` to Mermaid, k counting every subgraph in the order their `end`s come. |
 | **subgraph title** | The text shown on a subgraph. |
 | **title** | The diagram's title, the frontmatter's `title:`, drawn over the diagram (Mermaid's word). Alone, "title" is this one; a subgraph's is its subgraph title. |
 | **connect** | Make an edge between two nodes or subgraphs by pointing (Connect to…, Connect from…). |
 | **pick** | The state a menu item (or its key) puts you in when it needs another node or subgraph, such as Connect to… or Merge into…: you pick that node or subgraph by a click, or by the arrows or find and Enter; Escape or a click anywhere else cancels. merma's code calls it `picking`. Choosing an entry in a picker (below) is a pick too, but needs no node. |
 | **candidate** | In a pick, the item the arrows or find have reached, outlined solid, which Enter picks. |
-| **glow** | A wide pale red band drawn under what a key would delete, before it is pressed: what Delete subgraph and contents would take while Shift is held, and a cut node's edges where the paste would delete them. merma's own; not dashed, which would read as a dotted edge. |
+| **glow** | A wide pale red band drawn under what a key would delete, before it does: what Delete subgraph and contents or Delete node and children would take, after a first Shift+D or with the item focused in the menu, and a cut node's edges where the paste would delete them. merma's own; not dashed, which would read as a dotted edge. |
 | **merge** | Merge into…: a node's edges move to another node, and the node goes. |
 | **`linkStyle`** | Styles an edge by its number: the Nth edge in the file. Why no edit ever reorders edges. |
 | **`classDef`, `class`, `style`** | Named styles, applying them to nodes, and one-off node styles. |

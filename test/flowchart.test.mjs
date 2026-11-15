@@ -10,7 +10,7 @@ import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
-  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink,
+  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -1373,6 +1373,63 @@ test('deleteSubgraphContents deletes every node drawn in it, each with its edges
   assert.equal(blockOf(k.text, 'X')?.id, 'other');
 });
 
+// The "Simple" demo's shape: a loop under order, a box entered by an edge, and edges that only lead one way.
+const SIMPLE = `flowchart TD
+  start --> order --> check
+  check -->|yes| pay
+  check --> wait -.-> check
+  subgraph pay [Payment]
+    charge ==> ok
+    ok --> retry --> charge
+    ok --> receipt
+  end
+  ok --> ship & mail
+  subgraph ship [Shipping]
+    pack --> label --> send
+  end
+  mail --- note
+  send --> finish
+  send ~~~ mail
+  finish --o archive
+  finish --x cancel
+  archive <--> mail
+  order --> note
+  order -.-> wait
+`;
+
+test('childrenOf: the node, and what it leads to that nothing left still reaches, read as the text writes the edges', () => {
+  // mail stays: ok still leads to it. archive <--> mail leads from archive only.
+  assert.deepEqual(childrenOf(SIMPLE, 'label').nodes, ['label', 'send', 'finish', 'archive', 'cancel']);
+  // The edge to the Payment box leads to no node in it; check and wait lead to each other, and only order reaches them.
+  assert.deepEqual(childrenOf(SIMPLE, 'order').nodes, ['order', 'check', 'wait']);
+  assert.deepEqual(childrenOf(SIMPLE, 'check').nodes, ['check']);
+  assert.deepEqual(childrenOf(SIMPLE, 'mail').nodes, ['mail']);
+});
+
+test('deleteChildren deletes them with their edges, and the subgraph they leave empty with its own; counts what went', () => {
+  const r = deleteChildren(SIMPLE, 'retry');
+  // Seven edges: four inside Payment, ok's to ship and to mail, and check's to the Payment box.
+  assert.deepEqual([r.nodes, r.subgraphs, r.edges], [4, 1, 7]);
+  assert.ok(!subgraphs(r.text).some((g) => g.id === 'pay'), r.text);
+  assert.deepEqual(childrenOf(SIMPLE, 'retry').edges.length, r.edges);
+  // Shipping keeps pack: only label and what follows it go.
+  const l = deleteChildren(SIMPLE, 'label');
+  assert.deepEqual([l.nodes, l.subgraphs], [5, 0]);
+  assert.ok(subgraphs(l.text).some((g) => g.id === 'ship'));
+  assert.ok(hasNode(l.text, 'mail') && hasNode(l.text, 'note') && hasNode(l.text, 'pack'));
+});
+
+test('deleteChildren: a subgraph emptied only by its inner one going goes too; one already empty stays, with the one around it', () => {
+  const nested = 'flowchart TD\n  A --> B\n  subgraph outer [Outer]\n    subgraph inner [Inner]\n      B\n    end\n  end\n';
+  const n = deleteChildren(nested, 'A');
+  assert.equal(n.subgraphs, 2);
+  assert.equal(n.text, 'flowchart TD\n');
+  const kept = 'flowchart TD\n  A --> B\n  subgraph outer [Outer]\n    B\n    subgraph inner [Inner]\n    end\n  end\n';
+  const k = deleteChildren(kept, 'A');
+  assert.equal(k.subgraphs, 0);
+  assert.deepEqual(subgraphs(k.text).map((g) => g.id), ['outer', 'inner']);
+});
+
 for (const [name, ids] of Object.entries(SUBGRAPH_IDS)) {
   const src = fixture(name);
   for (const id of ids) {
@@ -1389,6 +1446,22 @@ for (const [name, ids] of Object.entries(SUBGRAPH_IDS)) {
       // What the Shift glow marks is what goes.
       const marked = contentsOf(src, id);
       assert.deepEqual([marked.nodes.length, marked.edges.length], [all.nodes, all.edges]);
+    });
+  }
+}
+
+for (const [name, ids] of Object.entries(NODE_IDS)) {
+  const src = fixture(name);
+  if (!isFlowchart(src)) continue;
+  for (const id of ids) {
+    test(`${name} ${id}: deleteChildren keeps every node it does not count and the other edges in order`, () => {
+      const sig = (/** @type {any} */ e) => `${e.from} ${e.arrow} ${e.label?.text ?? ''} ${e.to}`;
+      const c = childrenOf(src, id);
+      const r = deleteChildren(src, id);
+      const going = new Set([...c.nodes, ...c.tree.map((k) => subgraphs(src)[k].id)]);
+      assert.deepEqual(edges(r.text).map(sig), edges(src).filter((e) => !going.has(e.from) && !going.has(e.to)).map(sig));
+      assert.equal(r.edges, c.edges.length);
+      for (const n of c.nodes) assert.ok(!hasNode(r.text, n), n);
     });
   }
 }

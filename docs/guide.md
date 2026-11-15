@@ -143,7 +143,7 @@ another click on it closes it.
   read **Paste subgraph** and **Paste subgraph without outside edges** (Copy subgraph, in the subgraph menu).
 - **Cut node** (Ctrl+X) draws the node and its edges thicker, to move it: select where it goes (walk
   or click there; a click away keeps the cut), then Ctrl+V, whose items read **Move node here** and **Move node here
-  without edges**. The edges glow pale red where the paste would delete them: while Shift is held, while **Move
+  without edges**. The edges glow pale red where the paste would delete them: while **Move
   node here without edges** has focus or the pointer in a menu, and with an edge selected. It goes in
   the block of the selected node, inside the selected subgraph (a collapsed one too, its box selected after), to the
   top level with nothing selected, or into the selected edge (below). It keeps its edges, or with Ctrl+Shift+V they
@@ -157,6 +157,15 @@ another click on it closes it.
 - **Delete node** (D) removes the node from every statement, with its edges, its `style` and `click` lines and its name in
   `class` lines. Grayed without an edge match. Reached by the arrows, the item you came from is selected after it
   (the first one still there); clicked, nothing is.
+- **Delete node and children** (Shift+D, or Shift+Delete or Shift+Backspace outside menus) takes the node with its
+  children: every node it leads to, down the chain, except those a node that stays still leads to. An edge counts
+  the way the file writes it, from its start to its end, whatever its arrow. An edge to a subgraph leads to no node
+  in it. A subgraph the delete leaves empty goes too, with its edges; one that was already empty stays. Outside
+  menus it takes two presses: the first marks what would go pale red and says what it is ("Press the same key again
+  to delete "Print label", its 4 children and 7 edges."), and the same key again deletes it. Escape, a click, any
+  other key or a change to the diagram cancels; a held key's repeat never deletes. When nothing would go but the node
+  and its edges, the first press deletes it, as D does. In the menu it deletes at once, and while it has focus or the
+  pointer, what it would take is marked. One undo brings it all back.
 
 ### Edge menu
 
@@ -245,9 +254,10 @@ another click on it closes it.
   it, or at the top level. Grayed without an edge match.
 - **Delete subgraph and contents** (Shift+D, or Shift+Delete or Shift+Backspace outside menus) takes it with
   everything Mermaid draws in it: each node, with its edges and settings as Delete node takes them, then each box.
-  While Shift is held with the subgraph selected, or while this item has focus or the pointer in the menu, what it
-  would take is marked pale red: its nodes, boxes and edges. "Deleted "Payment", 4 nodes and 7 edges" says what went.
-  Both work on a collapsed box too, and one undo brings it all back.
+  Outside menus it takes two presses, as Delete node and children does: the first marks what it would take pale red
+  (its nodes, boxes and edges) and asks for the same key again ("Press the same key again to delete "Payment", 4 nodes
+  and 7 edges."). An empty subgraph goes at the first press. In the menu it deletes at once, and while it has focus or
+  the pointer, what it would take is marked. Both work on a collapsed box too, and one undo brings it all back.
 
 ### Title menu
 
@@ -424,7 +434,7 @@ here does just what it does in the selected item's menu:
 | H with a subgraph selected | Collapse it, or expand it: this tab's view only, never the file |
 | Up from the top row, Down from the title | Select the diagram's title, and back to the nearest node below it |
 | D, Delete or Backspace | Delete the selected node or edge, or the selected subgraph alone (what it held stays) |
-| Shift+D, Shift+Delete or Shift+Backspace | Delete the selected subgraph and its contents; on a node or an edge, as D |
+| Shift+D, Shift+Delete or Shift+Backspace, twice | Delete the selected subgraph and its contents, or the selected node and its children; on an edge, as D (above) |
 | ? (wherever it is on your keyboard) | Open Help, or close it |
 | R or Shift+R with nothing selected | Rotate, or Flip, the diagram (this tab only) |
 | R or Shift+R with a subgraph selected | Rotate, or Flip, its inside (this tab only) |

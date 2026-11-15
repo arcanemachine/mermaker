@@ -15,13 +15,13 @@
 // edges } a subgraph copied and pasted (pasteSubgraph): each [original, copy] node pair drawn alike, each new node in
 // the subgraph `blocks` names, and `edges` edges in all. `deleteSubgraph`: { gone, blocks, edges } a subgraph deleted
 // alone or with its contents: the nodes `gone` not drawn, every other node in the subgraph blockOf says after (`blocks`),
-// and `edges` edges in all.
+// and `edges` edges in all; a node deleted with its children is checked the same way.
 // `link`: { id, url } node id given the link url (null: none), drawn with it, every other node's link as before.
 // `color`: { id, kind, cls, fill } node or subgraph `id` given a color preset: `cls` its last class, drawn filled `fill`.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  ARROWS, BRACKETS, addConnected, addNode, addSubgraph, blockOf, connect, copyNode, copySubgraph, deleteEdge, deleteNode, deleteSubgraph, deleteSubgraphContents, contentsOf, edges, freeId, quoteLabel,
+  ARROWS, BRACKETS, addConnected, addNode, addSubgraph, blockOf, connect, copyNode, copySubgraph, deleteEdge, deleteNode, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, edges, freeId, quoteLabel,
   editEdge, mergeNode, moveCut, moveEdges, moveIntoEdge, moveNode, moveSubgraph, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setEdgeArrow, setEdgeLabel, setLink, setShape, setSubgraphTitle, setTitle, subgraphRefusal,
   subgraphs, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, setColor, colorRefusal, presetClass, PRESETS,
 } from '../web/patch/flowchart.mjs';
@@ -242,6 +242,15 @@ for (const [name, , src] of sources) {
       cases.push({ name: `${name} delete subgraph ${id} ${what}`, kind: 'delete-subgraph', src, out: r.text,
         deleteSubgraph: { gone: out, blocks: Object.fromEntries(left.map((n) => [n, blockOf(r.text, n)?.id ?? null])), edges: edges(r.text).length } });
     }
+  }
+}
+// Each node deleted with its children, and with any subgraph that leaves empty: checked as a subgraph's delete is.
+for (const [name, list, src] of sources) {
+  for (const id of list) {
+    const r = deleteChildren(src, id);
+    const left = [...new Set(edges(r.text).flatMap((e) => [e.from, e.to]))];
+    cases.push({ name: `${name} delete node ${id} with children`, kind: 'delete-subgraph', src, out: r.text,
+      deleteSubgraph: { gone: childrenOf(src, id).nodes, blocks: Object.fromEntries(left.map((n) => [n, blockOf(r.text, n)?.id ?? null])), edges: edges(r.text).length } });
   }
 }
 // Each node cut and moved: into every edge not its own (drawn in the block the edge's first half is written in), and

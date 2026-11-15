@@ -15,7 +15,7 @@ import { ANIMATED_BY_STYLE, applies, GLOBAL_KEYS, INSERT_COLLAPSED, LOCKED, MENU
 import { createKeys } from './keys.mjs';
 import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
-  addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
+  addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
   subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
@@ -392,8 +392,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /**
    * A cut node's edges are drawn thicker while it is cut, as a pick's moving edges are (the user), under a mark of
    * their own, since a pick's goes with each selection. A pale red glow lies under them where the paste would delete
-   * them: on an edge, where the move applies; with Shift held or "Move node here without edges" focused in a menu,
-   * where that applies. A cut subgraph's edges never change in its move, so they are not marked.
+   * them: on an edge, where the move applies; with "Move node here without edges" focused or hovered in a menu, where
+   * that applies. A cut subgraph's edges never change in its move, so they are not marked.
    */
   function glowCut() {
     clearMarks('data-page-cut-edge');
@@ -401,7 +401,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (cut?.kind !== 'node') return;
     const id = cut.id;
     const list = selected ? MENUS[isBox(selected) ? 'box' : selected.kind] : MENUS.space;
-    const action = selected?.kind === 'edge' ? 'paste-node' : (shiftHeld || menuFocus === 'paste-node-bare') ? 'paste-node-bare' : null;
+    const action = selected?.kind === 'edge' ? 'paste-node' : menuFocus === 'paste-node-bare' ? 'paste-node-bare' : null;
     const item = action && !picking ? list.find((i) => i.action === action) : undefined;
     const red = Boolean(item && applies(item, menuState()));
     const own = drawnEdges(edges(shownText), collapse.subs, collapse.overrides).filter((e) => e.from === id || e.to === id);
@@ -417,21 +417,39 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       path.before(glow);
     }
   }
+  /** @type {Item | null} the item a first Shift+D (or Shift+Delete, Shift+Backspace) armed: the same key again deletes */
+  let armed = null;
+  /** The Shift delete on `sel`: Delete subgraph and contents, or Delete node and children. */
+  const shiftAction = (/** @type {Item} */ sel) => (sel.kind === 'subgraph' ? 'delete-subgraph-contents' : 'delete-node-children');
   /**
-   * What Delete subgraph and contents would take, pale red, before it is pressed (docs/ux.md, the Shift rule): with a
-   * subgraph selected and Shift held, or the item focused or hovered in its menu, where it applies. Its contents are
-   * marked, not the selected box, which shows the selection: each node and box drawn in it gets a wide pale band under
-   * its shape, and each edge that would go glows.
+   * What the Shift delete takes from `sel` (contentsOf, childrenOf), and whether that is more than D takes (the item
+   * and its edges). Null on anything else.
+   */
+  function doomedBy(/** @type {Item} */ sel, sgs = subgraphs(shownText)) {
+    if (sel.kind === 'subgraph') {
+      const c = contentsOf(shownText, sel.id, sgs);
+      return { ...c, boxes: c.tree.slice(1), more: c.nodes.length > 0 || c.tree.length > 1 };
+    }
+    if (sel.kind !== 'node') return null;
+    const c = childrenOf(shownText, sel.id, sgs);
+    return { ...c, nodes: c.nodes.slice(1), boxes: c.tree, more: c.nodes.length > 1 || c.tree.length > 0 };
+  }
+  /**
+   * What the Shift delete would take, pale red, before it happens (docs/ux.md, the Shift rule): once a first press has
+   * armed it, or while its menu item is focused or hovered, where it applies. The selected item is not marked, since
+   * it shows the selection: each node and box that would go gets a wide pale band under its shape, and each edge that
+   * would go glows.
    */
   function glowDoomed() {
     for (const e of drawn('[data-page-doomed]')) e.remove();
-    if (selected?.kind !== 'subgraph' || picking) return;
-    if (!shiftHeld && menuFocus !== 'delete-subgraph-contents') return;
-    const item = /** @type {import('./menu-items.mjs').MenuItem} */ (MENUS[isBox(selected) ? 'box' : 'subgraph']
-      .find((i) => i.action === 'delete-subgraph-contents'));
+    if ((selected?.kind !== 'subgraph' && selected?.kind !== 'node') || picking) return;
+    const action = shiftAction(selected);
+    if (!(armed && same(armed, selected)) && menuFocus !== action) return;
+    const item = /** @type {import('./menu-items.mjs').MenuItem} */ (MENUS[isBox(selected) ? 'box' : selected.kind]
+      .find((i) => i.action === action));
     if (!applies(item, menuState())) return;
     const sgs = subgraphs(shownText);
-    const { nodes, tree, edges: gone } = contentsOf(shownText, selected.id, sgs);
+    const { nodes, boxes, edges: gone } = /** @type {NonNullable<ReturnType<typeof doomedBy>>} */ (doomedBy(selected, sgs));
     const band = (/** @type {Element} */ shape) => {
       const copy = /** @type {Element} */ (shape.cloneNode(false));
       copy.removeAttribute('id');
@@ -451,7 +469,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         }
       }
     }
-    for (const k of tree.slice(1)) {
+    for (const k of boxes) {
       const box = clusterEl(/** @type {string} */ (sgs[k].id))?.querySelector(':scope > rect:not([data-page-only])');
       if (box) band(box);
     }
@@ -461,7 +479,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (path) band(path);
     }
   }
-  /** The glows that Shift and the focused menu item change: the cut's, and what deleting with contents would take. */
+  /** The glows that the focused menu item and the selection change: the cut's, and what a Shift delete would take. */
   const glows = () => { glowCut(); glowDoomed(); };
   /**
    * Shift held or let go, read from every key and pointer event, since one pressed elsewhere sends no keydown here. The
@@ -471,8 +489,22 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (on === shiftHeld) return;
     shiftHeld = on;
     document.documentElement.toggleAttribute('data-shift', on);
-    glows();
   };
+  /** Let go of an armed Shift delete: its marks and its notice go. */
+  function disarm() {
+    if (!armed) return;
+    armed = null;
+    ui.hideNotice();
+    glowDoomed();
+  }
+  /** Whether `e` is Shift+D, Shift+Delete or Shift+Backspace, the keys that arm and confirm a Shift delete. */
+  const shiftDeleteKey = (/** @type {KeyboardEvent} */ e) => e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey
+    && ['d', 'delete', 'backspace'].includes(e.key.toLowerCase());
+  // Any other key but Shift itself, and any pointer press, lets go of an armed delete; Escape does it as its first step.
+  window.addEventListener('keydown', (e) => {
+    if (armed && e.key !== 'Shift' && e.key !== 'Escape' && !shiftDeleteKey(e)) disarm();
+  }, true);
+  window.addEventListener('pointerdown', () => disarm(), true);
   window.addEventListener('keydown', (e) => holdShift(e.shiftKey || e.key === 'Shift'), true);
   window.addEventListener('keyup', (e) => holdShift(e.key === 'Shift' ? false : e.shiftKey), true);
   for (const type of ['pointerdown', 'pointermove']) {
@@ -590,7 +622,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'delete-node': () => deleteSelected(),
     'delete-edge': () => deleteSelected(),
     'delete-subgraph': () => deleteSelected(),
-    'delete-subgraph-contents': () => deleteSelected(true),
+    'delete-subgraph-contents': () => deleteSelected('contents'),
+    'delete-node-children': () => deleteSelected('children'),
     'insert-node': () => startInsert(),
     'copy-node': () => copySelected(),
     'copy-subgraph': () => copySelected(),
@@ -1268,34 +1301,64 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }, options);
   }
 
-  /** Delete the selected node or edge. */
   /**
-   * Delete the selection: a node or an edge; a subgraph alone (Delete subgraph: what it held stays) or, `contents`,
-   * with everything in it (Delete subgraph and contents). On a node or an edge `contents` changes nothing.
+   * Shift+D, Shift+Delete or Shift+Backspace (the user): on a subgraph or a node whose Shift delete takes more than D
+   * would, the first press marks what would go pale red and asks for the same key again, which deletes it; a key
+   * repeat never does. Anything else deletes at once, as D.
    */
-  function deleteSelected(contents = false) {
+  function shiftDelete() {
+    if (!selected || picking) return false;
+    if (repeating) return true;
+    const sel = selected;
+    if (armed && same(armed, sel)) { disarm(); deleteSelected(sel.kind === 'subgraph' ? 'contents' : 'children'); return true; }
+    const doomed = (sel.kind === 'node' || sel.kind === 'subgraph') && edgesOk && !locked ? doomedBy(sel) : null;
+    if (!doomed?.more) { deleteSelected(sel.kind === 'subgraph' ? 'contents' : sel.kind === 'node' ? 'children' : 'one'); return true; }
+    armed = sel;
+    glowDoomed();
+    const what = sel.kind === 'subgraph' ? counted(doomed.nodes.length, 'node')
+      : doomed.nodes.length ? `its ${doomed.nodes.length} ${doomed.nodes.length === 1 ? 'child' : 'children'}` : null;
+    const parts = [what, counted(doomed.boxes.length, 'subgraph'), counted(doomed.edges.length, 'edge')];
+    ui.notice(`Press the same key again to delete ${named(sel)}${listed(parts)}.`, 'info');
+    return true;
+  }
+  /** `n` things, or null for none. */
+  const counted = (/** @type {number} */ n, /** @type {string} */ what) => (n ? `${n} ${what}${n === 1 ? '' : 's'}` : null);
+  /** What else goes, after an item's name: ", 2 nodes, 1 subgraph and 3 edges", leaving out the nones. */
+  const listed = (/** @type {(string | null)[]} */ parts) => {
+    const some = /** @type {string[]} */ (parts.filter(Boolean));
+    return some.length ? `, ${some.length > 1 ? `${some.slice(0, -1).join(', ')} and ${some.at(-1)}` : some[0]}` : '';
+  };
+
+  /**
+   * Delete the selection: a node or an edge; a subgraph alone (Delete subgraph: what it held stays); `contents`, a
+   * subgraph with everything in it (Delete subgraph and contents); `children`, a node with its children (Delete node
+   * and children). On an edge `how` changes nothing.
+   */
+  function deleteSelected(/** @type {'one' | 'contents' | 'children'} */ how = 'one') {
     const sel = selected;
     if (!sel || refuseLocked()) return;
     if (sel.kind === 'title') { ui.notice("Removing the title isn't supported. Edit the title in the file.", 'warning'); return; }
     if (!edgesOk) { ui.notice(NO_EDGE_MATCH, 'warning'); return; }
     // Named before the edit: once deleted, the node is no longer drawn.
     const name = sel.kind !== 'edge' && named(sel);
-    const count = (/** @type {number} */ n, /** @type {string} */ what) => `${n} ${what}${n === 1 ? '' : 's'}`;
     // Where the keyboard goes after (the user: it keeps its place): back along the trail to the first item still
     // drawn; with no trail, an edge's source (a node clicked: nothing). Taken now: the edit starts the trail afresh.
     const back = moves.fallback(sel);
     const source = sel.kind === 'edge' ? shownEdge(sel.id)?.from : null;
     if (source) back.push({ kind: subgraphs(shownText).some((g) => g.id === source) ? 'subgraph' : 'node', id: source });
-    /** @type {(text: string) => { text: string, edges?: number, nodes?: number }} */
+    /** @type {(text: string) => { text: string, edges?: number, nodes?: number, subgraphs?: number }} */
     const change = sel.kind === 'edge' ? (text) => deleteEdge(text, sel.id)
-      : sel.kind === 'node' ? (text) => deleteNode(text, sel.id)
-        : contents ? (text) => deleteSubgraphContents(text, sel.id) : (text) => deleteSubgraph(text, sel.id);
+      : sel.kind === 'node' ? (how === 'children' ? (text) => deleteChildren(text, sel.id) : (text) => deleteNode(text, sel.id))
+        : how === 'contents' ? (text) => deleteSubgraphContents(text, sel.id) : (text) => deleteSubgraph(text, sel.id);
     editDrawn(change, {
       after: () => (back.length ? { item: back[0], others: back.slice(1), reveal: true } : null),
       afterSave: (result) => {
         if (sel.kind === 'edge') { ui.announce('Deleted the edge'); return; }
-        const went = [...(result.nodes ? [count(result.nodes, 'node')] : []), ...(result.edges ? [count(result.edges, 'edge')] : [])];
-        ui.announce(`Deleted ${name}` + (went.length ? `, ${went.join(' and ')}` : ''));
+        // Delete node and children counts the node itself among its nodes.
+        const children = sel.kind === 'node' ? (result.nodes ?? 1) - 1 : 0;
+        const nodes = sel.kind === 'node' ? (children ? `its ${children} ${children === 1 ? 'child' : 'children'}` : null)
+          : counted(result.nodes ?? 0, 'node');
+        ui.announce(`Deleted ${name}${listed([nodes, counted(result.subgraphs ?? 0, 'subgraph'), counted(result.edges ?? 0, 'edge')])}`);
       },
     });
   }
@@ -1355,6 +1418,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** @type {[string, () => boolean][]} Escape's steps on the diagram, in order */
   const ESCAPE = [
+    ['armed delete', () => Boolean(armed) && (disarm(), true)],
     ['pick', () => Boolean(picking) && (cancelPick(), true)],
     // A cut is a pick spread over time: Escape drops it first, the selection kept; a click away does not.
     ['cut', () => Boolean(cut) && (dropCut(), ui.announce('Cut dropped'), true)],
@@ -1367,6 +1431,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     }],
     ['code panel', () => ui.escape()],
   ];
+  /** Whether the key being answered is a held key's repeat. */
+  let repeating = false;
   /** @type {Record<string, () => unknown>} what each key does, by name (below); truthy when it was used */
   const keys = {
     // S adds a subgraph: inside a selected subgraph, or with nothing selected at the top level, as their menus' S does.
@@ -1421,12 +1487,12 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     f2: () => selected && !picking && (editLabelOrTitle(selected), true),
     delete: () => selected && !picking && (deleteSelected(), true),
     backspace: () => selected && !picking && (deleteSelected(), true),
-    // D deletes as Delete does (the user: the home row). With Shift, a subgraph goes with everything in it; a node or
-    // an edge, which hold nothing, go as with D.
+    // D deletes as Delete does (the user: the home row). With Shift, a subgraph goes with everything in it, and a node
+    // with its children, in two presses; an edge goes as with D.
     d: () => selected && !picking && (deleteSelected(), true),
-    'shift+d': () => selected && !picking && (deleteSelected(true), true),
-    'shift+delete': () => selected && !picking && (deleteSelected(true), true),
-    'shift+backspace': () => selected && !picking && (deleteSelected(true), true),
+    'shift+d': () => shiftDelete(),
+    'shift+delete': () => shiftDelete(),
+    'shift+backspace': () => shiftDelete(),
     // M is Merge into… on a node; nothing elsewhere.
     m: () => itemKey('merge-into'),
     // L follows a node's link; Shift+L in a new tab.
@@ -1894,6 +1960,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // A diagram that cannot be selected (not a flowchart) takes only the view keys, silently.
     if (!selectable && !VIEW_KEYS.includes(name)) return;
     if (name !== 'escape') clearRefusal();   // Escape's own steps take it first
+    repeating = e.repeat;
     if (keys[name]()) e.preventDefault();
   });
 
@@ -2591,6 +2658,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       }
       tagEdges(shownText);
       markCut();
+      // A redraw lets go of an armed Shift delete: what it counted may have changed.
+      if (changed) disarm();
       glowDoomed();
       // A new drawing while finding: find again in it, so no mark is left on what has gone.
       if (finding) { refind(); markMatches(); }

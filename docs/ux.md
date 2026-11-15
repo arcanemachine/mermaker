@@ -121,18 +121,29 @@ Mermaid's theme is the file's to set.
 
 - One gesture, one kind of outcome. A gesture that adds never deletes; removing is always a deliberate Delete. When
   there is nothing to add, it shows what exists instead of changing anything.
-- Shift shows a key's extra cost before it is pressed (the user, "a rule emerging here"): where a key's Shift form
-  deletes what the plain form keeps (Ctrl+Shift+V a cut node's edges, Shift+D a subgraph's contents), what would go
-  glows pale red while Shift is held where the key would act, and while that item is in focus or under the pointer in
-  the menu, so mouse and keyboard see it alike. On a node or an edge, which hold nothing, Shift+D, Shift+Delete and
-  Shift+Backspace do what the plain key does. Any Shift key shows the glow for a moment (Shift+F on a subgraph); a
-  subgraph's contents hidden in a collapsed box get no mark, and the announcement counts what went.
+- A key's Shift form shows its extra cost before it acts (the user, "a rule emerging here"): where it deletes what the
+  plain form keeps (Ctrl+Shift+V a cut node's edges, Shift+D a subgraph's contents or a node's children), what would
+  go glows pale red while that item is in focus or under the pointer in the menu, or after a first press that asks
+  for a second. Holding Shift shows nothing: the glow flashed under every Shift key (Ctrl+Shift+Arrows, Shift+F).
+  Shift+D, Shift+Delete and Shift+Backspace outside menus take two presses (the user): the first marks what would go
+  and says what it is in a notice; the same key again (any of the three) deletes it. Escape, a click, any other key
+  or a redraw cancels; a key's repeat never confirms, and pressing Shift never cancels. When the Shift form would
+  take no more than the plain one (a node with no children, an empty subgraph), the first press deletes. The menu
+  item deletes at once, since its focus already showed the cost. On an edge, Shift+D does what D does. What is hidden
+  in a collapsed box gets no mark; the notice and the announcement count it.
 - Deleting a subgraph (the user wants two): Delete subgraph (D, Delete, Backspace) takes the box alone, unwrapping
   it: its `subgraph`, own `direction` and `end` lines go, and so do the edges to the subgraph itself; what it held
   keeps its lines and is drawn where Mermaid then draws it (the block around it, or another block that also names a
   node). Delete subgraph and contents (Shift+D, Shift+Delete, Shift+Backspace) takes every node Mermaid draws in it,
   each with its edges as Delete node takes them, then the boxes; a line inside it naming only nodes drawn elsewhere
   stays. Both are one edit, one undo, and work on a collapsed box.
+- Delete node and children (the user): the node goes with every node it leads to, down the chain, except those a
+  node that stays still leads to, so a loop only the node feeds goes too. Edges count as the file writes them, start
+  to end, whatever the arrow (`---`, `<-->` and `~~~` too). An edge to a subgraph leads to no node in it, as
+  Ctrl+Shift+Arrows skip past a box: it names no node, and the delete takes less. A subgraph the delete leaves with
+  nothing in it goes too, by Delete subgraph's own edit (the user), so no empty box is left with edges still reaching
+  it; one already empty stays, and so does the subgraph around it. Plain D and a cut never do this: D takes one thing,
+  and a cut node comes back.
 - A letter outside a menu does exactly what it does in the selected item's menu (the user): R reverses a selected
   edge, as the edge menu's R does. So a letter never means two things. And a letter works outside menus only when no
   other key does the job (the user): R, C, N and M have no other key. A, Enable edge animation, is the exception the
@@ -164,8 +175,8 @@ Mermaid's theme is the file's to set.
   first and the pick after, so the candidate stays the one thing Enter picks.
 - Shift with an item's letter does its counterpart: the other way round, or the same thing further (the user; the
   reviewer's wording). Shift+C is Connect from…, C's edge the other way; Shift+R flips the diagram as R rotates it;
-  Shift+F fits the selection, which F only centers; Shift+D deletes a subgraph with its contents, which D takes alone
-  (on a node or an edge, which hold nothing more, Shift+D does what D does, with no item of its own). A Shift key
+  Shift+F fits the selection, which F only centers; Shift+D deletes a subgraph with its contents, which D takes alone,
+  and a node with its children (on an edge, Shift+D does what D does, with no item of its own). A Shift key
   exists only beside its plain letter in the same menu, shown as ⇧ and the letter, as the shape picker shows Shift with a digit, and is read from the Shift key held,
   never from the letter's case, so Caps Lock does not count. Ctrl+Shift+L (Show link, the user's pick) sits beside L,
   its letter, as Ctrl+Shift+V does beside Ctrl+V; on a Mac ⌘⇧L works too, since the menus show Ctrl as ⌘ there.

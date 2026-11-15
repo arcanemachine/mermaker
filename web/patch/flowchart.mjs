@@ -1665,6 +1665,54 @@ export function deleteSubgraphContents(/** @type {string} */ text, /** @type {st
 }
 
 /**
+ * What deleting node `id` with its children takes (GLOSSARY.md, children): `nodes`, it first, then every node it
+ * leads to, down the chain, that no node left can still reach; `tree`, the subgraphs that would be left empty (their
+ * places in subgraphs()), which go too; `edges`, every edge with an end among them. Edges are read as the text writes
+ * them, the start leading to the end, whatever the arrow. An edge to or from a subgraph leads to no node, so a
+ * subgraph is never walked through. A subgraph goes only when every node it draws goes and every subgraph inside it
+ * goes too: one with nothing in it already stays, and so does the subgraph around it.
+ */
+export function childrenOf(/** @type {string} */ text, /** @type {string} */ id, sgs = subgraphs(text)) {
+  assertNode(text, id);
+  const all = edges(text), ids = [...nodeIds(text)];
+  /** @type {Map<string, string[]>} each node's ends; a subgraph has none, and as an end it leads nowhere */
+  const next = new Map(ids.map((n) => [n, []]));
+  for (const e of all) next.get(e.from)?.push(e.to);
+  const reach = (/** @type {string[]} */ from) => {
+    const seen = new Set(from), todo = [...from];
+    while (todo.length) {
+      for (const n of next.get(/** @type {string} */ (todo.pop())) ?? []) {
+        if (n !== id && !seen.has(n)) { seen.add(n); todo.push(n); }
+      }
+    }
+    return seen;
+  };
+  const led = reach([id]);
+  const live = reach(ids.filter((n) => !led.has(n)));
+  const nodes = [id, ...ids.filter((n) => n !== id && led.has(n) && !live.has(n))];
+  const going = new Set(nodes);
+  const goes = (/** @type {number} */ k) => {
+    const c = contentsOf(text, /** @type {string} */ (sgs[k].id), sgs);
+    return c.nodes.length > 0 && c.nodes.every((n) => going.has(n)) && c.tree.every((t) => contentsOf(text, /** @type {string} */ (sgs[t].id), sgs).nodes.length > 0);
+  };
+  const tree = sgs.map((_, k) => k).filter((k) => sgs[k].end !== null && goes(k));
+  const gone = new Set([...nodes, ...tree.map((k) => /** @type {string} */ (sgs[k].id))]);
+  return { nodes, tree, edges: all.filter((e) => gone.has(e.from) || gone.has(e.to)) };
+}
+
+/**
+ * Delete node `id` with its children (childrenOf): each node as Delete node does, then each subgraph left empty, as
+ * Delete subgraph does. Returns { text, nodes, subgraphs, edges }: how many of each went, `id` among the nodes.
+ */
+export function deleteChildren(/** @type {string} */ text, /** @type {string} */ id) {
+  const { nodes, tree } = childrenOf(text, id);
+  let out = text;
+  for (const n of nodes) out = transform(out, { gone: n, removed: edges(out).filter((e) => e.from === n || e.to === n) });
+  for (const k of [...tree].reverse()) out = unwrap(out, k);
+  return { text: out, nodes: nodes.length, subgraphs: tree.length, edges: edges(text).length - edges(out).length };
+}
+
+/**
  * What a copy of a node carries, read at copy time so a paste still works once the node has changed or gone.
  * @typedef {object} Copied
  * @property {string} id the node's id when copied
