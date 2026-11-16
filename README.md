@@ -1,17 +1,22 @@
 # Mermaker
 
-Mermaker shows a Mermaid diagram file live in your browser, and lets you edit it by pointing and with keys. Each edit
-is written back into the `.mmd` file as a small text change, so the file stays plain Mermaid and is the only source of
-truth. You, your text editor and an AI agent can all work on the same file: the page redraws within a second whenever
-the file changes, whoever saved it.
+Mermaker shows a Mermaid diagram file (`.mmd`) in your browser, and you can edit the diagram there with the mouse
+and the keyboard. Mermaker writes each edit into the file as a small text change. The file stays plain Mermaid, and
+it is the only copy of the diagram.
 
-Mermaker edits flowcharts (`flowchart` and `graph`). Other diagram types are shown, but not edited.
+You, your text editor and an AI agent can work on the same file at the same time. When the file changes, the page
+draws it again within about a second.
+
+Mermaker edits flowcharts (`flowchart` and `graph`). It shows other types of diagram, but you cannot edit them.
 
 ![Mermaker showing a flowchart with subgraphs, in the browser](docs/screenshot.png)
 
 ## Getting started
 
-You need Node 22 or later, and a browser with internet access: the page loads Mermaid from a CDN.
+You need:
+
+- Node 22 or later.
+- A browser with internet access. The page loads Mermaid from a CDN.
 
 Install Mermaker from a clone of this repository:
 
@@ -21,8 +26,8 @@ cd mermaker
 npm install -g .
 ```
 
-(`./run.sh` in the clone does the same as `mermaker`, without installing: use it if npm refuses to install for lack
-of permissions.)
+If npm refuses to install for lack of permissions, use `./run.sh` in the clone in place of `mermaker`, with the same
+arguments (`./run.sh diagram.mmd`, `./run.sh skill`). It needs no install.
 
 **Open one file:**
 
@@ -30,9 +35,10 @@ of permissions.)
 mermaker path/to/diagram.mmd
 ```
 
-Mermaker prints the page's address; open it in your browser. Only that file is served. Add a port
-(`mermaker diagram.mmd 6378`) to get the same address each time: if a Mermaker already serves the file there, it
-prints that address instead of starting another.
+Mermaker prints the page's address. Open the address in your browser. Mermaker serves only that file.
+
+To get the same address each time, add a port: `mermaker diagram.mmd 6378`. If a Mermaker already serves the file on
+that port, Mermaker prints its address and does not start another.
 
 **Serve a folder of diagrams** from one long-running server:
 
@@ -40,36 +46,45 @@ prints that address instead of starting another.
 MERMAKER_ROOTS=/path/to/diagrams/ mermaker serve
 ```
 
-Then open `http://localhost:63762/?f=<absolute path to a .mmd file>`. With no `MERMAKER_ROOTS`, the folder is
-`/tmp/mermaid-diagrams/`; with no `?f=`, the page shows a scratch diagram there, made if missing. The address can also
-open on one subgraph or node (`docs/guide.md`, Viewing).
+Mermaker prints the address to open, with your file's absolute path in place of `<path>`:
+`http://localhost:63762/?f=<path>` (63762 is the default port).
 
-Mermaker runs until you stop it (Ctrl+C).
+- If you do not set `MERMAKER_ROOTS`, Mermaker serves `/tmp/mermaid-diagrams/`. Give several folders with commas.
+- If the address has no `?f=`, the page shows the scratch diagram, `/tmp/mermaid-diagrams/scratch.mmd`. Mermaker
+  makes that file when it starts, if it is missing. The page can show it only if that folder is in
+  `MERMAKER_ROOTS`.
+- The address can also open the page on one subgraph or one node (`docs/guide.md`, Viewing).
+
+Mermaker runs until you stop it with Ctrl+C (or end its process).
 
 ## A skill for agents
 
-Mermaker is made to work with AI agents: an agent edits the file, and the page follows it as you watch and edit
-too. `mermaker skill` prints an agent skill (`SKILL.md`) that teaches an agent to use Mermaker: serve a diagram, give
-you the page, and work on the same file with you. Save it as `mermaker/SKILL.md` in the folder your agent reads skills
-from:
+Mermaker is made to work with AI agents. An agent edits the file, and the page shows each change while you watch
+and edit too.
+
+`mermaker skill` prints an agent skill (`SKILL.md`). The skill tells an agent how to serve a diagram, give you the
+page, and work on the same file with you. Save it as `mermaker/SKILL.md` in the folder your agent reads skills from:
 
 ```bash
 mkdir -p <skills folder>/mermaker
 mermaker skill > <skills folder>/mermaker/SKILL.md
 ```
 
-The skill is stamped with the version it came from and a hash of its text, so an agent can tell when its saved copy
-differs from the Mermaker in use and offer to update it, keeping its Custom rules section.
+The skill has the Mermaker version and a hash of its text. So an agent can see when its copy is different from the
+Mermaker in use. The agent can then offer to update the copy, and keep the copy's Custom rules section.
 
 ## Using the page
 
-Right-click (or touch and hold) a node, an edge, a subgraph or empty space for what you can do there. Double-click a
-node or an edge to edit it. The Help button lists the main keys, and the Code button opens the file's code beside the
-diagram. `docs/guide.md` says what every gesture, menu item and key does.
+- To see what you can do with a node, an edge, a subgraph or empty space, right-click it (or touch and hold it).
+- To edit a node or an edge, double-click it.
+- The Help button shows the main keys.
+- The Code button shows the file's code next to the diagram.
+
+`docs/guide.md` tells what each gesture, menu item and key does.
 
 ## Settings
 
-Settings are environment variables, read when Mermaker starts.
+Settings are environment variables. Mermaker reads them when it starts.
 
 | Setting | What it does |
 |---|---|
@@ -81,19 +96,28 @@ Settings are environment variables, read when Mermaker starts.
 | `MERMAKER_MAX_TEXT` | The most characters a diagram's code may have, leaving out comments and frontmatter. Default: Mermaid's 50,000. Mermaid's drawing slows as diagrams grow, so a higher limit is no promise of a quick render |
 | `MERMAKER_HOSTS` | Host names the page may be opened under, besides `localhost`, `127.0.0.1` and `[::1]` (and the bound address, when it is a single one), comma-separated. Requests addressed to any other name are refused, which stops DNS rebinding |
 
-The server listens on `127.0.0.1` unless you give it a host: `mermaker serve [port] [host]`, defaults 63762 and
-`127.0.0.1`.
+The server listens on `127.0.0.1` unless you give it a host: `mermaker serve [port] [host]`. The default port is 63762,
+and the default host is `127.0.0.1`.
 
 ## Security
 
-Binding to anything other than `127.0.0.1` lets anyone who can reach the machine read and edit the served diagrams:
-there is no login. Only `.mmd` files inside `MERMAKER_ROOTS` are served, and requests addressed to a host name the
-server does not know are refused (`MERMAKER_HOSTS`).
+Mermaker has no login. If you bind it to an address other than `127.0.0.1`, anyone who can reach the machine can read
+and edit the diagrams it serves.
+
+- Mermaker serves only `.mmd` files in `MERMAKER_ROOTS`.
+- Mermaker refuses a request to a host name that it does not know (`MERMAKER_HOSTS`).
+
+To open the page from another device, start the server on all addresses, with the name or IP address that the device
+uses for this machine in `MERMAKER_HOSTS`:
+
+```bash
+MERMAKER_HOSTS=192.168.1.20 mermaker serve 63762 0.0.0.0
+```
 
 ## Contributing
 
-`AGENTS.md` holds the rules for changing Mermaker and the map of its code; `docs/ux.md` holds the rules the page
-follows, and why.
+`AGENTS.md` has the rules for changes to Mermaker, and a map of its code. `docs/ux.md` has the rules that the page
+follows, and the reasons for them.
 
 ## License
 
