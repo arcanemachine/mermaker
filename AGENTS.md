@@ -34,6 +34,10 @@ how to write a diagram merma edits). A change to any of those updates it in the 
   Mermaid's own syntax and features as far as they go. Everything the page draws is what Mermaid draws from the file,
   or from the file with lines in Mermaid's own syntax appended (as collapse does). merma never draws an element the
   file does not hold. merma's own metadata in the file is the last resort, and only with the maintainer's agreement.
+- **Use what Mermaid already does.** Where Mermaid has its own support for something (a link, a tooltip, a
+  setting), merma hooks into it rather than building its own. Only documented syntax counts: syntax Mermaid
+  accepts but does not document (a field of its own in `@{ … }`) is a hack, since it can change in any release, and
+  needs the maintainer's agreement.
 - **The diagram looks as Mermaid draws it.** A change to how the diagram looks with nothing selected is
   added to the list in `docs/ux.md`, "The diagram looks as Mermaid draws it", and needs the maintainer's agreement.
 - **Tests ship with the code, in the same commit.** `npm test` runs `test/*.test.mjs` with Node's own runner.
