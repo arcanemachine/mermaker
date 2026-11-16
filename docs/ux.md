@@ -175,7 +175,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - Shift with an item's letter does its counterpart: the other way round, or the same thing further . Shift+C is Connect from…, C's edge the other way; Shift+R flips the diagram as R rotates it;
   Shift+F fits the selection, which F only centers; Shift+D deletes a subgraph with its contents, which D takes alone,
   and a node with its children (on an edge, Shift+D deletes the edge as D does, in two presses, with no item of its own). A Shift key
-  exists only beside its plain letter in the same menu, shown as ⇧ and the letter, as the shape picker shows Shift with a digit, and is read from the Shift key held,
+  exists only beside its plain letter in the same menu (one exception: Shift+Y, Copy link to this node, is Copy link
+  to this subgraph in a subgraph's menu too, which has no Y, so one key copies the selection's address), shown as ⇧ and the letter, as the shape picker shows Shift with a digit, and is read from the Shift key held,
   never from the letter's case, so Caps Lock does not count. Ctrl+Shift+L (Show link) sits beside L,
   its letter, as Ctrl+Shift+V does beside Ctrl+V; on a Mac ⌘⇧L works too, since the menus show Ctrl as ⌘ there.
 - In a pick, solid is where the keys are and marked is what will change. The candidate, which the arrows
@@ -429,6 +430,14 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   holds them. Shift+L opens a new tab without asking the server first: the browser allows a new tab only straight
   from the key or the click, and the new tab says itself if the file cannot be served. An app's link (`vscode://`)
   goes to the system, not to a new tab, which would be left blank.
+- An address can name a node (`&node=`, Copy link to this node) as it names a part, so a link points at one item.
+  It is read once and dropped from the address as it is read (replaceState), so a reload, Back and
+  Forward keep the selection made since rather than going back to that node; nothing inside the page ever writes
+  it into the address. A node hidden in a collapsed subgraph selects that box, as a part does. An edge cannot be
+  named: its id is Mermaid's, renumbered as edges come and go. The address names the file by its host path when the
+  server knows one, since that is the path the reader has; the server takes either and sends the page to its own,
+  so the page knows each file by one name. Copy link copies the node's link as the file writes it, not as Mermaid
+  reads it, as Show link shows it.
 - Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
   and copied, a hover tip's cannot), and selecting a linked node says it aloud ("…selected, links to …"), so the
   keyboard and a screen reader learn what the mouse sees. No hover tip on the node: the notice does the job.

@@ -25,7 +25,7 @@ mermaker serve [port] [host]       # defaults 63762, 127.0.0.1
 ```
 
 Then open `http://localhost:<port>/?f=<absolute path to a .mmd file>`, adding `&part=<subgraph id>` to open it fitted to
-one subgraph (`docs/guide.md`, Viewing). With no `?f=`, the page shows a scratch
+one subgraph, or `&node=<node id>` to open it with a node selected (`docs/guide.md`, Viewing). With no `?f=`, the page shows a scratch
 diagram, `/tmp/mermaid-diagrams/scratch.mmd`, created on start if missing.
 
 Either way the server runs until you stop it (Ctrl+C), unless `MERMAKER_IDLE` is set.

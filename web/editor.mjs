@@ -70,7 +70,7 @@ const END_RUN = 3;
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
  * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
- * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
+ * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
  * @param {Record<'stage'|'diagram'|'labelBox'|'find'|'findBox'|'findCount'|'findPrev'|'findNext'|'findCancel'|'findToggle', HTMLElement>} deps.els
  */
@@ -259,6 +259,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   /** What a press says while another edit is still saving. */
   const BUSY = 'Another edit is still saving. Try again once that edit has saved.';
+  const EDGE_ADDRESS = 'Mermaker can link to a node or a subgraph, but not to an edge.';
   /** The start of what a refused save says; the reason follows, as a sentence of its own. */
   const NOT_SAVED = 'Your change was not saved. ';
   /** Say why something was refused. Under the lock its notice already says why, so the refusal is shorter. */
@@ -631,6 +632,17 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       if (link) ui.notice(`This node links to: ${link}`, 'info');
     },
     'edit-link': () => editLink(),
+    'copy-link': () => {
+      const link = writtenLink(shownText, selection().id);
+      if (!link || link === 'script') return;
+      ui.copyLink(link.url).then((ok) => ok && ui.announce('Copied the link'));
+    },
+    'copy-node-link': () => {
+      ui.copyLink(ui.itemAddress({ node: selection().id })).then((ok) => ok && ui.announce('Copied the link to this node'));
+    },
+    'copy-subgraph-link': () => {
+      ui.copyLink(ui.itemAddress({ part: selection().id })).then((ok) => ok && ui.announce('Copied the link to this subgraph'));
+    },
     'edit-node': () => openLabelBox(selection()),
     'edit-edge': () => openLabelBox(selection()),
     'edit-title': () => openLabelBox(selection()),
@@ -746,9 +758,15 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       link: selected?.kind === 'node' ? linkOf(selected.id) : undefined,
       linkText: selected?.kind === 'node' ? links.get(selected.id) ?? null : null,
       linkScript: selected?.kind === 'node' && writtenLink(shownText, selected.id) === 'script',
+      linkWritten: selected?.kind === 'node' ? linkWrittenOf(selected.id) : null,
     };
   }
 
+  /** Node `id`'s link as the file writes it, or null for none or a callback. */
+  function linkWrittenOf(/** @type {string} */ id) {
+    const link = writtenLink(shownText, id);
+    return link && link !== 'script' ? link.url : null;
+  }
   /** Where node `id`'s link leads, or why Open link does nothing (links.mjs). */
   function linkOf(/** @type {string} */ id) {
     return linkTarget(links.get(id), hasClick(shownText, id), file);
@@ -1517,6 +1535,12 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'shift+l': () => itemKey('open-link-tab'),
     'ctrl+shift+l': () => itemKey('show-link'),
     k: () => itemKey('edit-link'),
+    // Y copies a node's link; Shift+Y the address of the node or subgraph itself. An address cannot name an edge.
+    y: () => itemKey('copy-link'),
+    'shift+y': () => {
+      if (selected?.kind === 'edge' && !picking) { refuse(EDGE_ADDRESS); return true; }
+      return itemKey('copy-node-link') || itemKey('copy-subgraph-link');
+    },
     // . opens the selection's menu, or with nothing selected the empty-space menu, as the menu key and Shift+F10 do.
     '.': () => {
       if (picking) return false;
@@ -2805,6 +2829,27 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
      */
     undo: () => (busy ? ui.notice(BUSY, 'error') : undo()),
     redo: () => (busy ? ui.notice(BUSY, 'error') : redo()),
+
+    /**
+     * Select node `id` and fit it to the window, as Shift+F does, for an address naming it (`&node=`): or the collapsed
+     * subgraph's box it is hidden in. 'gone' when the file has no such node; 'unknown' when Mermaker does not edit this
+     * diagram, so cannot tell.
+     * @returns {'shown' | 'gone' | 'unknown'}
+     */
+    goTo(/** @type {string} */ id) {
+      if (!drawnEditable) return 'unknown';
+      if (!hasNode(shownText, id)) return 'gone';
+      const shown = drawnEnd(id);
+      /** @type {Item} */
+      const item = shown === id ? { kind: 'node', id } : { kind: 'subgraph', id: shown };
+      const rects = elsOf(item).map((e) => e.getBoundingClientRect()).filter((r) => r.width || r.height);
+      if (!rects.length) return 'gone';
+      moves.forget();
+      select(item);
+      ui.announce(selectedSaid(item));
+      viewer.fitRects(rects);
+      return 'shown';
+    },
 
     /** Whether the code panel holds the lock: its code is being edited. */
     codeLocked: () => locked,

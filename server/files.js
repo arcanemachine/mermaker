@@ -85,6 +85,19 @@ export function createFiles({ roots, pathMap = [] }) {
       }
       return '';
     },
+
+    /**
+     * The server's path for `path`, which may be a host path (a link copied from a page whose file has one). A path
+     * served as given is never remapped, so an address that works keeps its meaning; any other path is returned as it
+     * is, for allowed() to refuse.
+     */
+    serverPath(/** @type {string} */ path) {
+      if (this.allowed(path)) return path;
+      for (const [server, host] of pathMap) {
+        if (path === host || path.startsWith(host + '/')) return server + path.slice(host.length);
+      }
+      return path;
+    },
   };
 }
 

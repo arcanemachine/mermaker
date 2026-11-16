@@ -13,6 +13,7 @@ import { isFlowchart, itemLines, subgraphs as scannedSubgraphs, withHeader } fro
 import { createViewer, parse } from './viewer.mjs';
 import { fileTheme, shownTheme, themeChoice, THEME_KEY } from './theme.mjs';
 import { limitSentence, readLimits } from './limits.mjs';
+import { itemAddress } from './links.mjs';
 import { hide as hideTop, mode as modeNotice, NONE, show as showNotice } from './notices.mjs';
 
 // Every id the page asks for is in index.html.
@@ -69,6 +70,26 @@ let drawingSubs = [];
 /** @type {string | null} */
 let part = new URLSearchParams(location.search).get('part');
 let partGone = false;   // the part is not in the file: said once, until it is back
+/**
+ * The node to select once the file is drawn (`&node=`, a link's `?node=`): read from the address, then dropped from it,
+ * so a reload keeps the selection made since. Never put in the address from inside the page.
+ * @type {string | null}
+ */
+let goTo = null;
+/** Take `&node=` out of the address, for goTo. */
+function takeNode() {
+  const url = new URL(location.href);
+  const id = url.searchParams.get('node');
+  if (id === null) return null;
+  url.searchParams.delete('node');
+  history.replaceState(history.state, '', url);
+  return id;
+}
+goTo = takeNode();
+/** Select node `id` in the file shown, saying so if it is not there. */
+function selectNode(/** @type {string} */ id) {
+  if (editor?.goTo(id) === 'gone') ui.notice(`The node ${id} is not in this file.`, 'warning');
+}
 /** Where the part is drawn now, or null: no part, or not drawn. */
 function partRect() {
   if (!part || viewer.renderId === null) return null;
@@ -274,6 +295,15 @@ const ui = {
     copyText(text).catch(() => {});
     toast('Copied!');
   },
+  /** Put a link on the system clipboard, the whole of what is copied: whether the browser let it, saying so if not. */
+  copyLink: (/** @type {string} */ text) => copyText(text).then(() => { toast('Copied!'); return true; },
+    () => { ui.notice('The browser refused to copy the link.', 'error'); return false; }),
+  /**
+   * The address of a node, with the part shown, or of a subgraph as the part, naming the file by its host path when
+   * the server knows one (links.mjs itemAddress).
+   */
+  itemAddress: (/** @type {{ node: string } | { part: string }} */ to) => itemAddress(location.href,
+    'node' in to ? { node: to.node, part, hostFile } : { node: null, part: to.part, hostFile }),
   /** Fit to subgraph `id`, or to the whole diagram (null), as the address's part. */
   showPart: (/** @type {string | null} */ id) => setPart(id),
   /**
@@ -282,16 +312,17 @@ const ui = {
    * browser blocks the new tab. An app's address goes to the system, which hands it to the app, with no tab left
    * behind.
    */
-  openLink(/** @type {{ path: string, part: string | null } | { url: string, app: boolean }} */ to, /** @type {boolean} */ tab) {
+  openLink(/** @type {{ path: string, part: string | null, node: string | null } | { url: string, app: boolean }} */ to, /** @type {boolean} */ tab) {
     if ('url' in to) {
       if (to.app) location.href = to.url; else window.open(to.url, '_blank', 'noopener');
     } else if (tab) {
       const url = new URL(location.pathname, location.href);
       url.searchParams.set('f', to.path);
       if (to.part !== null) url.searchParams.set('part', to.part);
+      if (to.node !== null) url.searchParams.set('node', to.node);
       window.open(url, '_blank', 'noopener');
     } else {
-      openFile(to.path, to.part);
+      openFile(to.path, to.part, to.node);
     }
   },
   /** Escape on the diagram with nothing of its own to let go: close the code panel. Whether it did. */
@@ -423,6 +454,7 @@ async function draw(/** @type {string} */ written) {
   editor?.rendered(written, { subs, overrides: agree ? overrides : new Map() }, links);
   if (warning) ui.notice(warning, 'warning');
   checkPart();
+  if (goTo !== null) { const id = goTo; goTo = null; selectNode(id); }
 }
 
 /**
@@ -442,26 +474,31 @@ function sourceFor(/** @type {string} */ f) {
   return s;
 }
 let source = sourceFor(file);
-/** @type {{ source: ReturnType<typeof createSource>, file: string, part: string | null } | null} a file asked for */
+/** @type {{ source: ReturnType<typeof createSource>, file: string, part: string | null, node: string | null } | null} a file asked for */
 let opening = null;
 
 /**
- * Open `next` in this page, fitted to subgraph `nextPart` if given: a new history entry, so Back comes back here. Only
- * once the server has given its text: a file it refuses (missing, outside MERMAKER_ROOTS) changes nothing but a notice.
+ * Open `next` in this page, fitted to subgraph `nextPart` if given, with node `node` selected: a new history entry, so
+ * Back comes back here. Only once the server has given its text: a file it refuses (missing, outside MERMAKER_ROOTS)
+ * changes nothing but a notice. The same file keeps its part unless one is given.
  */
-function openFile(/** @type {string} */ next, /** @type {string | null} */ nextPart = null) {
+function openFile(/** @type {string} */ next, /** @type {string | null} */ nextPart = null, /** @type {string | null} */ node = null) {
   const refused = editor?.switchRefused();
   if (refused) { ui.notice(refused, 'warning'); return; }
-  if (next === file) { setPart(nextPart); return; }
+  if (next === file) {
+    if (nextPart !== null || node === null) setPart(nextPart);
+    if (node !== null) selectNode(node);
+    return;
+  }
   opening?.source.stop();
   const s = sourceFor(next);
-  opening = { source: s, file: next, part: nextPart };
+  opening = { source: s, file: next, part: nextPart, node };
   s.start();
 }
 /** The file being opened has been read: show it, unless something was started here meanwhile. */
 function opened(/** @type {ReturnType<typeof createSource>} */ s, /** @type {string} */ text) {
   if (s !== opening?.source) return undefined;
-  const { file: next, part: nextPart } = opening;
+  const { file: next, part: nextPart, node } = opening;
   opening = null;
   const refused = editor?.switchRefused();
   if (refused) { s.stop(); ui.notice(refused, 'warning'); return undefined; }
@@ -470,6 +507,7 @@ function opened(/** @type {ReturnType<typeof createSource>} */ s, /** @type {str
   if (nextPart === null) url.searchParams.delete('part'); else url.searchParams.set('part', nextPart);
   history.pushState(null, '', url);
   showFile(s, next, nextPart);
+  goTo = node;
   return display(text);
 }
 /**
@@ -490,6 +528,8 @@ function followAddress() {
     partGone = false;
     viewer.fit();
     checkPart();
+    const node = takeNode();
+    if (node !== null) selectNode(node);
     return;
   }
   if (editor && !editor.idle()) {
@@ -504,6 +544,7 @@ function followAddress() {
   opening = null;
   const s = sourceFor(f);
   showFile(s, f, nextPart);
+  goTo = takeNode();
   s.start();
 }
 /** Show file `f`, read by `s`, in place of the one shown: everything kept per file is that file's from here on. */
@@ -544,6 +585,8 @@ function showPath(/** @type {string} */ id, /** @type {string} */ text, /** @typ
   el(id).dataset.copy = path;
   el(id).title = `${path}\nClick to copy`;
 }
+/** The file's host path, once the server has said it ('' for none): what a copied address names the file by. */
+let hostFile = '';
 /** The header and the titles for the file shown. Its host path comes later, if the server knows one. */
 function showHeader() {
   const f = file;
@@ -554,7 +597,8 @@ function showHeader() {
   delete el('host').dataset.copy;
   el('host').removeAttribute('title');
   document.title = name + ' · Mermaker';
-  source.hostPath().then((host) => { if (host && f === file) showPath('host', 'host: ' + host, host); });
+  hostFile = '';
+  source.hostPath().then((host) => { if (host && f === file) { hostFile = host; showPath('host', 'host: ' + host, host); } });
 }
 showHeader();
 for (const id of ['path', 'host']) {

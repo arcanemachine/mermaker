@@ -24,6 +24,12 @@ test('every menu label starts with one of the verbs, in sentence case', () => {
   }
 });
 
+// The Shift keys that stand without their letter (docs/ux.md, the Shift rule), each for its reason.
+const LONE_SHIFT = {
+  // Copy link to this subgraph: the key Copy link to this node has, where Y (Copy link) is a node's only.
+  'shift+y': ['subgraph', 'box'],
+};
+
 test('keys are unique within a menu, each one key, Shift only with a letter the menu has (that item the other way round)', () => {
   for (const [menu, list] of Object.entries(ALL_MENUS)) {
     const keys = list.map((i) => i.key).filter((k) => k !== undefined);
@@ -31,6 +37,7 @@ test('keys are unique within a menu, each one key, Shift only with a letter the 
     for (const k of keys) {
       assert.match(k, /^(ctrl\+)?(shift\+)?[a-z/]$/);
       // Ctrl+Shift+L (Show link) sits beside L, as Ctrl+Shift+V does beside Ctrl+V.
+      if (LONE_SHIFT[k]?.includes(menu)) continue;
       if (k.includes('shift+')) assert.ok(keys.includes(k.replace('shift+', '')) || keys.includes(k.replace('ctrl+shift+', '')), `${menu}: ${k} with no ${k.replace('shift+', '')}`);
     }
   }
@@ -156,9 +163,9 @@ test('every icon is the shared frame around at least one drawing', () => {
 });
 
 test('while the code is being edited only the view items apply, and the rest say why', () => {
-  const locked = { edgesOk: true, selfLoop: false, nameWhy: null, locked: true, link: { url: 'https://example.com/', app: false }, linkText: 'https://example.com/' };
+  const locked = { edgesOk: true, selfLoop: false, nameWhy: null, locked: true, link: { url: 'https://example.com/', app: false }, linkText: 'https://example.com/', linkWritten: 'https://example.com/' };
   const live = Object.values(MENUS).flat().filter((item) => applies(item, locked)).map((item) => item.action);
-  assert.deepEqual([...new Set(live)].sort(), ['center-view', 'collapse-subgraph', 'copy-node', 'copy-subgraph', 'cut-node', 'cut-subgraph', 'expand-subgraph', 'find', 'fit-edge', 'fit-node', 'fit-subgraph', 'fit-view', 'flip', 'open-link', 'open-link-tab', 'page-theme', 'rotate', 'show-link']);
+  assert.deepEqual([...new Set(live)].sort(), ['center-view', 'collapse-subgraph', 'copy-link', 'copy-node', 'copy-node-link', 'copy-subgraph', 'copy-subgraph-link', 'cut-node', 'cut-subgraph', 'expand-subgraph', 'find', 'fit-edge', 'fit-node', 'fit-subgraph', 'fit-view', 'flip', 'open-link', 'open-link-tab', 'page-theme', 'rotate', 'show-link']);
   for (const item of Object.values(MENUS).flat()) {
     if (!applies(item, locked)) assert.equal(whyNot(item, locked), LOCKED, item.action);
   }

@@ -53,10 +53,11 @@ what `mermaker skill` prints over this file, with this file's Custom rules secti
 
 Add `&part=<subgraph id>` (encoded the same way) to open the page fitted to one subgraph, the rest still drawn
 around it: for a link into a big diagram. The subgraph needs an id in the file (`subgraph pay [Payment]`).
+Add `&node=<node id>` to open it with that node selected and zoomed to: for pointing the user at one node.
 
 `?f=` takes the file's absolute path as the server sees it. When Mermaker runs in a container,
-`MERMAKER_PATH_MAP=<server prefix>=<host prefix>` makes the page show the host's path, but `?f=` still takes
-the server's.
+`MERMAKER_PATH_MAP=<server prefix>=<host prefix>` makes the page show the host's path, and `?f=` takes the
+host's path too, opening the page on the server's.
 
 ## Work on it together
 
@@ -80,7 +81,7 @@ syntax and features as far as they go, and add no markers, comments or metadata 
   an edge or a `@{ view }` line in the file cannot rely on it.
 - To link a node to another diagram, add Mermaid's `click charge href "payment.mmd"` on a line of its
   own, the path read from this file's folder (`payment.mmd?part=pay` opens it fitted to its "pay"
-  subgraph). The user follows it with L, in the same page, and comes back with the browser's Back. The
+  subgraph, `payment.mmd?node=charge` with its "charge" node selected). The user follows it with L, in the same page, and comes back with the browser's Back. The
   other file must be one the server serves (`MERMAKER_ROOTS`). A web or `vscode://` address works too, and
   opens outside the page.
 - To have a subgraph start collapsed, drawn as one box, add Mermaid's `pay@{ view: collapsed }` on a line

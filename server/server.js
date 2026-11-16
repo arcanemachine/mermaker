@@ -1,6 +1,6 @@
 // The HTTP server: the page and its modules from web/, and the diagram files through the routes below.
 //
-//   GET /                  the page
+//   GET /                  the page; asked for by a file's host path (MERMAKER_PATH_MAP), a redirect to its server path
 //   GET /<file>.mjs|.css   the page's modules and styles
 //   GET /source?f=<path>   a diagram file's text, with its version as the ETag; 304 and no body when If-None-Match
 //                          names that version, so a page polling an unchanged file gets headers only
@@ -8,6 +8,8 @@
 //                          409 otherwise, so an edit made in the page never overwrites a change saved meanwhile
 //   GET /hostpath?f=<path> where that file is on the host, for a server in a container ('' when unknown)
 //   GET /health            "ok pid=<pid> script=<path>", so a caller can tell which server holds the port
+//
+// Every route takes a file's host path in `f=` for its server path (files.js serverPath).
 //
 // Every response carries X-Mermaker-Build, the build id (build.js), and the page is served with the same id embedded, so
 // an open page can tell when the code it is running has been replaced.
@@ -63,7 +65,8 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
       return send(res, 403, `This server does not answer to the host ${req.headers.host || '(none)'}.`);
     }
     const url = new URL(/** @type {string} */ (req.url), 'http://localhost');   // set on a server's requests
-    const f = url.searchParams.get('f') || '';
+    const asked = url.searchParams.get('f') || '';
+    const f = asked && files.serverPath(asked);
     if (req.method === 'POST' && url.pathname === '/edit') return edit(req, res, f);
     if (req.method !== 'GET') return send(res, 405, 'Method not allowed');
 
@@ -82,6 +85,12 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
       return send(res, 200, text, 'text/plain', { ETag: etag });
     }
 
+    // A page asked for by a host path is sent to its server path, the one name the page knows its file by.
+    if (url.pathname === '/' && f !== asked) {
+      url.searchParams.set('f', f);
+      res.writeHead(302, { Location: url.pathname + url.search, 'Cache-Control': 'no-store' });
+      return res.end();
+    }
     return serveWeb(web, url.pathname, res, {
       MERMAKER_BUILD: build.id(), MERMAKER_MAX_EDGES: String(limits.maxEdges ?? ''), MERMAKER_MAX_TEXT: String(limits.maxTextSize ?? ''),
     });

@@ -6,9 +6,10 @@ export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
 export const NOT_MMD = 'Mermaker opens only .mmd files from a link to a path.';
 
 /**
- * What a link leads to: a diagram file on this server, shown with its part (a subgraph id, as in the address), a web
- * address, an app's address (`vscode:`), which the system hands to the app, or why Mermaker does not follow it.
- * @typedef {{ path: string, part: string | null } | { url: string, app: boolean } | { why: string }} LinkTarget
+ * What a link leads to: a diagram file on this server, shown with its part (a subgraph id, as in the address) and the
+ * node to select, a web address, an app's address (`vscode:`), which the system hands to the app, or why Mermaker does
+ * not follow it.
+ * @typedef {{ path: string, part: string | null, node: string | null } | { url: string, app: boolean } | { why: string }} LinkTarget
  */
 
 /**
@@ -39,11 +40,23 @@ export function linkTarget(/** @type {string | undefined} */ link, /** @type {bo
   if (scheme === 'http' || scheme === 'https') return { url: link, app: false };
   if (scheme === 'vscode') return { url: link, app: true };
   if (scheme) return { why: `Mermaker does not open ${scheme}: links.` };
-  // A path, from the file's folder: `other.mmd?part=pay`, or `?part=pay` for this file.
+  // A path, from the file's folder: `other.mmd?part=pay`, or `?node=charge` for this file.
   const url = new URL(link, new URL('file://' + file));
   const path = decodeURIComponent(url.pathname);
   if (!path.endsWith('.mmd')) return { why: NOT_MMD };
-  return { path, part: url.searchParams.get('part') };
+  return { path, part: url.searchParams.get('part'), node: url.searchParams.get('node') };
+}
+
+/**
+ * The address of a node or a subgraph, for Copy link to this node or subgraph: page address `href` with `node` set
+ * and `part` set or removed (null), and the file given by `hostFile`, its host path, when the server knows one.
+ */
+export function itemAddress(/** @type {string} */ href, /** @type {{ node: string | null, part: string | null, hostFile?: string }} */ to) {
+  const url = new URL(href);
+  if (to.hostFile) url.searchParams.set('f', to.hostFile);
+  if (to.node === null) url.searchParams.delete('node'); else url.searchParams.set('node', to.node);
+  if (to.part === null) url.searchParams.delete('part'); else url.searchParams.set('part', to.part);
+  return url.href;
 }
 
 /**

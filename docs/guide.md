@@ -24,13 +24,22 @@ them.
   back to the whole diagram. Each is a step in the browser's history, so Back goes to the view before. On a subgraph with no id in the file it is grayed: the address could not name it. A
   part hidden in a collapsed subgraph fits that subgraph's box; a part not in the file shows the whole diagram, with a
   notice, until it is back.
+- **Links to a node or a subgraph.** **Copy link to this node** (Shift+Y with a node selected) copies the page's
+  address with `&node=<node id>` added, and the part too while one is shown; **Copy link to this subgraph** (Shift+Y
+  with a subgraph selected) copies it with that subgraph as the part. Opening the address selects the node (or the
+  collapsed subgraph's box it is hidden in) and fits it to the window as Shift+F does; a node not in the file is
+  shown with a notice. The page then drops `&node=` from its address, so a reload keeps what you select after. Shift+Y
+  on an edge says that a link cannot name one. When Mermaker runs in a container and knows the file's host path
+  (`MERMAKER_PATH_MAP`), the copied address names the file by it; `?f=` takes either path, and the page opens on the
+  server's.
 - **Links between diagrams.** A node with a link in the file (`click A href "payment.mmd"`) has its label underlined,
   in blue unless the diagram colors the label itself. **Open link** (L) follows it. A `.mmd` file opens in this page in place of this one, and Back comes back (Forward goes again). A path
   is read from this file's folder. `payment.mmd?part=pay` opens the file fitted to its "pay" subgraph, as in the
-  address, and `?part=pay` alone fits a subgraph of this file. A web address opens in a new tab. A `vscode://` link
+  address, and `?part=pay` alone fits a subgraph of this file; `?node=charge` selects a node as `&node=` does
+  (above), keeping the part shown. A web address opens in a new tab. A `vscode://` link
   goes to VS Code, and the page stays as it is. **Show link** (Ctrl+Shift+L, ⌘⇧L on a Mac) shows the link as the file
-  writes it in a notice, where it can be selected and copied; selecting a linked node also says it to a screen
-  reader. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
+  writes it in a notice, where it can be selected and copied, and **Copy link** (Y) copies it as the file writes it;
+  selecting a linked node also says it to a screen reader. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
   on any other link it does what L does. L and Shift+L are grayed, with the reason, on a node with no link, a link that runs a
   script (`click A callback`, a `javascript:` link), a link of another kind (`mailto:`), and a path to anything but a
   `.mmd` file. Hovering over the item shows where it leads. A click on a linked node selects it, as on any node: Mermaker
@@ -125,8 +134,11 @@ another click on it closes it.
   picks. A subgraph is refused. Grayed without an edge match. An edge written inside a subgraph moves out after the
   last edge when the other node is named outside it, as Reassign end… says.
 - **Edit node** opens the node panel on it: its label and its shape (below).
-- **Open link** (L) and **Open link in new tab** (Shift+L) follow the node's link, and **Show link** (Ctrl+Shift+L)
-  shows it (Viewing, Links between diagrams).
+- **Open link** (L) and **Open link in new tab** (Shift+L) follow the node's link, **Show link** (Ctrl+Shift+L)
+  shows it, and **Copy link** (Y) copies it as the file writes it, grayed with no link or one that runs a script
+  (Viewing, Links between diagrams).
+- **Copy link to this node** (Shift+Y) copies an address that opens this page with the node selected (Viewing, Links
+  to a node or a subgraph).
 - **Edit link** (K) asks for the node's link in the browser's own box, holding the link as the file writes it. OK
   writes it as `click A href "payment.mmd"`; empty it to remove the link. A link already in the file keeps its tooltip
   and target, and a `click` line shared with other nodes (`click A,B href …`) keeps their link. Grayed on a node whose
@@ -260,6 +272,8 @@ another click on it closes it.
   (the box, its nodes, boxes and edges; an empty subgraph's title) and asks for the same key again ("Press the same
   key again to delete this subgraph, 4 nodes and 7 edges."). In the menu it deletes at once, and while it has focus or
   the pointer, what it would take is marked. Both work on a collapsed box too, and one undo brings it all back.
+- **Copy link to this subgraph** (Shift+Y) copies an address that opens this page fitted to the subgraph, as Fit to
+  subgraph does (Viewing, Links to a node or a subgraph). Grayed on a subgraph with no id in the file.
 
 ### Title menu
 
@@ -418,6 +432,8 @@ here does just what it does in the selected item's menu:
 | Shift+L with a node selected | Open link in new tab |
 | Ctrl+Shift+L with a node selected | Show link |
 | K with a node selected | Edit link |
+| Y with a node selected | Copy link |
+| Shift+Y with a node or subgraph selected | Copy link to this node or subgraph |
 | C with a node or subgraph selected | Connect to… |
 | Shift+C with a node or subgraph selected | Connect from… |
 | C with an edge selected | Reassign end… (Space in it: the other end) |

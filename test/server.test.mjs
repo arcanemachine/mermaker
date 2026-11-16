@@ -67,6 +67,40 @@ test('hostpath maps by prefix, and is empty when unknown', async () => {
   assert.equal((await get('/hostpath?f=' + q('/elsewhere/a.mmd'))).text, '');
 });
 
+test('a host path reaches the file it maps to, and only a file the roots serve', async () => {
+  file('h.mmd', 'flowchart TD\n  H\n');
+  assert.equal((await get('/source?f=' + q('/host/diagrams/h.mmd'))).text, 'flowchart TD\n  H\n');
+  assert.equal((await get('/hostpath?f=' + q('/host/diagrams/h.mmd'))).text, '/host/diagrams/h.mmd');
+  // Past the prefix's end, and mapped out of the roots by `..`: refused.
+  assert.equal((await get('/source?f=' + q('/host/diagrams2/h.mmd'))).status, 403);
+  file('y.mmd', 'secret', OUTSIDE);
+  const out = (await get('/source?f=' + q('/host/diagrams/../' + OUTSIDE.split('/').pop() + '/y.mmd')));
+  assert.equal(out.status, 403);
+  assert.ok(!out.text.includes('secret'));
+});
+
+test('the page asked for by a host path is sent to the server path, the rest of its address kept', async () => {
+  const res = await fetch(`${base}/?f=${q('/host/diagrams/h.mmd')}&node=pay`, { redirect: 'manual' });
+  assert.equal(res.status, 302);
+  const to = new URL(res.headers.get('location'), base);
+  assert.equal(to.pathname, '/');
+  assert.equal(to.searchParams.get('f'), join(ROOT, 'h.mmd'));
+  assert.equal(to.searchParams.get('node'), 'pay');
+  assert.equal((await fetch(`${base}/?f=${q(join(ROOT, 'h.mmd'))}`, { redirect: 'manual' })).status, 200);
+});
+
+test('serverPath maps a host path back, but never a path served as given', () => {
+  const files = createFiles({ roots: [ROOT], pathMap: [[ROOT, '/host/diagrams']] });
+  const p = file('round.mmd');
+  assert.equal(files.serverPath(files.hostPath(p)), p);
+  assert.equal(files.serverPath('/elsewhere/a.mmd'), '/elsewhere/a.mmd');
+  assert.equal(files.serverPath('/host/diagrams2/a.mmd'), '/host/diagrams2/a.mmd');   // past the prefix's end
+  // A host prefix that is also a served folder: its paths keep their meaning.
+  const overlap = createFiles({ roots: [ROOT], pathMap: [['/srv/other', ROOT]] });
+  assert.equal(overlap.serverPath(p), p);
+  assert.equal(overlap.serverPath(join(ROOT, 'missing-dir', 'x.txt')), '/srv/other/missing-dir/x.txt');
+});
+
 test('the page and its modules are served with their types', async () => {
   const page = await get('/');
   assert.equal(page.status, 200);

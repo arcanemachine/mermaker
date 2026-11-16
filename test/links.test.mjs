@@ -1,18 +1,34 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
+import { itemAddress, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
 
 const FILE = '/diagrams/flows/order.mmd';
 
 test('a path leads to a .mmd file from the folder of the file shown, with its part as in the address', () => {
-  assert.deepEqual(linkTarget('payment.mmd', true, FILE), { path: '/diagrams/flows/payment.mmd', part: null });
-  assert.deepEqual(linkTarget('../shared/log.mmd?part=pay', true, FILE), { path: '/diagrams/shared/log.mmd', part: 'pay' });
-  assert.deepEqual(linkTarget('/elsewhere/a.mmd', true, FILE), { path: '/elsewhere/a.mmd', part: null });
-  assert.deepEqual(linkTarget('my%20flow.mmd', true, FILE), { path: '/diagrams/flows/my flow.mmd', part: null });
+  assert.deepEqual(linkTarget('payment.mmd', true, FILE), { path: '/diagrams/flows/payment.mmd', part: null, node: null });
+  assert.deepEqual(linkTarget('../shared/log.mmd?part=pay', true, FILE), { path: '/diagrams/shared/log.mmd', part: 'pay', node: null });
+  assert.deepEqual(linkTarget('/elsewhere/a.mmd', true, FILE), { path: '/elsewhere/a.mmd', part: null, node: null });
+  assert.deepEqual(linkTarget('my%20flow.mmd', true, FILE), { path: '/diagrams/flows/my flow.mmd', part: null, node: null });
 });
 
 test('a link with only a part leads to the file shown', () => {
-  assert.deepEqual(linkTarget('?part=pay', true, FILE), { path: FILE, part: 'pay' });
+  assert.deepEqual(linkTarget('?part=pay', true, FILE), { path: FILE, part: 'pay', node: null });
+});
+
+test('a link can name the node to select, with or without a part', () => {
+  assert.deepEqual(linkTarget('?node=charge', true, FILE), { path: FILE, part: null, node: 'charge' });
+  assert.deepEqual(linkTarget('log.mmd?part=pay&node=charge', true, FILE), { path: '/diagrams/flows/log.mmd', part: 'pay', node: 'charge' });
+});
+
+test("an item's address is the page's, with the node and part set, and the file's host path when it has one", () => {
+  const page = 'http://localhost:63762/?f=%2Fsrv%2Fd%2Forder.mmd&part=ship';
+  const at = (href, to) => Object.fromEntries(new URL(itemAddress(href, to)).searchParams);
+  assert.deepEqual(at(page, { node: 'charge', part: 'ship' }), { f: '/srv/d/order.mmd', part: 'ship', node: 'charge' });
+  assert.deepEqual(at(page, { node: 'charge', part: null }), { f: '/srv/d/order.mmd', node: 'charge' });
+  assert.deepEqual(at(page + '&node=old', { node: null, part: 'pay' }), { f: '/srv/d/order.mmd', part: 'pay' });
+  assert.deepEqual(at(page, { node: 'charge', part: null, hostFile: '/home/u/d/order.mmd' }), { f: '/home/u/d/order.mmd', node: 'charge' });
+  // The scratch diagram's page has no f=, and its link loads it the same way.
+  assert.deepEqual(at('http://localhost:63762/', { node: 'A', part: null }), { node: 'A' });
 });
 
 test('a path to anything but a .mmd file is not followed', () => {

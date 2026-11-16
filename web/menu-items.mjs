@@ -25,6 +25,8 @@ export const GLOBAL_KEYS = {
   l: ['open-link'],
   'shift+l': ['open-link-tab'],
   'ctrl+shift+l': ['show-link'],
+  y: ['copy-link'],
+  'shift+y': ['copy-node-link', 'copy-subgraph-link'],
   k: ['edit-link'],
   s: ['add-subgraph'],
   enter: ['edit-node', 'edit-edge', 'edit-title'],
@@ -97,6 +99,7 @@ export const LOCKED = 'The code is being edited. Save or cancel the code to edit
  * @property {import('./links.mjs').LinkTarget} [link] where the selected node's link leads, or why it is not followed
  * @property {string | null} [linkText] the selected node's link as Mermaid read it, or null for none
  * @property {boolean} [linkScript] the selected node's `click` line, as the file writes it, runs a script
+ * @property {string | null} [linkWritten] the selected node's link as the file writes it, or null for none
  */
 
 /** Whether `item` can be chosen in `state`. */
@@ -148,6 +151,9 @@ const showLinkItem = {
 };
 /** Fit to subgraph, in a subgraph's menu and a box's. */
 const fitPart = { action: 'fit-subgraph', label: 'Fit to subgraph', view: true, key: 'shift+f',
+  applies: (/** @type {MenuState} */ s) => !s.partWhy, why: (/** @type {MenuState} */ s) => s.partWhy ?? null };
+/** Copy link to this subgraph, in a subgraph's menu and a box's: its address names it as the part, by its id. */
+const partLink = { action: 'copy-subgraph-link', label: 'Copy link to this subgraph', view: true, key: 'shift+y',
   applies: (/** @type {MenuState} */ s) => !s.partWhy, why: (/** @type {MenuState} */ s) => s.partWhy ?? null };
 export const NOTHING_COPIED = 'Nothing has been copied. Copy a node or a subgraph first (Ctrl+C).';
 /** Why a copied subgraph is not pasted onto an edge. */
@@ -229,6 +235,9 @@ export const MENUS = {
     { action: 'open-link', label: 'Open link', key: 'l', separated: true, view: true, ...linkItem },
     { action: 'open-link-tab', label: 'Open link in new tab', key: 'shift+l', view: true, ...linkItem },
     { action: 'show-link', label: 'Show link', key: 'ctrl+shift+l', view: true, ...showLinkItem },
+    { action: 'copy-link', label: 'Copy link', key: 'y', view: true, applies: (s) => Boolean(s.linkWritten),
+      why: (s) => (s.linkScript ? SCRIPT_LINK : NO_LINK) },
+    { action: 'copy-node-link', label: 'Copy link to this node', key: 'shift+y', view: true },
     { action: 'edit-link', label: 'Edit link', key: 'k', applies: (s) => !s.linkScript, why: () => SCRIPT_LINK },
     { action: 'copy-node', label: 'Copy node', key: 'ctrl+c', separated: true, view: true },
     { action: 'cut-node', label: 'Cut node', key: 'ctrl+x', view: true },
@@ -270,6 +279,7 @@ export const MENUS = {
     ...turnItems().map((i) => ({ ...i, separated: false })),
     { action: 'center-view', label: 'Center in window', key: 'f', view: true },
     fitPart,
+    partLink,
   ],
   box: [
     { action: 'add-node', label: 'Add node', key: 'n', applies: () => false, why: () => EXPAND_FIRST },
@@ -286,6 +296,7 @@ export const MENUS = {
     ...turnItems().map((i) => ({ ...i, separated: false })),
     { action: 'center-view', label: 'Center in window', key: 'f', view: true },
     fitPart,
+    partLink,
   ],
   title: [
     { action: 'edit-title', label: 'Edit title' },
