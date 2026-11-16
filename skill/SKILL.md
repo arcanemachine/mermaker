@@ -105,6 +105,8 @@ All from the environment, read when Mermaker starts:
 - `MERMAKER_IDLE`: seconds with no requests before Mermaker exits (unset or 0: it runs until stopped).
 - `MERMAKER_PATH_MAP`: `server=host` path prefixes, comma-separated, to show the host's path in the page.
 - `MERMAKER_MAX_EDGES`, `MERMAKER_MAX_TEXT`: Mermaid's size limits, above.
+- `MERMAKER_THEME`: the page theme a browser starts with until the user picks one: `light` (default), `dark`
+  or `system`.
 - `MERMAKER_HOSTS`: host names the page may be opened under besides localhost, comma-separated. The page's
   address works from the machine Mermaker runs on. For a browser on another machine, `mermaker serve` must be
   bound to an address it can reach, and do that only when the user asks: there is no login, so anyone who

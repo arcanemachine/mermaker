@@ -310,6 +310,18 @@ test('the page is served with the size limits the server was given, and empty on
   }
 });
 
+test('the page is served with the default page theme the server was given, Light when none', async () => {
+  assert.ok((await get('/')).text.includes('<meta name="mermaker-theme" content="light">'));
+  const other = createServer({ files: createFiles({ roots: [ROOT] }), script: 'x', theme: 'system' });
+  await new Promise((resolve) => other.listen(0, '127.0.0.1', resolve));
+  try {
+    const text = await (await fetch(`http://127.0.0.1:${other.address().port}/`)).text();
+    assert.ok(text.includes('<meta name="mermaker-theme" content="system">'));
+  } finally {
+    other.close();
+  }
+});
+
 test('the build id changes when a page file changes under a running server', async () => {
   const web = mkdtempSync(join(tmpdir(), 'mermaker-web-'));
   writeFileSync(join(web, 'index.html'), '<meta name="mermaker-build" content="{{MERMAKER_BUILD}}">');

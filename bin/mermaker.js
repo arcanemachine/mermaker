@@ -22,6 +22,7 @@ Settings, from the environment:
   MERMAKER_HOSTS     host names the page may be opened under besides localhost, 127.0.0.1 and [::1], comma-separated
   MERMAKER_MAX_EDGES the most edges a diagram may have (unset: Mermaid's 500)
   MERMAKER_MAX_TEXT  the most characters a diagram's code may have, comments and frontmatter aside (unset: Mermaid's 50000)
+  MERMAKER_THEME     the page theme a browser starts with until it chooses one: light, dark or system (unset: light)
   BROWSER         for mermaker <file>: a command to open the page with, arguments allowed (unset: the address is printed)`;
 
 const SCRATCH = '/tmp/mermaid-diagrams/scratch.mmd';
@@ -114,7 +115,12 @@ function start(/** @type {string[]} */ roots, /** @type {string} */ port, /** @t
     maxEdges: limit('MERMAKER_MAX_EDGES', 'a whole number of edges'),
     maxTextSize: limit('MERMAKER_MAX_TEXT', 'a whole number of characters'),
   };
-  const server = createServer({ files, script: realpathSync(fileURLToPath(import.meta.url)), hosts, limits });
+  const theme = process.env.MERMAKER_THEME || 'light';
+  if (!['light', 'dark', 'system'].includes(theme)) {
+    console.error(`mermaker: MERMAKER_THEME must be light, dark or system, not ${theme}`);
+    process.exit(2);
+  }
+  const server = createServer({ files, script: realpathSync(fileURLToPath(import.meta.url)), hosts, limits, theme });
 
   // Only with MERMAKER_IDLE does the server stop on its own, that many seconds after the last request. An open page polls
   // every second, but a browser may freeze or unload a tab left in the background, so the time is not a page count.

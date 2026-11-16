@@ -302,8 +302,9 @@ add a new node (or, with a subgraph copied, a new subgraph) from the copy there,
 **Find…** (/) opens the find (below). **Fit to window** fits the whole diagram to the window, as F does with
 nothing selected, leaving a part (Viewing, above).
 
-**Page theme ▸** picks how the page's own parts look: **System** (the system's light or dark setting, the default),
-**Light** or **Dark**. Dark darkens the header, the footer, the menus, Help and the code panel, and draws the diagram
+**Page theme ▸** picks how the page's own parts look: **System** (the system's light or dark setting), **Light** or
+**Dark**. Until a browser picks one, the page uses the server's default: Light, unless Mermaker was started with
+`MERMAKER_THEME` (README.md, Settings). Dark darkens the header, the footer, the menus, Help and the code panel, and draws the diagram
 with Mermaid's dark themes, unless the file sets a theme of its own; the find bar stays amber. Export gives the diagram
 as drawn. This browser keeps the choice, in every tab.
 

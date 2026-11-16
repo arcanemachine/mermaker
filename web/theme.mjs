@@ -1,5 +1,6 @@
-// The page's theme, light or dark (docs/ux.md): the system's, unless one is chosen in this browser; with Dark, the
-// diagram is drawn with Mermaid's dark themes unless its file sets one. No DOM.
+// The page's theme, light or dark (docs/ux.md): the one chosen in this browser, else the server's default
+// (MERMAKER_THEME, Light unless set); System follows the system's setting. With Dark, the diagram is drawn with
+// Mermaid's dark themes unless its file sets one. No DOM.
 
 /** Where the chosen theme is kept (localStorage); index.html reads it too, before the page paints. */
 export const THEME_KEY = 'mermaker:theme';
@@ -11,14 +12,20 @@ export const THEMES = [
   { key: 'dark', name: 'Dark' },
 ];
 
-/** The theme shown: the one chosen ('light' or 'dark'; anything else is none), else the system's. */
-export function shownTheme(/** @type {string | null} */ chosen, /** @type {boolean} */ systemDark) {
-  return chosen === 'light' || chosen === 'dark' ? chosen : systemDark ? 'dark' : 'light';
+/** Whether `value` is one of the choices. */
+const isChoice = (/** @type {string | null} */ value) => THEMES.some((t) => t.key === value);
+
+/**
+ * The choice in force: the one kept in this browser, else the server's default (`fallback`), each counted only when it
+ * is a choice; else 'light'.
+ */
+export function themeChoice(/** @type {string | null} */ kept, /** @type {string | null} */ fallback) {
+  return isChoice(kept) ? /** @type {string} */ (kept) : isChoice(fallback) ? /** @type {string} */ (fallback) : 'light';
 }
 
-/** The choice that a kept value stands for: 'light', 'dark', or 'system' for none (or anything else). */
-export function themeChoice(/** @type {string | null} */ chosen) {
-  return chosen === 'light' || chosen === 'dark' ? chosen : 'system';
+/** The theme shown for choice `choice`: Light or Dark as chosen, System by the system's setting. */
+export function shownTheme(/** @type {string} */ choice, /** @type {boolean} */ systemDark) {
+  return choice === 'light' || choice === 'dark' ? choice : systemDark ? 'dark' : 'light';
 }
 
 /**

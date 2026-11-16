@@ -265,15 +265,13 @@ const ui = {
     await display(text);
     return id === null ? turn[which] : Boolean(turn.subs.find(([k]) => k === id)?.[1][which]);
   },
-  /** The page theme chosen: 'system', 'light' or 'dark'. */
+  /** The page theme in force: 'system', 'light' or 'dark'. */
   theme() {
-    return themeChoice(chosenTheme());
+    return themeChoice(chosenTheme(), defaultTheme);
   },
-  /** Choose the page theme, kept in this browser; 'system' keeps none, following the system's setting. */
+  /** Choose the page theme, kept in this browser, System too, so it wins over the server's default. */
   setTheme(/** @type {string} */ choice) {
-    try {
-      if (choice === 'light' || choice === 'dark') localStorage.setItem(THEME_KEY, choice); else localStorage.removeItem(THEME_KEY);
-    } catch { /* not remembered */ }
+    try { localStorage.setItem(THEME_KEY, choice); } catch { /* not remembered */ }
     showTheme();
   },
   /** How the page turns the diagram, or subgraph `id` on its own, for the menus. */
@@ -610,14 +608,16 @@ for (const id of ['path', 'host']) {
   });
 }
 
-// The page theme: the system's, followed as it changes, unless one is chosen; a choice made in another tab shows here too.
+// The page theme: the one chosen in this browser, else the server's default; System follows the system's setting as it
+// changes. A choice made in another tab shows here too.
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const defaultTheme = /** @type {HTMLMetaElement} */ (document.querySelector('meta[name="mermaker-theme"]')).content;
 function chosenTheme() {
   try { return localStorage.getItem(THEME_KEY); } catch { return null; }
 }
 /** Show the page theme, and draw the diagram again with Mermaid's matching theme when it changed. */
 function showTheme() {
-  const shown = shownTheme(chosenTheme(), systemDark.matches);
+  const shown = shownTheme(themeChoice(chosenTheme(), defaultTheme), systemDark.matches);
   if (document.documentElement.dataset.theme === shown && drawnDark === (shown === 'dark')) return;
   document.documentElement.dataset.theme = shown;
   drawnDark = shown === 'dark';

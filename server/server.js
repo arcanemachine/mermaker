@@ -46,8 +46,9 @@ function hostName(header = '') {
  * @param {string} [options.web] the page's files (default: web/ beside server/)
  * @param {{ maxEdges?: number, maxTextSize?: number }} [options.limits] Mermaid's size limits for the page (unset:
  *   Mermaid's defaults)
+ * @param {string} [options.theme] the page theme a browser starts with until it chooses one: light, dark or system
  */
-export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB, limits = {} }) {
+export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB, limits = {}, theme = 'light' }) {
   const allowedHosts = new Set(hosts.map((h) => h.toLowerCase()));
   const build = createBuild({ web, fixed: FIXED });
   // lastRequest: the time of the last request, for the idle exit.
@@ -93,6 +94,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
     return serveWeb(web, url.pathname, res, {
       MERMAKER_BUILD: build.id(), MERMAKER_MAX_EDGES: String(limits.maxEdges ?? ''), MERMAKER_MAX_TEXT: String(limits.maxTextSize ?? ''),
+      MERMAKER_THEME: theme,
     });
   }
 
@@ -147,7 +149,7 @@ function shellQuote(/** @type {string} */ s) {
 
 /**
  * A file from the page's folder, by its path; nothing outside it and nothing but the page's own file types. The page
- * itself gets `{{NAME}}` filled in from `fill`: the build id and the size limits.
+ * itself gets `{{NAME}}` filled in from `fill`: the build id, the size limits and the default page theme.
  */
 async function serveWeb(/** @type {string} */ web, /** @type {string} */ pathname, /** @type {import('node:http').ServerResponse} */ res, /** @type {Record<string, string>} */ fill) {
   const root = web.endsWith(sep) ? web : web + sep;

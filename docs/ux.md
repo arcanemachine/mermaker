@@ -67,8 +67,9 @@ differences are kept few. Each one is listed here:
   each get a color), else `dark`, on a dark canvas; otherwise it is drawn on white. A file's own theme
   always wins. The Light page theme names no theme, so each type keeps Mermaid's own default.
 
-The page theme: System, the default, follows the system's setting; Light and Dark override it (following the system
-alone would eventually annoy), kept by the browser for every tab. Dark darkens the page's own parts and draws the
+The page theme: Light by default, the look Mermaid's diagrams are made for; the server can start browsers on another
+(`MERMAKER_THEME`), and a browser's own choice, kept for every tab, wins over it. System follows the system's setting;
+choosing it is kept too, so it wins over the default. Dark darkens the page's own parts and draws the
 diagram with Mermaid's dark themes, which Mermaker asks for and never writes into the file. The marks keep their colors,
 chosen to read on either: a selected node or subgraph is marked by a band around it that keeps its own fill, border and
 text (an edit's colors show after it), find's current match brings its own dark text with its fill, and a link's blue

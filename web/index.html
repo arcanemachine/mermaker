@@ -6,14 +6,18 @@
   <meta name="mermaker-build" content="{{MERMAKER_BUILD}}">
   <meta name="mermaker-max-edges" content="{{MERMAKER_MAX_EDGES}}">
   <meta name="mermaker-max-text" content="{{MERMAKER_MAX_TEXT}}">
+  <meta name="mermaker-theme" content="{{MERMAKER_THEME}}">
   <title>Mermaker</title>
   <script>
-    // The look, set before the page paints: the one chosen in this browser, else the system's (web/theme.mjs holds
-    // the rule and the key; main.mjs keeps it current).
+    // The look, set before the page paints: the one chosen in this browser, else the server's default (web/theme.mjs
+    // holds the rule and the key; main.mjs keeps it current). System follows the system's setting.
     {
       let chosen = null;
-      try { chosen = localStorage.getItem('mermaker:theme'); } catch { /* storage unavailable: the system's look */ }
-      document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen
+      try { chosen = localStorage.getItem('mermaker:theme'); } catch { /* storage unavailable: the default */ }
+      const choices = ['light', 'dark', 'system'];
+      const fallback = document.querySelector('meta[name="mermaker-theme"]').content;
+      const choice = choices.includes(chosen) ? chosen : choices.includes(fallback) ? fallback : 'light';
+      document.documentElement.dataset.theme = choice !== 'system' ? choice
         : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
   </script>

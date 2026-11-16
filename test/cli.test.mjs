@@ -125,3 +125,11 @@ test('MERMAKER_MAX_EDGES and MERMAKER_MAX_TEXT that are not whole numbers above 
     assert.match(String(r.stderr), new RegExp(`${name} must be ${says}, not ${value.replace('.', '\\.')}`));
   }
 });
+
+test('MERMAKER_THEME reaches the page, and anything but light, dark or system is refused', async () => {
+  const { url } = await run([file('theme.mmd')], { MERMAKER_THEME: 'dark' });
+  assert.ok((await (await fetch(new URL('/', url))).text()).includes('<meta name="mermaker-theme" content="dark">'));
+  const r = spawnSync(process.execPath, [BIN, file('bad.mmd')], { env: { ...process.env, BROWSER: '', MERMAKER_THEME: 'blue' }, timeout: 5000 });
+  assert.equal(r.status, 2);
+  assert.match(String(r.stderr), /MERMAKER_THEME must be light, dark or system, not blue/);
+});
