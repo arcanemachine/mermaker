@@ -53,7 +53,8 @@ Mermaid syntax.
 | **merge** | Merge into…: a node's edges move to another node, and the node goes. |
 | **`linkStyle`** | Styles an edge by its number: the Nth edge in the file. Why no edit ever reorders edges. |
 | **`classDef`, `class`, `style`** | Named styles, applying them to nodes, and one-off node styles. |
-| **callback**, **script** | What a node's `click` line runs instead of a link: a function named in the file (`click A charge`, `click A call charge("eu", 3)`). Callback is Mermaid's word, used in the docs; the page says script (Run script, Shift+X), the plainer word for someone using it. Mermaker never runs one itself: Run script hands it to the page's other scripts (`docs/guide.md`, Scripts of your own). |
+| **callback**, **script** | What a node's `click` line runs instead of a link: a function named in the file (`click A charge`, `click A call charge("eu", 3)`). Callback is Mermaid's word, used in the docs; the page says script (Run script, Shift+X), the plainer word for someone using it. Mermaker never runs code from the file: Run script calls the user's own function of that name (`docs/guide.md`, Scripts of your own). |
+| **script file** | The user's JavaScript module that Mermaker was started with (`MERMAKER_SCRIPT`), loaded by the page: its exported functions are what Run script calls. |
 | **tooltip** | The text a `click` line gives a node after its link or script (`click A href "a.mmd" "Payment flow"`), shown by Mermaid when the pointer is over the node (Mermaid's word). |
 | **link** | Where a node leads, by its `click` line: `click A href "payment.mmd"`. Open link (L) follows it. Mermaid's word for where a `click` leads; never an edge, which Mermaid's older docs also call a link (above). |
 

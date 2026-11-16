@@ -93,6 +93,7 @@ Settings are environment variables. Mermaker reads them when it starts.
 | `MERMAKER_IDLE` | Seconds with no requests before the server exits. Unset or 0: it runs until stopped. An open page polls every second, but a browser may freeze or unload a tab left in the background, which then stops asking |
 | `BROWSER` | For `mermaker <file>`: a command to open the page with, arguments allowed (`firefox --new-tab`). Unset: the address is only printed |
 | `MERMAKER_MAX_EDGES` | The most edges a diagram may have. Default: Mermaid's 500 |
+| `MERMAKER_SCRIPT` | A JavaScript module of your own, which the page loads. Run script (Shift+X) calls its exported functions by the names a diagram's `click` lines give (`docs/guide.md`, Scripts of your own) |
 | `MERMAKER_THEME` | The page theme a browser starts with, until it picks one in the page: `light`, `dark` or `system` (the system's setting). Default: `light` |
 | `MERMAKER_MAX_TEXT` | The most characters a diagram's code may have, leaving out comments and frontmatter. Default: Mermaid's 50,000. Mermaid's drawing slows as diagrams grow, so a higher limit is no promise of a quick render |
 | `MERMAKER_HOSTS` | Host names the page may be opened under, besides `localhost`, `127.0.0.1` and `[::1]` (and the bound address, when it is a single one), comma-separated. Requests addressed to any other name are refused, which stops DNS rebinding |
@@ -107,6 +108,8 @@ and edit the diagrams it serves.
 
 - Mermaker serves only `.mmd` files in `MERMAKER_ROOTS`.
 - Mermaker refuses a request to a host name that it does not know (`MERMAKER_HOSTS`).
+- Anyone who can reach the server can read the `MERMAKER_SCRIPT` file, and any diagram it serves can call the
+  functions that file exports, once you press Shift+X on its node.
 
 To open the page from another device, start the server on all addresses, with the name or IP address that the device
 uses for this machine in `MERMAKER_HOSTS`:

@@ -3,7 +3,7 @@
 // print the agent skill. See README.md for the settings.
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFiles, parsePathMap, parseRoots } from '../server/files.js';
@@ -23,6 +23,7 @@ Settings, from the environment:
   MERMAKER_MAX_EDGES the most edges a diagram may have (unset: Mermaid's 500)
   MERMAKER_MAX_TEXT  the most characters a diagram's code may have, comments and frontmatter aside (unset: Mermaid's 50000)
   MERMAKER_THEME     the page theme a browser starts with until it chooses one: light, dark or system (unset: light)
+  MERMAKER_SCRIPT    a JavaScript module of your own that the page loads; Run script calls its exported functions
   BROWSER         for mermaker <file>: a command to open the page with, arguments allowed (unset: the address is printed)`;
 
 const SCRATCH = '/tmp/mermaid-diagrams/scratch.mmd';
@@ -120,7 +121,12 @@ function start(/** @type {string[]} */ roots, /** @type {string} */ port, /** @t
     console.error(`mermaker: MERMAKER_THEME must be light, dark or system, not ${theme}`);
     process.exit(2);
   }
-  const server = createServer({ files, script: realpathSync(fileURLToPath(import.meta.url)), hosts, limits, theme });
+  const userScript = process.env.MERMAKER_SCRIPT ? resolve(process.env.MERMAKER_SCRIPT) : undefined;
+  if (userScript && !(existsSync(userScript) && statSync(userScript).isFile())) {
+    console.error(`mermaker: MERMAKER_SCRIPT must name a file, not ${process.env.MERMAKER_SCRIPT}`);
+    process.exit(2);
+  }
+  const server = createServer({ files, script: realpathSync(fileURLToPath(import.meta.url)), hosts, limits, theme, userScript });
 
   // Only with MERMAKER_IDLE does the server stop on its own, that many seconds after the last request. An open page polls
   // every second, but a browser may freeze or unload a tab left in the background, so the time is not a page count.

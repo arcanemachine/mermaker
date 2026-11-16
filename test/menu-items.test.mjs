@@ -197,6 +197,7 @@ const HELP_ONLY = {
   'ctrl+shift+z': 'redo, handled before the key map',
   'ctrl+y': 'redo, handled before the key map',
   'shift+f10': "the browser's contextmenu event",
+  shift: "editor.mjs's tooltip, Shift held alone",
 };
 // '=' is + unshifted on a US keyboard (docs/ux.md): the guide lists it, Help shows +.
 const NOT_IN_HELP = ['='];
@@ -245,7 +246,7 @@ test("every row under Help's Keys sections names a key, and each is one the page
 
 // Within a Keys section, rows go by the key: punctuation and digits, then letters, then named keys (Arrows, Backspace,
 // Delete, …), each key's forms together in the order plain, Shift, Ctrl, Ctrl+Shift.
-const NAMED = ['arrows', 'backspace', 'delete', 'arrowdown', 'enter', 'escape', 'f2', 'f10', ' ', 'arrowup'];
+const NAMED = ['arrows', 'backspace', 'delete', 'arrowdown', 'enter', 'escape', 'f2', 'f10', 'shift', ' ', 'arrowup'];
 const sortKey = (/** @type {string} */ shortcut) => {
   const [, mods, base] = /** @type {RegExpMatchArray} */ (shortcut.match(/^((?:ctrl\+)?(?:shift\+)?)(.+)$/));
   const form = ['', 'shift+', 'ctrl+', 'ctrl+shift+'].indexOf(mods);

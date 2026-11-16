@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CALLBACK, itemAddress, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
+import { CALLBACK, itemAddress, runExport, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
 
 const FILE = '/diagrams/flows/order.mmd';
 
@@ -69,4 +69,23 @@ test('Edit link writes the answer trimmed, removes the link when emptied, and do
   assert.equal(linkEdit('a.mmd', null), null);
   assert.equal(linkEdit('a.mmd', 'a.mmd '), null);
   assert.equal(linkEdit(null, ''), null);
+});
+
+test("Run script calls only a function the script file exports itself, with exactly the call's arguments", async () => {
+  const called = [];
+  const module = { charge: (...a) => { called.push(a); }, other: 1 };
+  assert.deepEqual(await runExport({ module }, 'charge', ['eu', '3'], 'charge("eu", 3)'), { ran: true });
+  assert.deepEqual(called, [['eu', '3']]);
+  const none = { why: 'The script file has no function named toString.', kind: 'warning' };
+  assert.deepEqual(await runExport({ module }, 'toString', [], 'toString'), none);
+  assert.deepEqual(await runExport({ module }, 'other', [], 'other'), { ...none, why: 'The script file has no function named other.' });
+  assert.deepEqual(await runExport(null, 'charge', [], 'charge'), { none: true });
+  assert.deepEqual(await runExport({ error: 'Unexpected token' }, 'charge', [], 'charge'),
+    { why: 'The script file did not load: Unexpected token', kind: 'error' });
+});
+
+test('a script that throws or rejects is reported as failed, with its message', async () => {
+  const module = { thrown: () => { throw new Error('declined'); }, rejected: async () => { throw new Error('timed out'); } };
+  assert.deepEqual(await runExport({ module }, 'thrown', [], 'thrown()'), { why: 'thrown() failed: declined', kind: 'error' });
+  assert.deepEqual(await runExport({ module }, 'rejected', [], 'rejected()'), { why: 'rejected() failed: timed out', kind: 'error' });
 });

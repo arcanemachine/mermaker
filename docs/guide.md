@@ -426,14 +426,35 @@ with no label, the picker can cover the arrowhead; the picker shows the current 
 
 ## Scripts of your own
 
-Mermaker never runs a diagram's scripts itself. It tells the page's other scripts (a userscript, a bookmarklet, an
-extension) what happens, as events on `document`, and they can act on it. This is an experiment: the events may gain
-fields, but a field they have keeps its meaning.
+Mermaker never runs code a diagram file gives. A node's script (`click charge call charge("eu", 3)`) names a
+function, and Run script (Shift+X) calls a function of yours by that name. This is an experiment.
+
+**A script file.** Write the functions in a JavaScript module, and start Mermaker with its path in `MERMAKER_SCRIPT`.
+Run script calls the function the module exports under the script's name, with its arguments (strings, as Mermaid
+passes them; with none, the node's id):
+
+```js
+// my-scripts.mjs, served with MERMAKER_SCRIPT=/path/to/my-scripts.mjs
+export function charge(region, amount) {
+  alert(`Charging ${amount} in ${region}`);
+}
+```
+
+- The page loads the module once, when it opens, so its top-level code runs then, as a userscript's does. After you
+  change the file, reload the page.
+- Keep it to one file: imports of other files from it do not load.
+- Anyone who can open the page can read the file, at `/script`: keep no secrets in it.
+- Any diagram the server serves can call any function the module exports, with any arguments, once you press Shift+X
+  on its node: export only what is safe to call that way.
+- When the file does not load, the module has no function of that name, or the function throws, a notice says so.
+
+**Events**, for a userscript, a bookmarklet or an extension, without a script file. The page tells what happens as
+events on `document`; the events may gain fields, but a field they have keeps its meaning.
 
 - `mermaker:select` is sent when the selection changes (another item, or the selected one changed by an edit), with
   `event.detail` saying what is selected, or `null` when nothing is.
-- `mermaker:run` is sent by Run script (Shift+X), with the node in `event.detail`. Call `event.preventDefault()` to
-  say the script was handled; when no listener does, the page says that nothing ran it.
+- `mermaker:run` is sent by Run script (Shift+X), with the node in `event.detail`, before the script file is used. Call
+  `event.preventDefault()` to say the script was handled, and the script file is then not used.
 
 The detail is plain JSON:
 

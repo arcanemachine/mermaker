@@ -124,7 +124,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - A key's Shift form shows its extra cost before it acts: where it deletes what the
   plain form keeps (Ctrl+Shift+V a cut node's edges, Shift+D a subgraph's contents or a node's children), what would
   go glows pale red while that item is in focus or under the pointer in the menu, or after a first press that asks
-  for a second. Holding Shift shows nothing: the glow would flash under every Shift key (Ctrl+Shift+Arrows, Shift+F).
+  for a second. Holding Shift shows no glow: it would flash under every Shift key (Ctrl+Shift+Arrows, Shift+F). The
+  one thing held Shift shows is a selected node's tooltip, after a short delay (below).
   Shift+D, Shift+Delete and Shift+Backspace outside menus always take two presses, on a node, an edge or a subgraph,
   whatever would go: the first marks all that would go pale red, the selected item too (its band wider than the
   selection's, under it), and says what goes in a notice that names the item only as "this node", "this edge" or
@@ -441,10 +442,14 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   server knows one, since that is the path the reader has; the server takes either and sends the page to its own,
   so the page knows each file by one name. Copy link copies the node's link as the file writes it, not as Mermaid
   reads it, as Show link shows it.
+- A node's tooltip shows as Mermaid shows it, on hover, and by keyboard when Shift is held alone on the selected node
+  for 200 ms: Mermaker fires the mouseover Mermaid's tooltip listens for, so the box, its place and its sanitizing are
+  Mermaid's. Any other key, a pointer press or Shift's release hides it, and a Shift key pressed quickly (Shift+F)
+  never shows it. Not in a pick, nor with Shift+D or Shift+X armed, where Shift is pressed again to confirm.
 - Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
   and copied, a hover tip's cannot), and selecting a linked node says it aloud ("…selected, links to …"), so the
-  keyboard and a screen reader learn what the mouse sees. A script shows and is said the same way ("calls …"), and so
-  is a tooltip. The tooltip itself is Mermaid's own, shown on hover as Mermaid shows it (Mermaker hooks into Mermaid
+  keyboard and a screen reader learn what the mouse sees. A script shows and is said the same way ("calls …"), in one
+  line; the tooltip is said with the selection, but not shown in the notice, since it shows on the node. The tooltip itself is Mermaid's own, shown on hover as Mermaid shows it (Mermaker hooks into Mermaid
   rather than drawing one), with its text dark on the dark page theme, since Mermaid sets only its pale background;
   hidden from screen readers, which hear it with the selection, and hidden at each redraw, view change and label
   box, none of which a mouseout follows.
@@ -462,10 +467,14 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   (accepted: rare, and L says which). No mark beside the label (↗): after the text it is clipped on snug labels, and
   nothing can be added to SVG text labels.
 - Run script (Shift+X) hands a node's callback (`click A charge`, `click A call charge("eu", 3)`) to the user's own
-  scripts, never running it itself: Mermaker keeps Mermaid's strict security level, under which Mermaid binds no
-  callback, and it never calls a page global by a name the file gives (`window[name]`), since whoever writes a served
-  file would then choose what runs. It sends a cancelable `mermaker:run` event on the document instead, and a
-  userscript or an extension does the work; with none that takes it, a warning says so. Events, not a registry or a
+  scripts: Mermaker keeps Mermaid's strict security level, under which Mermaid binds no callback, and it never calls a
+  page global by a name the file gives (`window[name]`), since whoever writes a served file would then choose what
+  runs. It sends a cancelable `mermaker:run` event on the document first, for a userscript or an extension; if none
+  takes it, it calls the function of that name exported by the script file the server was started with
+  (`MERMAKER_SCRIPT`), with the arguments only, as Mermaid would. The diagram file then picks only among the functions
+  the server's owner exported for this, never the code. The script file is a plain module, no extension needed: the
+  page imports it once when it loads, so its top level runs then, as a userscript's does, and an edit to it shows on
+  the next reload. With neither, or with no function of that name, or when the function throws, a notice says which. Events, not a registry or a
   global: an extension's content script sees the page's DOM events but not its globals, and an event needs no load
   order. The details are plain JSON so that they reach an isolated world whole. `mermaker:select` follows the
   selection the same way, sent when what it would say changes (another item, or the selected one edited), not on

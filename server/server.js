@@ -8,6 +8,7 @@
 //                          409 otherwise, so an edit made in the page never overwrites a change saved meanwhile
 //   GET /hostpath?f=<path> where that file is on the host, for a server in a container ('' when unknown)
 //   GET /health            "ok pid=<pid> script=<path>", so a caller can tell which server holds the port
+//   GET /script            the user's script file (MERMAKER_SCRIPT), read afresh each time, as a module; 404 when unset
 //
 // Every route takes a file's host path in `f=` for its server path (files.js serverPath).
 //
@@ -19,6 +20,7 @@
 // same-origin to the browser, but they still carry that domain as their Host.
 
 import http from 'node:http';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,8 +49,9 @@ function hostName(header = '') {
  * @param {{ maxEdges?: number, maxTextSize?: number }} [options.limits] Mermaid's size limits for the page (unset:
  *   Mermaid's defaults)
  * @param {string} [options.theme] the page theme a browser starts with until it chooses one: light, dark or system
+ * @param {string} [options.userScript] the user's script file, served at /script for the page to import
  */
-export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB, limits = {}, theme = 'light' }) {
+export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB, limits = {}, theme = 'light', userScript }) {
   const allowedHosts = new Set(hosts.map((h) => h.toLowerCase()));
   const build = createBuild({ web, fixed: FIXED });
   // lastRequest: the time of the last request, for the idle exit.
@@ -73,6 +76,13 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
 
     if (url.pathname === '/health') return send(res, 200, `ok pid=${process.pid} script=${script}`);
     if (url.pathname === '/hostpath') return send(res, 200, files.hostPath(f));
+    // A route no file in web/ can take, since those are served by their names.
+    if (url.pathname === '/script') {
+      if (!userScript) return send(res, 404, 'Mermaker was started with no MERMAKER_SCRIPT.');
+      let text;
+      try { text = readFileSync(userScript, 'utf8'); } catch (e) { return send(res, 404, `The script file cannot be read: ${e.message}`); }
+      return send(res, 200, text, 'text/javascript');
+    }
 
     if (url.pathname === '/source') {
       if (!files.allowed(f)) return send(res, 403, notServed(files, f));
@@ -94,7 +104,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
     return serveWeb(web, url.pathname, res, {
       MERMAKER_BUILD: build.id(), MERMAKER_MAX_EDGES: String(limits.maxEdges ?? ''), MERMAKER_MAX_TEXT: String(limits.maxTextSize ?? ''),
-      MERMAKER_THEME: theme,
+      MERMAKER_THEME: theme, MERMAKER_SCRIPT: userScript ? 'on' : '',
     });
   }
 

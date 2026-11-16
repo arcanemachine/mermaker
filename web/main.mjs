@@ -13,7 +13,7 @@ import { isFlowchart, itemLines, subgraphs as scannedSubgraphs, withHeader } fro
 import { createViewer, parse } from './viewer.mjs';
 import { fileTheme, shownTheme, themeChoice, THEME_KEY } from './theme.mjs';
 import { limitSentence, readLimits } from './limits.mjs';
-import { itemAddress } from './links.mjs';
+import { itemAddress, runExport } from './links.mjs';
 import { hide as hideTop, mode as modeNotice, NONE, show as showNotice } from './notices.mjs';
 
 // Every id the page asks for is in index.html.
@@ -293,6 +293,12 @@ const ui = {
     copyText(text).catch(() => {});
     toast('Copied!');
   },
+  /**
+   * Call function `name` of the user's script file with `args` (strings, as Mermaid passes them), awaiting it: whether
+   * it ran, there is no script file, or why it did not run.
+   */
+  runScript: async (/** @type {string} */ name, /** @type {string[]} */ args, /** @type {string} */ call) =>
+    runExport(await userScript, name, args, call),
   /** Put a link on the system clipboard, the whole of what is copied: whether the browser let it, saying so if not. */
   copyLink: (/** @type {string} */ text) => copyText(text).then(() => { toast('Copied!'); return true; },
     () => { ui.notice('The browser refused to copy the link.', 'error'); return false; }),
@@ -607,6 +613,14 @@ for (const id of ['path', 'host']) {
     toast('Copied!');
   });
 }
+
+// The user's script file (MERMAKER_SCRIPT, served at /script): imported once, when the page loads, so its top level
+// runs then, as a userscript's does. Run script calls its exported functions by name (ui.runScript).
+/** @type {Promise<{ module: Record<string, unknown> } | { error: string } | null>} */
+const userScript = /** @type {HTMLMetaElement} */ (document.querySelector('meta[name="mermaker-script"]')).content
+  ? import(/* a route, not a module of Mermaker's */ String('/script')).then((module) => ({ module }), (e) => ({ error: e instanceof Error ? e.message : String(e) }))
+  : Promise.resolve(null);
+userScript.then((loaded) => { if (loaded && 'error' in loaded) ui.notice(`The script file did not load: ${loaded.error}`, 'error'); });
 
 // The page theme: the one chosen in this browser, else the server's default; System follows the system's setting as it
 // changes. A choice made in another tab shows here too.

@@ -21,7 +21,7 @@ import {
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
-import { linkEdit, linkTarget, linkTone, NO_HANDLER } from './links.mjs';
+import { linkEdit, linkTarget, linkTone, noHandler } from './links.mjs';
 import { limitOf, limitSentence } from './limits.mjs';
 import { createPicker } from './picker.mjs';
 import { THEMES } from './theme.mjs';
@@ -70,7 +70,7 @@ const END_RUN = 3;
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
  * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
- * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
+ * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
  * @param {Record<'stage'|'diagram'|'labelBox'|'find'|'findBox'|'findCount'|'findPrev'|'findNext'|'findCancel'|'findToggle', HTMLElement>} deps.els
  */
@@ -539,6 +539,33 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   window.addEventListener('blur', () => holdShift(false));
   document.addEventListener('visibilitychange', () => { if (document.hidden) holdShift(false); });
 
+  // Shift held alone on a selected node shows its tooltip (docs/ux.md), as hovering does: Mermaid's own, by firing the
+  // mouseover its tooltip listens for on the node, and mouseout to hide it. Not in a pick, with a Shift key armed, in a
+  // field or a menu: only with the node selected and nothing else under way.
+  const TIP_DELAY = 200;
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let tipTimer;
+  /** @type {Element | null} the node whose tooltip shows */
+  let tipOn = null;
+  function hideTip() {
+    clearTimeout(tipTimer);
+    if (tipOn) tipOn.dispatchEvent(new MouseEvent('mouseout'));
+    tipOn = null;
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift' && e.repeat) return;
+    hideTip();
+    if (e.key !== 'Shift' || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (selected?.kind !== 'node' || picking || armed || labelling || finding || menuOpen() || document.activeElement !== els.diagram) return;
+    const node = elsOf(selected).find((x) => x.matches('g.node[title]'));
+    // A redraw meanwhile leaves the node detached, where Mermaid would place the tip at the page's corner.
+    if (node) tipTimer = setTimeout(() => { if (node.isConnected) { tipOn = node; node.dispatchEvent(new MouseEvent('mouseover')); } }, TIP_DELAY);
+  }, true);
+  window.addEventListener('keyup', (e) => { if (e.key === 'Shift') hideTip(); }, true);
+  window.addEventListener('pointerdown', hideTip, true);
+  window.addEventListener('blur', hideTip);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) hideTip(); });
+
   /**
    * Move node here: the cut node into the selected edge (its own edges deleted), inside the selected subgraph, into
    * the block of the selected node, or to the top level. `withEdges` false deletes its edges first. It stays
@@ -637,15 +664,14 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'merge-into': () => startMerge(),
     'open-link': () => openLink(false),
     'open-link-tab': () => openLink(true),
-    // The link as Mermaid reads it, or the script, then the tooltip, as the file writes them: one notice, selectable.
+    // The link as Mermaid reads it, or the script as the file writes it: one line, selectable.
     'show-link': () => {
       const { id } = selection();
       const link = links.get(id);
       const script = writtenScript(shownText, id);
-      const tip = writtenTooltip(shownText, id);
       const does = link ? `links to: ${link}` : script ? `calls ${script.call}.` : null;
       if (!does) return;
-      ui.notice(`This node ${does}${tip === null ? '' : `\nIts tooltip says "${tip}".`}`, 'info');
+      ui.notice(`This node ${does}`, 'info');
     },
     'edit-link': () => editLink(),
     'copy-link': () => {
@@ -809,12 +835,18 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     toldSelected = json;
     document.dispatchEvent(new CustomEvent('mermaker:select', { detail }));
   }
-  /** Run script: hand the selected node's script to the page's own scripts, saying so if none takes it. */
-  function runScript() {
+  /**
+   * Run script: hand the selected node's script to the page's own scripts, first as the `mermaker:run` event, then, if
+   * no listener took it, to the user's script file's function of that name; saying so if neither did.
+   */
+  async function runScript() {
     const detail = itemDetail(selection());
     if (!detail.call) return;
-    const handled = !document.dispatchEvent(new CustomEvent('mermaker:run', { cancelable: true, detail }));
-    if (handled) ui.announce(`Ran ${detail.call}`); else ui.notice(NO_HANDLER, 'warning');
+    if (!document.dispatchEvent(new CustomEvent('mermaker:run', { cancelable: true, detail }))) { ui.announce(`Ran ${detail.call}`); return; }
+    const result = await ui.runScript(detail.name, detail.args, detail.call);
+    if ('ran' in result) ui.announce(`Ran ${detail.call}`);
+    else if ('none' in result) ui.notice(noHandler(detail.call), 'warning');
+    else ui.notice(result.why, result.kind);
   }
   /**
    * Shift+X, two presses: the first asks for Shift+X again, which runs the node's script; a key repeat never does.

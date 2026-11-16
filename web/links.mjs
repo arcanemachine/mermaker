@@ -4,13 +4,13 @@ export const NO_LINK = 'No link on this node.';
 /** A `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
 export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
 /** A callback (`click A charge`): a script for Run script, not a link. */
-export const CALLBACK = 'This node has a script, not a link. Run script (Shift+X) runs it.';
+export const CALLBACK = 'This node has no link. Shift+X runs its script.';
 /** Edit link on a callback, which a link would overwrite. */
 export const CALLBACK_EDIT = 'This node has a script, not a link. Change it in the code.';
 /** Run script on a node with no callback. */
 export const NO_SCRIPT = 'This node has no script to run.';
-/** Run script with nothing on the page handling `mermaker:run`. */
-export const NO_HANDLER = "Nothing on this page ran this node's script. A userscript or an extension must listen for mermaker:run.";
+/** Run script with no script file and nothing on the page handling `mermaker:run`, naming the call. */
+export const noHandler = (/** @type {string} */ call) => `Nothing on this page ran ${call}. The guide (Scripts of your own) shows how to add a script.`;
 export const NOT_MMD = 'Mermaker opens only .mmd files from a link to a path.';
 
 /**
@@ -77,4 +77,27 @@ export function linkEdit(/** @type {string | null} */ now, /** @type {string | n
   const link = answer.trim();
   if (link === (now ?? '')) return null;
   return { link: link || null };
+}
+
+/**
+ * Run script through the user's script file: call function `name` of `loaded` (the imported module, the error it did not
+ * load with, or null for no script file) with exactly `args`, awaiting it. Only a function the module exports itself is
+ * called, never an inherited member (`toString`), since the diagram file gives the name.
+ * @param {{ module: Record<string, unknown> } | { error: string } | null} loaded
+ * @param {string} name
+ * @param {string[]} args
+ * @param {string} call the script as the file writes it, for the message
+ * @returns {Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>}
+ */
+export async function runExport(loaded, name, args, call) {
+  if (!loaded) return { none: true };
+  if ('error' in loaded) return { why: `The script file did not load: ${loaded.error}`, kind: 'error' };
+  const fn = Object.hasOwn(loaded.module, name) ? loaded.module[name] : undefined;
+  if (typeof fn !== 'function') return { why: `The script file has no function named ${name}.`, kind: 'warning' };
+  try {
+    await fn(...args);
+    return { ran: true };
+  } catch (e) {
+    return { why: `${call} failed: ${e instanceof Error ? e.message : String(e)}`, kind: 'error' };
+  }
 }

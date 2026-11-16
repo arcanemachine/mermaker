@@ -133,3 +133,11 @@ test('MERMAKER_THEME reaches the page, and anything but light, dark or system is
   assert.equal(r.status, 2);
   assert.match(String(r.stderr), /MERMAKER_THEME must be light, dark or system, not blue/);
 });
+
+test('MERMAKER_SCRIPT that names no file, or a folder, is refused', () => {
+  for (const path of ['/no/such/script.mjs', tmpdir()]) {
+    const r = spawnSync(process.execPath, [BIN, file('bad.mmd')], { env: { ...process.env, BROWSER: '', MERMAKER_SCRIPT: path }, timeout: 5000 });
+    assert.equal(r.status, 2, path);
+    assert.match(String(r.stderr), /MERMAKER_SCRIPT must name a file, not /);
+  }
+});

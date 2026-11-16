@@ -86,8 +86,8 @@ syntax and features as far as they go, and add no markers, comments or metadata 
   other file must be one the server serves (`MERMAKER_ROOTS`). A web or `vscode://` address works too, and
   opens outside the page.
 - A node can name a script instead of a link (`click charge call charge("eu", 3)`, Mermaid's callback).
-  Mermaker never runs it itself: the user's Run script (Shift+X) hands it to their own userscript or
-  extension, if they have one.
+  Mermaker never runs code from the file: the user's Run script (Shift+X) calls their own function of that
+  name, from the script file Mermaker was started with (`MERMAKER_SCRIPT`), or a userscript or extension.
 - To have a subgraph start collapsed, drawn as one box, add Mermaid's `pay@{ view: collapsed }` on a line
   of its own after the subgraph's `end`. The user can expand it in the page without changing the file.
 - Mermaid refuses a diagram with more than 500 edges or 50,000 characters of code, leaving out comments
@@ -105,6 +105,7 @@ All from the environment, read when Mermaker starts:
 - `MERMAKER_IDLE`: seconds with no requests before Mermaker exits (unset or 0: it runs until stopped).
 - `MERMAKER_PATH_MAP`: `server=host` path prefixes, comma-separated, to show the host's path in the page.
 - `MERMAKER_MAX_EDGES`, `MERMAKER_MAX_TEXT`: Mermaid's size limits, above.
+- `MERMAKER_SCRIPT`: a JavaScript module of the user's whose exported functions Run script calls.
 - `MERMAKER_THEME`: the page theme a browser starts with until the user picks one: `light` (default), `dark`
   or `system`.
 - `MERMAKER_HOSTS`: host names the page may be opened under besides localhost, comma-separated. The page's

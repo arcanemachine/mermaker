@@ -322,6 +322,28 @@ test('the page is served with the default page theme the server was given, Light
   }
 });
 
+test("the user's script file is served at /script, read afresh, and 404 when there is none", async () => {
+  assert.equal((await get('/script')).status, 404);
+  assert.ok((await get('/')).text.includes('<meta name="mermaker-script" content="">'));
+  const path = join(OUTSIDE, 'mine.mjs');
+  writeFileSync(path, 'export const a = 1;\n');
+  const other = createServer({ files: createFiles({ roots: [ROOT] }), script: 'x', userScript: path });
+  await new Promise((resolve) => other.listen(0, '127.0.0.1', resolve));
+  try {
+    const at = `http://127.0.0.1:${other.address().port}`;
+    const first = await fetch(`${at}/script`);
+    assert.equal(first.status, 200);
+    assert.match(first.headers.get('content-type'), /^text\/javascript/);
+    assert.equal(first.headers.get('cache-control'), 'no-store');
+    assert.equal(await first.text(), 'export const a = 1;\n');
+    writeFileSync(path, 'export const a = 2;\n');
+    assert.equal(await (await fetch(`${at}/script`)).text(), 'export const a = 2;\n');
+    assert.ok((await (await fetch(`${at}/`)).text()).includes('<meta name="mermaker-script" content="on">'));
+  } finally {
+    other.close();
+  }
+});
+
 test('the build id changes when a page file changes under a running server', async () => {
   const web = mkdtempSync(join(tmpdir(), 'mermaker-web-'));
   writeFileSync(join(web, 'index.html'), '<meta name="mermaker-build" content="{{MERMAKER_BUILD}}">');
