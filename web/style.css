@@ -184,7 +184,8 @@ footer button:disabled { cursor: default; color: var(--disabled); }
 #code-panel .code-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--border); }
 #code-panel h2 { margin: 0; font-size: inherit; }
 /* The controls wrap to a second row together, right-aligned, before the file name is cut to nothing. */
-#code-panel .code-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+#code-panel .code-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px;
+                            margin-left: auto; min-width: 0; }
 #code-panel .code-file { flex: 0 1 auto; min-width: 4em; color: var(--text-muted); font-family: ui-monospace, monospace; white-space: nowrap;
                          overflow: hidden; text-overflow: ellipsis; }
 #code-panel select, #code-panel button { font: inherit; }
