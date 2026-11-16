@@ -1779,6 +1779,28 @@ export function writtenLink(/** @type {string} */ text, /** @type {string} */ id
 }
 
 /**
+ * The script node `id`'s `click` line runs, as Mermaid reads it, or null for none (no line, or a link): the call as
+ * written (`charge("eu", 3)`, or `charge` with no parentheses), the function's name, and its arguments, strings split
+ * on commas outside quotes, each trimmed and unquoted. With none, the one argument is the node's id, as Mermaid passes
+ * it: on a line naming several nodes, each node's own. Mermaid ends the arguments at the first `)`, inside quotes or
+ * not, and reads `call` only with parentheses.
+ * @returns {{ call: string, name: string, args: string[] } | null}
+ */
+export function writtenScript(/** @type {string} */ text, /** @type {string} */ id) {
+  const line = clickLine(text, id);
+  if (!line || line.link) return null;
+  const called = line.rest.match(/^\s+call\s+([^(]*?)\s*\(([^)]*)\)(?:\s+"[^"]*")?\s*$/s);
+  if (called) {
+    const raw = called[2].trim();
+    const args = raw ? raw.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((a) => a.trim().replace(/^"(.*)"$/s, '$1')) : [id];
+    return { call: `${called[1]}(${called[2]})`, name: called[1], args };
+  }
+  const bare = line.rest.match(/^\s+([^\s"(]+)(?:\s+"[^"]*")?\s*$/s);
+  if (!bare || bare[1] === 'call' || bare[1] === 'href') return null;
+  return { call: bare[1], name: bare[1], args: [id] };
+}
+
+/**
  * Give node `id` the link `link`, or with null remove it. A link already written keeps its form, tooltip and target;
  * one on a line shared with other nodes is moved to a line of its own, so their links stay as they were. Removing
  * takes the node off every link line naming it, since an earlier one would take over. A `"` is written `%22`, since

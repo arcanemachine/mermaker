@@ -40,8 +40,8 @@ them.
   goes to VS Code, and the page stays as it is. **Show link** (Ctrl+Shift+L, ⌘⇧L on a Mac) shows the link as the file
   writes it in a notice, where it can be selected and copied, and **Copy link** (Y) copies it as the file writes it;
   selecting a linked node also says it to a screen reader. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
-  on any other link it does what L does. L and Shift+L are grayed, with the reason, on a node with no link, a link that runs a
-  script (`click A callback`, a `javascript:` link), a link of another kind (`mailto:`), and a path to anything but a
+  on any other link it does what L does. L and Shift+L are grayed, with the reason, on a node with no link, a script
+  (`click A callback`, which Run script runs, below), a `javascript:` link, a link of another kind (`mailto:`), and a path to anything but a
   `.mmd` file. Hovering over the item shows where it leads. A click on a linked node selects it, as on any node: Mermaker
   never follows a link on a click. A file the server does not serve (missing, or outside the folders Mermaker serves) is
   refused with a notice. So is opening one while an edit is saving, while a pick or the label box is open, or while
@@ -143,6 +143,9 @@ another click on it closes it.
   writes it as `click A href "payment.mmd"`; empty it to remove the link. A link already in the file keeps its tooltip
   and target, and a `click` line shared with other nodes (`click A,B href …`) keeps their link. Grayed on a node whose
   `click` line runs a script (`click A callback`): change that in the code.
+- **Run script** (Shift+X) runs the node's script, Mermaid's callback (`click A charge`, `click A call charge("eu",
+  3)`), through a script of your own (Scripts of your own, below). Outside menus it takes two presses: the first asks
+  for Shift+X again. The menu item runs at once. Grayed on a node with no script.
 - **Copy node** (Ctrl+C) keeps a copy of the node, as it is now, for this tab: its shape and label, its classes, its
   `style` and `click` lines, and its edges. The node's Mermaid text goes on the system clipboard too, to paste into an
   editor or a message. Nothing in the file changes. Ctrl+C on an edge says that only a node or a subgraph can be copied.
@@ -417,6 +420,42 @@ with no label, the picker can cover the arrowhead; the picker shows the current 
 |  | Dotted two-way cross | `x-.-x` |
 |  | Thick two-way cross | `x==x` |
 
+## Scripts of your own
+
+Mermaker never runs a diagram's scripts itself. It tells the page's other scripts (a userscript, a bookmarklet, an
+extension) what happens, as events on `document`, and they can act on it. This is an experiment: the events may gain
+fields, but a field they have keeps its meaning.
+
+- `mermaker:select` is sent when the selection changes (another item, or the selected one changed by an edit), with
+  `event.detail` saying what is selected, or `null` when nothing is.
+- `mermaker:run` is sent by Run script (Shift+X), with the node in `event.detail`. Call `event.preventDefault()` to
+  say the script was handled; when no listener does, the page says that nothing ran it.
+
+The detail is plain JSON:
+
+| Field | What it holds |
+|---|---|
+| `file` | The diagram file's path on the server |
+| `kind` | `node`, `edge`, `subgraph` or `title` |
+| `id` | The node or subgraph id; for an edge, the id Mermaid draws it with, which changes as edges come and go |
+| `label` | The label or title as drawn |
+| `from`, `to` | An edge's ends as drawn, by node or subgraph id (a collapsed subgraph's box for a node hidden in it); else `null` |
+| `link` | A node's link as the file writes it, else `null` |
+| `call`, `name`, `args` | A node's script as the file writes it (`charge("eu", 3)`), its function's name and its arguments as strings (`["eu", "3"]`; with none, the node's id), else `null` |
+
+```js
+// A userscript: run Mermaker's scripts by name, from a table of your own.
+const scripts = { charge: (region, amount) => console.log('charge', region, amount) };
+document.addEventListener('mermaker:run', (e) => {
+  if (!Object.hasOwn(scripts, e.detail.name)) return;   // not an inherited member, such as constructor
+  e.preventDefault();
+  scripts[e.detail.name](...e.detail.args);
+});
+```
+
+The name and the arguments come from the diagram file: treat both as untrusted, as anything a file says. Look the
+name up only among your own scripts, never on `window` or through an object's inherited members.
+
 ## Keys
 
 Outside menus, and not while typing in the label box. Keys are case-insensitive, here and in menus, and a letter
@@ -434,6 +473,7 @@ here does just what it does in the selected item's menu:
 | K with a node selected | Edit link |
 | Y with a node selected | Copy link |
 | Shift+Y with a node or subgraph selected | Copy link to this node or subgraph |
+| Shift+X with a node selected, twice | Run script |
 | C with a node or subgraph selected | Connect to… |
 | Shift+C with a node or subgraph selected | Connect from… |
 | C with an edge selected | Reassign end… (Space in it: the other end) |

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { applies, EXPORT_MENU, GLOBAL_KEYS, keyAria, keyLabel, LOCKED, MENUS, NOTHING_COPIED, PART_UNNAMED, SUBGRAPH_BARE, SUBGRAPH_ON_EDGE, VERBS, whyNot } from '../web/menu-items.mjs';
-import { NO_LINK, SCRIPT_LINK } from '../web/links.mjs';
+import { NO_LINK, NO_SCRIPT, SCRIPT_LINK } from '../web/links.mjs';
 import { ARROW_TYPES } from '../web/arrow-types.mjs';
 import { ARROWS, arrowType, BRACKETS } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -28,6 +28,8 @@ test('every menu label starts with one of the verbs, in sentence case', () => {
 const LONE_SHIFT = {
   // Copy link to this subgraph: the key Copy link to this node has, where Y (Copy link) is a node's only.
   'shift+y': ['subgraph', 'box'],
+  // Run script: Shift guards a key that runs a script, and plain X stays free.
+  'shift+x': ['node'],
 };
 
 test('keys are unique within a menu, each one key, Shift only with a letter the menu has (that item the other way round)', () => {
@@ -163,9 +165,9 @@ test('every icon is the shared frame around at least one drawing', () => {
 });
 
 test('while the code is being edited only the view items apply, and the rest say why', () => {
-  const locked = { edgesOk: true, selfLoop: false, nameWhy: null, locked: true, link: { url: 'https://example.com/', app: false }, linkText: 'https://example.com/', linkWritten: 'https://example.com/' };
+  const locked = { edgesOk: true, selfLoop: false, nameWhy: null, locked: true, link: { url: 'https://example.com/', app: false }, linkText: 'https://example.com/', linkWritten: 'https://example.com/', script: 'charge()' };
   const live = Object.values(MENUS).flat().filter((item) => applies(item, locked)).map((item) => item.action);
-  assert.deepEqual([...new Set(live)].sort(), ['center-view', 'collapse-subgraph', 'copy-link', 'copy-node', 'copy-node-link', 'copy-subgraph', 'copy-subgraph-link', 'cut-node', 'cut-subgraph', 'expand-subgraph', 'find', 'fit-edge', 'fit-node', 'fit-subgraph', 'fit-view', 'flip', 'open-link', 'open-link-tab', 'page-theme', 'rotate', 'show-link']);
+  assert.deepEqual([...new Set(live)].sort(), ['center-view', 'collapse-subgraph', 'copy-link', 'copy-node', 'copy-node-link', 'copy-subgraph', 'copy-subgraph-link', 'cut-node', 'cut-subgraph', 'expand-subgraph', 'find', 'fit-edge', 'fit-node', 'fit-subgraph', 'fit-view', 'flip', 'open-link', 'open-link-tab', 'page-theme', 'rotate', 'run-script', 'show-link']);
   for (const item of Object.values(MENUS).flat()) {
     if (!applies(item, locked)) assert.equal(whyNot(item, locked), LOCKED, item.action);
   }
@@ -364,6 +366,16 @@ test('Open link (L) and Open link in new tab (Shift+L) in the node menu only: gr
     assert.equal(whyNot(item, none), NO_LINK);
     assert.equal(item.title?.(none), null);
   }
+});
+
+test('Run script (Shift+X) in the node menu: grayed, saying why, on a node with no script', () => {
+  const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS.node.find((i) => i.action === 'run-script'));
+  assert.equal(item.key, 'shift+x');
+  assert.deepEqual(GLOBAL_KEYS['shift+x'], ['run-script']);
+  const base = { edgesOk: true, selfLoop: false, nameWhy: null };
+  assert.equal(applies(item, { ...base, script: 'charge("eu", 3)' }), true);
+  assert.equal(applies(item, { ...base, script: null }), false);
+  assert.equal(whyNot(item, { ...base, script: null }), NO_SCRIPT);
 });
 
 test('Show link (Ctrl+Shift+L) in the node menu: any address, grayed as Open link is with none or a script', () => {

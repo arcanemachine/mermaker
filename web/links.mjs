@@ -1,8 +1,16 @@
 // A node's link (`click A href "…"`), as Mermaid reads it: what Open link does with it, or why it does nothing. No DOM.
 
 export const NO_LINK = 'No link on this node.';
-/** A callback, or a `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
+/** A `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
 export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
+/** A callback (`click A charge`): a script for Run script, not a link. */
+export const CALLBACK = 'This node has a script, not a link. Run script (Shift+X) runs it.';
+/** Edit link on a callback, which a link would overwrite. */
+export const CALLBACK_EDIT = 'This node has a script, not a link. Change it in the code.';
+/** Run script on a node with no callback. */
+export const NO_SCRIPT = 'This node has no script to run.';
+/** Run script with nothing on the page handling `mermaker:run`. */
+export const NO_HANDLER = "Nothing on this page ran this node's script. A userscript or an extension must listen for mermaker:run.";
 export const NOT_MMD = 'Mermaker opens only .mmd files from a link to a path.';
 
 /**
@@ -34,7 +42,7 @@ export function linkTone(/** @type {string} */ fill) {
  * @returns {LinkTarget}
  */
 export function linkTarget(/** @type {string | undefined} */ link, /** @type {boolean} */ click, /** @type {string} */ file) {
-  if (!link) return { why: click ? SCRIPT_LINK : NO_LINK };
+  if (!link) return { why: click ? CALLBACK : NO_LINK };
   if (link === 'about:blank') return { why: SCRIPT_LINK };
   const scheme = /^([a-z][a-z\d+.-]*):/i.exec(link)?.[1].toLowerCase();
   if (scheme === 'http' || scheme === 'https') return { url: link, app: false };

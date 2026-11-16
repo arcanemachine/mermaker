@@ -3,11 +3,11 @@
 // its menu and is shown at the item's right, a key the page also uses outside menus runs the same action here, and only
 // an item that waits for a further click or typing (mode) ends in "…".
 
-import { NO_LINK, SCRIPT_LINK } from './links.mjs';
+import { CALLBACK, CALLBACK_EDIT, NO_LINK, NO_SCRIPT } from './links.mjs';
 
 /** The verbs menu labels start with: Add makes a thing, Edit changes one of its properties, Remove clears one, Delete
  * removes the thing. */
-export const VERBS = ['Add', 'Insert', 'Edit', 'Remove', 'Delete', 'Connect', 'Reverse', 'Reassign', 'Move', 'Merge', 'Open', 'Show', 'Find', 'Fit', 'Center', 'Copy',
+export const VERBS = ['Add', 'Insert', 'Edit', 'Remove', 'Delete', 'Connect', 'Reverse', 'Reassign', 'Move', 'Merge', 'Open', 'Show', 'Find', 'Fit', 'Center', 'Copy', 'Run',
   'Cut', 'Paste',
   'Download', 'Collapse', 'Expand', 'Rotate', 'Flip', 'Enable', 'Disable'];
 
@@ -27,6 +27,7 @@ export const GLOBAL_KEYS = {
   'ctrl+shift+l': ['show-link'],
   y: ['copy-link'],
   'shift+y': ['copy-node-link', 'copy-subgraph-link'],
+  'shift+x': ['run-script'],
   k: ['edit-link'],
   s: ['add-subgraph'],
   enter: ['edit-node', 'edit-edge', 'edit-title'],
@@ -100,6 +101,7 @@ export const LOCKED = 'The code is being edited. Save or cancel the code to edit
  * @property {string | null} [linkText] the selected node's link as Mermaid read it, or null for none
  * @property {boolean} [linkScript] the selected node's `click` line, as the file writes it, runs a script
  * @property {string | null} [linkWritten] the selected node's link as the file writes it, or null for none
+ * @property {string | null} [script] the call the selected node's `click` line makes, or null for none
  */
 
 /** Whether `item` can be chosen in `state`. */
@@ -236,9 +238,11 @@ export const MENUS = {
     { action: 'open-link-tab', label: 'Open link in new tab', key: 'shift+l', view: true, ...linkItem },
     { action: 'show-link', label: 'Show link', key: 'ctrl+shift+l', view: true, ...showLinkItem },
     { action: 'copy-link', label: 'Copy link', key: 'y', view: true, applies: (s) => Boolean(s.linkWritten),
-      why: (s) => (s.linkScript ? SCRIPT_LINK : NO_LINK) },
+      why: (s) => (s.linkScript ? CALLBACK : NO_LINK) },
     { action: 'copy-node-link', label: 'Copy link to this node', key: 'shift+y', view: true },
-    { action: 'edit-link', label: 'Edit link', key: 'k', applies: (s) => !s.linkScript, why: () => SCRIPT_LINK },
+    { action: 'edit-link', label: 'Edit link', key: 'k', applies: (s) => !s.linkScript, why: () => CALLBACK_EDIT },
+    // Shift guards a key that runs a script; outside menus it takes two presses, as Shift+D does.
+    { action: 'run-script', label: 'Run script', key: 'shift+x', view: true, applies: (s) => Boolean(s.script), why: () => NO_SCRIPT },
     { action: 'copy-node', label: 'Copy node', key: 'ctrl+c', separated: true, view: true },
     { action: 'cut-node', label: 'Cut node', key: 'ctrl+x', view: true },
     ...pasteItems(),

@@ -449,9 +449,20 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - A linked node looks like a link, by a stylesheet rule only, nothing drawn: its label underlined, since WCAG asks a
   link to differ by more than color, and blue where the diagram gives the label no color of its own, so the diagram's
   styling always wins. The blue is chosen by the node's own fill, light or dark, each keeping 4.5:1. A callback
-  (Mermaid's `clickable` too) gets no look: Mermaker never runs it. A label the diagram underlines itself looks the same
+  (Mermaid's `clickable` too) gets no look: a click selects, and only Run script runs it. A label the diagram underlines itself looks the same
   (accepted: rare, and L says which). No mark beside the label (↗): after the text it is clipped on snug labels, and
   nothing can be added to SVG text labels.
+- Run script (Shift+X) hands a node's callback (`click A charge`, `click A call charge("eu", 3)`) to the user's own
+  scripts, never running it itself: Mermaker keeps Mermaid's strict security level, under which Mermaid binds no
+  callback, and it never calls a page global by a name the file gives (`window[name]`), since whoever writes a served
+  file would then choose what runs. It sends a cancelable `mermaker:run` event on the document instead, and a
+  userscript or an extension does the work; with none that takes it, a warning says so. Events, not a registry or a
+  global: an extension's content script sees the page's DOM events but not its globals, and an event needs no load
+  order. The details are plain JSON so that they reach an isolated world whole. `mermaker:select` follows the
+  selection the same way, sent when what it would say changes (another item, or the selected one edited), not on
+  every redraw. Shift guards the key, and outside menus it takes two presses, as Shift+D does: running a script can
+  do anything, and plain X stays free. The first press names the key, not the callback, which the user can read in
+  Show link. The arguments are read from the file as Mermaid reads them, with the node's id when there are none.
 - Copy and paste are the system's own keys, Ctrl+C and Ctrl+V (⌘ on a Mac, as undo is; Option does not stand in,
   as it does for the arrows, since Option+C and Option+V are no copy or paste). The page takes them only when it acts, on the diagram
   with no text selected: Ctrl+C with a node or a subgraph selected, Ctrl+V with something copied or cut. Otherwise the browser's own copy and

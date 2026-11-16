@@ -84,6 +84,9 @@ syntax and features as far as they go, and add no markers, comments or metadata 
   subgraph, `payment.mmd?node=charge` with its "charge" node selected). The user follows it with L, in the same page, and comes back with the browser's Back. The
   other file must be one the server serves (`MERMAKER_ROOTS`). A web or `vscode://` address works too, and
   opens outside the page.
+- A node can name a script instead of a link (`click charge call charge("eu", 3)`, Mermaid's callback).
+  Mermaker never runs it itself: the user's Run script (Shift+X) hands it to their own userscript or
+  extension, if they have one.
 - To have a subgraph start collapsed, drawn as one box, add Mermaid's `pay@{ view: collapsed }` on a line
   of its own after the subgraph's `end`. The user can expand it in the page without changing the file.
 - Mermaid refuses a diagram with more than 500 edges or 50,000 characters of code, leaving out comments

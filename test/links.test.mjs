@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { itemAddress, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
+import { CALLBACK, itemAddress, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
 
 const FILE = '/diagrams/flows/order.mmd';
 
@@ -47,7 +47,7 @@ test('any other scheme is refused, naming it', () => {
 
 test('no link is a callback when the node has a click line, and about:blank is a script link', () => {
   assert.deepEqual(linkTarget(undefined, false, FILE), { why: NO_LINK });
-  assert.deepEqual(linkTarget(undefined, true, FILE), { why: SCRIPT_LINK });
+  assert.deepEqual(linkTarget(undefined, true, FILE), { why: CALLBACK });
   assert.deepEqual(linkTarget('about:blank', true, FILE), { why: SCRIPT_LINK });
 });
 

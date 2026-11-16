@@ -17,11 +17,11 @@ import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, writtenScript, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
-import { linkEdit, linkTarget, linkTone } from './links.mjs';
+import { linkEdit, linkTarget, linkTone, NO_HANDLER } from './links.mjs';
 import { limitOf, limitSentence } from './limits.mjs';
 import { createPicker } from './picker.mjs';
 import { THEMES } from './theme.mjs';
@@ -418,8 +418,14 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       path.before(glow);
     }
   }
-  /** @type {Item | null} the item a first Shift+D (or Shift+Delete, Shift+Backspace) armed: the same key again deletes */
+  /**
+   * The item a first Shift+D (or Shift+Delete, Shift+Backspace) or Shift+X armed, and which of the two: a key of the
+   * same family again deletes it, or runs its script.
+   * @type {{ item: Item, family: 'delete' | 'run' } | null}
+   */
   let armed = null;
+  /** Whether a delete is armed on `sel`. */
+  const armedDelete = (/** @type {Item | null} */ sel) => armed?.family === 'delete' && same(armed.item, sel);
   /** The menu item of the Shift delete on `sel`: Delete subgraph and contents, or Delete node and children; an edge has none. */
   const shiftAction = (/** @type {Item} */ sel) => (sel.kind === 'subgraph' ? 'delete-subgraph-contents' : sel.kind === 'node' ? 'delete-node-children' : null);
   /**
@@ -448,7 +454,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     for (const e of drawn('[data-page-doomed-box]')) e.removeAttribute('data-page-doomed-box');
     if (!selected || selected.kind === 'title' || picking) return;
     const action = shiftAction(selected);
-    if (!(armed && same(armed, selected)) && (!action || menuFocus !== action)) return;
+    if (!armedDelete(selected) && (!action || menuFocus !== action)) return;
     const item = action ? MENUS[isBox(selected) ? 'box' : selected.kind].find((i) => i.action === action) : undefined;
     if (item && !applies(item, menuState())) return;
     const sgs = subgraphs(shownText);
@@ -506,7 +512,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     shiftHeld = on;
     document.documentElement.toggleAttribute('data-shift', on);
   };
-  /** Let go of an armed Shift delete: its marks and its notice go. */
+  /** Let go of an armed Shift delete or script: its marks and its notice go. */
   function disarm() {
     if (!armed) return;
     armed = null;
@@ -516,9 +522,13 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   /** Whether `e` is Shift+D, Shift+Delete or Shift+Backspace, the keys that arm and confirm a Shift delete. */
   const shiftDeleteKey = (/** @type {KeyboardEvent} */ e) => e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey
     && ['d', 'delete', 'backspace'].includes(e.key.toLowerCase());
-  // Any other key but Shift itself, and any pointer press, lets go of an armed delete; Escape does it as its first step.
+  /** Whether `e` is Shift+X, the key that arms and confirms Run script. */
+  const shiftRunKey = (/** @type {KeyboardEvent} */ e) => e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey
+    && e.key.toLowerCase() === 'x';
+  // Any other key but Shift itself, and any pointer press, lets go of what is armed; Escape does it as its first step.
+  // A key of the other family lets go too, then arms its own.
   window.addEventListener('keydown', (e) => {
-    if (armed && e.key !== 'Shift' && e.key !== 'Escape' && !shiftDeleteKey(e)) disarm();
+    if (armed && e.key !== 'Shift' && e.key !== 'Escape' && !(armed.family === 'delete' ? shiftDeleteKey : shiftRunKey)(e)) disarm();
   }, true);
   window.addEventListener('pointerdown', () => disarm(), true);
   window.addEventListener('keydown', (e) => holdShift(e.shiftKey || e.key === 'Shift'), true);
@@ -640,6 +650,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'copy-node-link': () => {
       ui.copyLink(ui.itemAddress({ node: selection().id })).then((ok) => ok && ui.announce('Copied the link to this node'));
     },
+    'run-script': () => runScript(),
     'copy-subgraph-link': () => {
       ui.copyLink(ui.itemAddress({ part: selection().id })).then((ok) => ok && ui.announce('Copied the link to this subgraph'));
     },
@@ -759,7 +770,61 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       linkText: selected?.kind === 'node' ? links.get(selected.id) ?? null : null,
       linkScript: selected?.kind === 'node' && writtenLink(shownText, selected.id) === 'script',
       linkWritten: selected?.kind === 'node' ? linkWrittenOf(selected.id) : null,
+      script: selected?.kind === 'node' ? writtenScript(shownText, selected.id)?.call ?? null : null,
     };
+  }
+
+  // Page events, for the user's own scripts (userscripts, extensions; docs/guide.md): `mermaker:select` when what is
+  // selected changes, `mermaker:run` from Run script. Their details are plain JSON, so a content script in an isolated
+  // world gets them whole.
+  /**
+   * What the page events say about `item`: the file (the server's path), the item, its label as drawn, an edge's ends,
+   * and a node's link and script as the file writes them.
+   */
+  function itemDetail(/** @type {Item} */ item) {
+    const script = item.kind === 'node' ? writtenScript(shownText, item.id) : null;
+    // As drawn: an edge to a node hidden in a collapsed subgraph ends at that subgraph's box.
+    const edge = item.kind === 'edge' ? shownEdge(item.id) : undefined;
+    const label = item.kind === 'title' ? titleEl()?.textContent
+      : item.kind === 'edge' ? edgeEls(item.id).find((x) => x.matches('g.edgeLabel'))?.textContent : labelEl(item)?.innerText;
+    return JSON.parse(JSON.stringify({
+      file, kind: item.kind, id: item.id, label: (label ?? '').trim().replace(/\s+/g, ' '),
+      from: edge?.from ?? null, to: edge?.to ?? null,
+      link: item.kind === 'node' ? linkWrittenOf(item.id) : null,
+      call: script?.call ?? null, name: script?.name ?? null, args: script?.args ?? null,
+    }));
+  }
+  /** The last `mermaker:select` detail sent, as JSON: a redraw that changes nothing about the selection sends none. */
+  let toldSelected = 'null';
+  function tellSelected(/** @type {Item | null} */ item) {
+    const detail = item ? itemDetail(item) : null;
+    const json = JSON.stringify(detail);
+    if (json === toldSelected) return;
+    toldSelected = json;
+    document.dispatchEvent(new CustomEvent('mermaker:select', { detail }));
+  }
+  /** Run script: hand the selected node's script to the page's own scripts, saying so if none takes it. */
+  function runScript() {
+    const detail = itemDetail(selection());
+    if (!detail.call) return;
+    const handled = !document.dispatchEvent(new CustomEvent('mermaker:run', { cancelable: true, detail }));
+    if (handled) ui.announce(`Ran ${detail.call}`); else ui.notice(NO_HANDLER, 'warning');
+  }
+  /**
+   * Shift+X, two presses: the first asks for Shift+X again, which runs the node's script; a key repeat never does.
+   * Grayed as the menu grays it, saying why.
+   */
+  function shiftRun() {
+    if (selected?.kind !== 'node' || picking) return false;
+    if (repeating) return true;
+    const sel = selected;
+    const item = /** @type {import('./menu-items.mjs').MenuItem} */ (MENUS.node.find((i) => i.action === 'run-script'));
+    const state = menuState();
+    if (!applies(item, state)) { refuse(whyNot(item, state)); return true; }
+    if (armed?.family === 'run' && same(armed.item, sel)) { disarm(); runScript(); return true; }
+    armed = { item: sel, family: 'run' };
+    ui.notice('Press Shift+X again to run the script in this node.', 'info');
+    return true;
   }
 
   /** Node `id`'s link as the file writes it, or null for none or a callback. */
@@ -958,6 +1023,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     selected = sel;
     keepSelection(sel);
     ui.selected(sel);
+    tellSelected(sel);
     for (const e of elsOf(sel)) mark(e, 'data-page-selected');
     if (sel.kind === 'edge') markEnd();
     if (!keepMode) picking = null;
@@ -1106,6 +1172,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     selected = null;
     if (!keep) keepSelection(null);
     ui.selected(null);
+    tellSelected(null);
     picking = null;
     closeMenus();
     glows();
@@ -1344,10 +1411,10 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     if (repeating) return true;
     const sel = selected;
     const how = sel.kind === 'subgraph' ? 'contents' : sel.kind === 'node' ? 'children' : 'one';
-    if (armed && same(armed, sel)) { disarm(); deleteSelected(how); return true; }
+    if (armedDelete(sel)) { disarm(); deleteSelected(how); return true; }
     const doomed = edgesOk && !locked ? doomedBy(sel) : null;
     if (!doomed) { deleteSelected(how); return true; }   // refused, saying why
-    armed = sel;
+    armed = { item: sel, family: 'delete' };
     glowDoomed();
     const n = doomed.nodes.length;
     const what = sel.kind === 'subgraph' ? counted(n, 'node') : n ? `its ${n} ${n === 1 ? 'child' : 'children'}` : null;
@@ -1453,7 +1520,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   /** @type {[string, () => boolean][]} Escape's steps on the diagram, in order */
   const ESCAPE = [
-    ['armed delete', () => Boolean(armed) && (disarm(), true)],
+    ['armed key', () => Boolean(armed) && (disarm(), true)],
     ['pick', () => Boolean(picking) && (cancelPick(), true)],
     // A cut is a pick spread over time: Escape drops it first, the selection kept; a click away does not.
     ['cut', () => Boolean(cut) && (dropCut(), ui.announce('Cut dropped'), true)],
@@ -1535,6 +1602,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'shift+l': () => itemKey('open-link-tab'),
     'ctrl+shift+l': () => itemKey('show-link'),
     k: () => itemKey('edit-link'),
+    'shift+x': () => shiftRun(),
     // Y copies a node's link; Shift+Y the address of the node or subgraph itself. An address cannot name an edge.
     y: () => itemKey('copy-link'),
     'shift+y': () => {

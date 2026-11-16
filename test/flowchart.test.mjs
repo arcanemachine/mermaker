@@ -10,7 +10,7 @@ import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
-  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink,
+  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink, writtenScript,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -1562,6 +1562,23 @@ test('hasNode: a node named in the body, not one only in a label or a comment', 
 test('hasClick finds a click line naming the node, a link or a callback, and no other line', () => {
   const text = 'flowchart TD\n  A --> B --> C\n  click A href "a.mmd"\n  click B callback\n  style C fill:#eef\n';
   assert.deepEqual(['A', 'B', 'C'].map((id) => hasClick(text, id)), [true, true, false]);
+});
+
+test('writtenScript reads a callback as Mermaid does: its call, name and arguments, or the node id with none', () => {
+  const on = (line, id = 'A') => writtenScript(`flowchart TD\n  A --> B\n  ${line}\n`, id);
+  assert.deepEqual(on('click A charge'), { call: 'charge', name: 'charge', args: ['A'] });
+  assert.deepEqual(on('click A charge "Charge the card"'), { call: 'charge', name: 'charge', args: ['A'] });
+  assert.deepEqual(on('click A call charge()'), { call: 'charge()', name: 'charge', args: ['A'] });
+  assert.deepEqual(on('click A call charge( )'), { call: 'charge( )', name: 'charge', args: ['A'] });
+  assert.deepEqual(on('click A call charge("eu", 3)'), { call: 'charge("eu", 3)', name: 'charge', args: ['eu', '3'] });
+  // A comma inside quotes stays in its argument.
+  assert.deepEqual(on('click A call charge("a, b", x) "tip"').args, ['a, b', 'x']);
+  // A line naming several nodes passes each its own id.
+  assert.deepEqual(on('click A,B call f()', 'B'), { call: 'f()', name: 'f', args: ['B'] });
+  // Links, `call` without parentheses (not a form Mermaid reads), and no click line: no script.
+  for (const line of ['click A href "x.mmd"', 'click A "x.mmd"', 'click A call charge', '%% none']) assert.equal(on(line), null, line);
+  // The last click line naming the node is the one Mermaid takes.
+  assert.equal(on('click A charge\n  click A href "x.mmd"'), null);
 });
 
 test('writtenLink reads the address as written from the last click line naming the node, javascript: too; a callback is a script', () => {
