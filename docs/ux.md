@@ -16,7 +16,7 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   Copy SVG and Download SVG show what you see, collapse included. H toggles it, separate from O and I, which move: I
   on a collapsed subgraph expands it to go in, and O never collapses (moving out would hide where you were). Escape
   never expands.
-- Mermaid's size limits (`maxEdges`, `maxTextSize`) are merma's settings, never the file's: Mermaid lets only the page
+- Mermaid's size limits (`maxEdges`, `maxTextSize`) are Mermaker's settings, never the file's: Mermaid lets only the page
   that loads it raise them. Over one, the last good render stays, and the error names the setting, not Mermaid's
   advice to call `mermaid.initialize`. The text limit counts what the page draws, so the lines that collapse and turn
   append can push a file just under the limit over it; the page then draws the file as written, with a warning.
@@ -36,14 +36,14 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   an edge written inside a subgraph block when its new end is named outside that block: an edge line pulls both its ends
   into its block, so the line moves out, after the last edge, and its `linkStyle` number goes with it (the others after
   it move down one).
-- Colors are presets only (a few things done well), each a `classDef` of merma's own name (`merma-blue`)
+- Colors are presets only (a few things done well), each a `classDef` of Mermaker's own name (`mermaker-blue`)
   and a `class` line at the end, so the node's own lines are untouched and a file's own class names are never taken.
   Mermaid draws a node's last class over the others, whatever order the `classDef`s are in, so a color is always its
-  node's last class: changed in place when merma's line already is, else moved to the end. merma writes a `classDef`
+  node's last class: changed in place when Mermaker's line already is, else moved to the end. Mermaker writes a `classDef`
   only where the file has none by that name, and removes only its own, once nothing names it and it is exactly as
-  merma wrote it, so a color changed by hand stays as it was. A paste writes the `classDef` its colors need,
+  Mermaker wrote it, so a color changed by hand stays as it was. A paste writes the `classDef` its colors need,
   since a class with none draws plain. A `style` line setting a fill, border or text color draws over any class, so
-  the colors are grayed there, with the reason, and merma never removes the file's `style` line. One set serves both
+  the colors are grayed there, with the reason, and Mermaker never removes the file's `style` line. One set serves both
   page themes, each with its text color set: a per-theme set would mean drawing the file other than as Mermaid draws
   it, and Copy SVG differing from the file.
 - A blank file (nothing but blank lines, comments and a closed frontmatter) is an empty flowchart, not a syntax error:
@@ -55,7 +55,7 @@ the page, each with its reason. What does not: what each control does (`docs/gui
 
 ## The diagram looks as Mermaid draws it
 
-A design goal: with nothing selected, the diagram looks as Mermaid draws it from the file, and merma's own
+A design goal: with nothing selected, the diagram looks as Mermaid draws it from the file, and Mermaker's own
 differences are kept few. Each one is listed here:
 
 - A linked node's label is underlined, and blue unless the diagram colors it (Links between diagrams, below).
@@ -69,7 +69,7 @@ differences are kept few. Each one is listed here:
 
 The page theme: System, the default, follows the system's setting; Light and Dark override it (following the system
 alone would eventually annoy), kept by the browser for every tab. Dark darkens the page's own parts and draws the
-diagram with Mermaid's dark themes, which merma asks for and never writes into the file. The marks keep their colors,
+diagram with Mermaid's dark themes, which Mermaker asks for and never writes into the file. The marks keep their colors,
 chosen to read on either: a selected node or subgraph is marked by a band around it that keeps its own fill, border and
 text (an edit's colors show after it), find's current match brings its own dark text with its fill, and a link's blue
 follows the node's fill. The label box, the notices and the find bar (amber, as find's marks are) keep their light
@@ -92,7 +92,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   `test/menu-items.test.mjs` hold the order and the length.
 
 - Mermaid's word wherever it has one: node, edge, label, shape, subgraph, title, direction, arrow type, length. A word
-  of merma's own needs a reason, given in `GLOSSARY.md`. Readers who know Mermaid should not have to translate.
+  of Mermaker's own needs a reason, given in `GLOSSARY.md`. Readers who know Mermaid should not have to translate.
 - No em dashes in the page's text: a colon or parentheses instead ("Current: Diamond (Decision)").
 - Menu labels are in sentence case and read verb + noun, from a fixed set of verbs, so one label predicts the next:
 
@@ -289,8 +289,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   a large subgraph) is shown whole, zoomed out just enough and centered, as find frames its matches (part of a line is
   neither the line nor the end that matters). An edge is shown with its label. A view moved that way counts as yours, as
   after a drag: a change in the window's size no longer refits it.
-- The view is yours: merma moves it on its own only to bring something into view, and once you move it yourself, nothing
-  merma does afterwards puts it back. Find (/) is the case in point. It matches the whole diagram, on screen or not, and
+- The view is yours: Mermaker moves it on its own only to bring something into view, and once you move it yourself, nothing
+  Mermaker does afterwards puts it back. Find (/) is the case in point. It matches the whole diagram, on screen or not, and
   typing never moves the view: the current match is the best one wholly on screen, else the best, and the count says how
   many are not ("2 of 5, 3 off screen"). Tab and Shift+Tab step; the first of them with any match off screen also moves
   the view once to show them all, as a fit puts the diagram: centered at the zoom it has, or zoomed out just enough,
@@ -419,10 +419,10 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   Escape step. It may zoom in up to twice actual size, the whole diagram never past actual size, so a small subgraph
   fills the window.
 - Links between diagrams (a dev tool: usefulness over security, within reason). Open link reads a
-  node's link from Mermaid's own reading of the file, so merma keeps Mermaid's strict security level (loose would
+  node's link from Mermaid's own reading of the file, so Mermaker keeps Mermaid's strict security level (loose would
   allow HTML labels), and it opens only http, https and vscode addresses and paths to `.mmd` files. A click never
   follows a link, since a click selects. A `.mmd` link opens in place as a history entry, so the browser's Back and
-  Forward are the jump list (rather than merma keys such as Ctrl+I and Ctrl+O). The page switches only once the
+  Forward are the jump list (rather than Mermaker keys such as Ctrl+I and Ctrl+O). The page switches only once the
   server has given the new file's text, so the address never names a file that is not shown. A link is refused,
   rather than waiting, while an edit is under way, since a jump minutes after the press reads as broken. Back and
   Forward cannot be refused, since the address has already changed, so they wait, with a notice when a code draft
@@ -432,7 +432,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
   and copied, a hover tip's cannot), and selecting a linked node says it aloud ("…selected, links to …"), so the
   keyboard and a screen reader learn what the mouse sees. No hover tip on the node: the notice does the job.
-- Edit link asks in the browser's own prompt (keep it simple), not a box of merma's: a link is one line of
+- Edit link asks in the browser's own prompt (keep it simple), not a box of Mermaker's: a link is one line of
   text, rarely changed. Emptying it removes the link, as an emptied edge label does, so there is no Remove link
   item. It edits the link as the file writes it, never Mermaid's sanitized reading, so a `javascript:` link can be
   fixed; only a callback line is left to the code, which a link would overwrite. In an embedded page from another
@@ -440,7 +440,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - A linked node looks like a link, by a stylesheet rule only, nothing drawn: its label underlined, since WCAG asks a
   link to differ by more than color, and blue where the diagram gives the label no color of its own, so the diagram's
   styling always wins. The blue is chosen by the node's own fill, light or dark, each keeping 4.5:1. A callback
-  (Mermaid's `clickable` too) gets no look: merma never runs it. A label the diagram underlines itself looks the same
+  (Mermaid's `clickable` too) gets no look: Mermaker never runs it. A label the diagram underlines itself looks the same
   (accepted: rare, and L says which). No mark beside the label (↗): after the text it is clipped on snug labels, and
   nothing can be added to SVG text labels.
 - Copy and paste are the system's own keys, Ctrl+C and Ctrl+V (⌘ on a Mac, as undo is; Option does not stand in,
@@ -508,7 +508,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   another tab can still write the file. That is what saving over the version Edit started from is for: a change since is
   refused, never overwritten, and the draft kept; the header says so before you try.
 - While editing, a new version of the file does not replace the draft, and the page does not reload itself for a new
-  build of merma. Save and Cancel only: Ctrl+Z in the field takes back typing, and Cancel shows the file as it is now,
+  build of Mermaker. Save and Cancel only: Ctrl+Z in the field takes back typing, and Cancel shows the file as it is now,
   so there is nothing for a Revert or a Reload to do. Cancel asks first only when the draft differs. Save and Cancel
   keep the selection while its item is still drawn, and Undo of a saved draft selects nothing.
 
@@ -557,11 +557,11 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   the screen to point back to. Once the message has named the thing, "it" is fine ("This subgraph is collapsed.
   Expand it first (H)."). `test/messages.test.mjs` catches the usual shapes of the mistake.
 - One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash. Text
-  merma did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
+  Mermaker did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
 - Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally.
-- merma refuses only what it cannot write correctly, or what would break the file (a subgraph with no id that the file
+- Mermaker refuses only what it cannot write correctly, or what would break the file (a subgraph with no id that the file
   already names by Mermaid's name for it, `style subGraph1 …`, which an edge would have to name); a legal edit that
-  Mermaid draws badly is yours to make, with Undo as the net (a legal edit is not merma's to refuse). A subgraph
+  Mermaid draws badly is yours to make, with Undo as the net (a legal edit is not Mermaker's to refuse). A subgraph
   connected to itself is allowed, though Mermaid draws it as a frame round the box and may rearrange what is inside.
 - A mode's notice (a pick's, the code panel's while the code is being edited) stays while the mode lasts;
   what is refused in it shows in a row under it, one at most, a second replacing the first, and goes with the next key
@@ -575,7 +575,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   - **warning** (amber): you asked, and it was refused, or kept back, with nothing lost (trying something
     not allowed is not just information): a grayed item's key or click, Enter on an edge in Connect to…, "Deleting a
     subgraph isn't supported yet.", an emptied label kept on a click away, a node kept because the file changed;
-    merma is unable to match the edges, so an edit could hit the wrong one (the file is at risk).
+    Mermaker is unable to match the edges, so an edit could hit the wrong one (the file is at risk).
   - **error** (red): something you tried did not happen: "Your change was not saved. …", an undo refused because the file changed, an
     empty label on Enter, a press while another edit saves.
 - The colors come in pairs, a background and a text color that reads on it (Accessibility: contrast), one pair per

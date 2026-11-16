@@ -1106,7 +1106,7 @@ test('setShape and shapeOf go by the last mention with a shape, as Mermaid does'
   assert.equal(setShape(mixed, 'A', 'hex').text, 'flowchart TD\n  A@{ shape: doc }\n  A{{x}} --> B\n  A@{ label: "y" }\n');
 });
 
-test('shapeOf reads brackets, @{ shape }, and bare nodes as rect; a name merma does not list as written', () => {
+test('shapeOf reads brackets, @{ shape }, and bare nodes as rect; a name Mermaker does not list as written', () => {
   const src = fixture('05-chains-shapes.mmd');
   const expected = { A: 'rect', B: 'circle', C: 'hex', D: 'lean-r', E: 'lean-l', F: 'odd', G: 'fr-rect', H: 'stadium', I: 'dbl-circ', J: 'trap-b', K: 'trap-t' };
   for (const [id, at] of Object.entries(expected)) assert.equal(shapeOf(src, id), at, id);

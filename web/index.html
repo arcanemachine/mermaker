@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="merma-build" content="{{MERMA_BUILD}}">
-  <meta name="merma-max-edges" content="{{MERMA_MAX_EDGES}}">
-  <meta name="merma-max-text" content="{{MERMA_MAX_TEXT}}">
-  <title>merma</title>
+  <meta name="mermaker-build" content="{{MERMAKER_BUILD}}">
+  <meta name="mermaker-max-edges" content="{{MERMAKER_MAX_EDGES}}">
+  <meta name="mermaker-max-text" content="{{MERMAKER_MAX_TEXT}}">
+  <title>Mermaker</title>
   <script>
     // The look, set before the page paints: the one chosen in this browser, else the system's (web/theme.mjs holds
     // the rule and the key; main.mjs keeps it current).
     {
       let chosen = null;
-      try { chosen = localStorage.getItem('merma:theme'); } catch { /* storage unavailable: the system's look */ }
+      try { chosen = localStorage.getItem('mermaker:theme'); } catch { /* storage unavailable: the system's look */ }
       document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen
         : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
@@ -21,7 +21,7 @@
 </head>
 <body>
   <header>
-    <h1>merma</h1>
+    <h1>Mermaker</h1>
     <div class="paths"><span class="path" id="path"></span><span class="path host" id="host"></span></div>
     <div class="right"><span class="status" id="status">loading…</span><span class="toast" id="toast"></span></div>
   </header>
@@ -32,7 +32,7 @@
     <div id="diagram" tabindex="0" role="application" aria-label="Diagram">
       <div id="stage"></div>
       <div id="welcome" hidden>
-        <p>Welcome to merma. This diagram is empty.</p>
+        <p>Welcome to Mermaker. This diagram is empty.</p>
         <p>To add a new node, <span data-pointer="fine">right-click anywhere on this page</span><span data-pointer="coarse" hidden>touch and hold the screen</span> to open the menu.</p>
         <p>To edit an existing Mermaid diagram, open the code panel with the <code>Code</code> button at the bottom of this page.</p>
       </div>

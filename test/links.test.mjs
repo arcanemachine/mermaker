@@ -26,7 +26,7 @@ test('web addresses open as they are; a vscode: address is an app link', () => {
 });
 
 test('any other scheme is refused, naming it', () => {
-  assert.deepEqual(linkTarget('mailto:someone@example.com', true, FILE), { why: 'merma does not open mailto: links.' });
+  assert.deepEqual(linkTarget('mailto:someone@example.com', true, FILE), { why: 'Mermaker does not open mailto: links.' });
 });
 
 test('no link is a callback when the node has a click line, and about:blank is a script link', () => {

@@ -20,11 +20,11 @@ test("a drawing is Mermaid's stand-in for a diagram over the text limit only whe
 
 test('each sentence names the limit in force and the setting that raises it', () => {
   assert.equal(limitSentence('edges', {}, false),
-    "The diagram has more edges than merma's limit of 500, so the last good render is shown. Start merma with MERMA_MAX_EDGES set higher.");
+    "The diagram has more edges than Mermaker's limit of 500, so the last good render is shown. Start Mermaker with MERMAKER_MAX_EDGES set higher.");
   assert.equal(limitSentence('edges', { maxEdges: 2000 }, true),
-    "Your change was not saved, because the diagram would have more edges than merma's limit of 2,000. Start merma with MERMA_MAX_EDGES set higher.");
+    "Your change was not saved, because the diagram would have more edges than Mermaker's limit of 2,000. Start Mermaker with MERMAKER_MAX_EDGES set higher.");
   assert.equal(limitSentence('text', {}, false),
-    "The diagram's code is longer than merma's limit of 50,000 characters, so the last good render is shown. Start merma with MERMA_MAX_TEXT set higher.");
+    "The diagram's code is longer than Mermaker's limit of 50,000 characters, so the last good render is shown. Start Mermaker with MERMAKER_MAX_TEXT set higher.");
   assert.match(limitSentence('text', { maxTextSize: 1000000 }, false), /limit of 1,000,000 characters/);
 });
 

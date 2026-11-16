@@ -70,8 +70,8 @@ export const GLOBAL_KEYS = {
 export const NO_EDGE_MATCH = "The drawn edges don't match the file's text (no edge match), so deleting could change the wrong "
   + 'edge. Delete the edge in the file.';
 
-/** Why a subgraph cannot be collapsed or expanded: Mermaid's subgraphs are not the ones merma reads in the text. */
-export const NO_SUBGRAPH_MATCH = "merma can't match this diagram's subgraphs to its text, so they can't be collapsed or "
+/** Why a subgraph cannot be collapsed or expanded: Mermaid's subgraphs are not the ones Mermaker reads in the text. */
+export const NO_SUBGRAPH_MATCH = "Mermaker can't match this diagram's subgraphs to its text, so they can't be collapsed or "
   + 'expanded here.';
 
 /** Why an edit does nothing while the code panel's draft holds the lock: the warning, and a grayed item's reason. */

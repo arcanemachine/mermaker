@@ -67,7 +67,7 @@ export function createFiles({ roots, pathMap = [] }) {
       }
       if (version(current) !== base) return 'conflict';
       const target = real(path);
-      const tmp = join(dirname(target), `.merma-${process.pid}-${Date.now()}.tmp`);
+      const tmp = join(dirname(target), `.mermaker-${process.pid}-${Date.now()}.tmp`);
       try {
         writeFileSync(tmp, text);
         chmodSync(tmp, statSync(target).mode & 0o777);

@@ -52,9 +52,9 @@ export function createCodePanel(els, hooks) {
   const { main, panel, code, dock: dockSelect, handle, close, toggle, diagram, edit, save, cancel, status, follow, band } = els;
   const local = store(() => localStorage);
   const session = store(() => sessionStorage);
-  const openKey = 'merma:code';
-  const dockKey = 'merma:code-dock';
-  const sizeKey = (/** @type {'x' | 'y'} */ a) => 'merma:code-size-' + a;
+  const openKey = 'mermaker:code';
+  const dockKey = 'mermaker:code-dock';
+  const sizeKey = (/** @type {'x' | 'y'} */ a) => 'mermaker:code-size-' + a;
 
   let open = session.get(openKey) === '1';
   const stored = local.get(dockKey);
@@ -230,7 +230,7 @@ export function createCodePanel(els, hooks) {
   // Follow selection (on by default, the browser's for every file): the selected item's lines, banded, the
   // caret at their start and scrolled into view when the selection changes. Never while the code has focus: the
   // caret there is the user's, and marks the place itself.
-  const followKey = 'merma:code-follow';
+  const followKey = 'mermaker:code-follow';
   follow.checked = local.get(followKey) !== 'off';
   follow.addEventListener('change', () => { local.set(followKey, follow.checked ? null : 'off'); refollow(true); });
   function placeBand() {

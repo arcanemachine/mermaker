@@ -104,7 +104,7 @@ test('an item that can be grayed says why', () => {
   }
 });
 
-test('arrow types: 1–9, 0, then the same with Shift, then none; every one is an arrow type merma can write, and every one of those is listed', () => {
+test('arrow types: 1–9, 0, then the same with Shift, then none; every one is an arrow type Mermaker can write, and every one of those is listed', () => {
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   assert.deepEqual(ARROW_TYPES.slice(0, 10).map((a) => [a.digit, Boolean(a.shift)]), digits.map((d) => [d, false]));
   assert.deepEqual(ARROW_TYPES.slice(10, 20).map((a) => [a.digit, a.shift]), digits.map((d) => [d, true]));
@@ -365,7 +365,7 @@ test('Show link (Ctrl+Shift+L) in the node menu: any address, grayed as Open lin
   assert.deepEqual(GLOBAL_KEYS['ctrl+shift+l'], ['show-link']);
   const base = { edgesOk: true, selfLoop: false, nameWhy: null };
   assert.equal(applies(item, { ...base, linkText: 'other.mmd' }), true);
-  assert.equal(applies(item, { ...base, linkText: 'mailto:a@example.com', link: { why: 'merma does not open mailto: links.' } }), true);
+  assert.equal(applies(item, { ...base, linkText: 'mailto:a@example.com', link: { why: 'Mermaker does not open mailto: links.' } }), true);
   assert.equal(applies(item, { ...base, linkText: 'about:blank', link: { why: SCRIPT_LINK } }), false);
   assert.equal(whyNot(item, { ...base, linkText: 'about:blank', link: { why: SCRIPT_LINK } }), SCRIPT_LINK);
   assert.equal(applies(item, { ...base, linkText: null }), false);

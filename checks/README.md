@@ -18,13 +18,13 @@ its old `linkStyle` style; for an edge edit, that every edge is in its place wit
 has the arrow type, drawn label and animation asked for; for a move, that the moved edge has its new end, its type, label and
 `linkStyle` style, at its place (where it was, or last), and the others are in order with theirs; for a move of a node's edges, that the
 edges are the same ones, those ends moved, each with its type, label and style; for a link, that the node has it and every other node the link it had; for a merge, that the node is gone
-and Mermaid draws as many edges as merma reads; for a move into or out of a subgraph (moveNode, moveSubgraph), that
+and Mermaid draws as many edges as Mermaker reads; for a move into or out of a subgraph (moveNode, moveSubgraph), that
 it is where it was sent and the edges are the same, each with its style; that blockOf reads where Mermaid draws every
 node of every fixture; for a shape, that the node has it, with its label and classes, and that
 no other node changed; for a label, that Mermaid reads the new one, with the node's shape and classes, and that no
 other node changed.
 
-1. Start merma with a root you can write to, and open any diagram in that root in a browser.
+1. Start Mermaker with a root you can write to, and open any diagram in that root in a browser.
 2. Write the cases next to it, as a `.mmd` file so the server will hand it to the page:
    `node checks/gen-cases.mjs > <that root>/_cases.json.mmd`
 3. In that page, run `checks/parse-check.js`: `pw-repl send eval --file=checks/parse-check.js`. It takes longer than
@@ -36,7 +36,7 @@ other node changed.
 
 After changing `web/shapes.mjs` or an icon: `checks/shapes.js` draws a node of every shape with Mermaid (12.2.0 parses
 a shape name it lacks, then fails to draw it), and every picker icon in the page, checking that each has a size and
-stays inside its frame. `pw-repl send eval --timeout=60s --file=checks/shapes.js` in any merma page; it returns the
+stays inside its frame. `pw-repl send eval --timeout=60s --file=checks/shapes.js` in any Mermaker page; it returns the
 failures, `[]` to pass.
 
 ## Mermaid's own ids for the fixtures

@@ -790,8 +790,8 @@ function readStatement(/** @type {string} */ line, /** @type {string} */ m, /** 
 // --- colors --------------------------------------------------------------------------------------------------
 
 /**
- * merma's color presets, in a fixed order (colors.mjs gives each its digit): a node's fill, border and text color, and
- * a subgraph's lighter `-box` set. Each is a `classDef` named `merma-<key>` or `merma-<key>-box`, so it never takes a
+ * Mermaker's color presets, in a fixed order (colors.mjs gives each its digit): a node's fill, border and text color, and
+ * a subgraph's lighter `-box` set. Each is a `classDef` named `mermaker-<key>` or `mermaker-<key>-box`, so it never takes a
  * file's own class name. The text color is always set, so a label stays readable in either page theme.
  * @type {Record<string, { node: [string, string, string], box: [string, string, string] }>}
  */
@@ -807,18 +807,18 @@ export const PRESETS = {
   pink: { node: ['#fce7f3', '#db2777', '#831843'], box: ['#fdf2f8', '#f472b6', '#831843'] },
 };
 
-/** The class a preset is written as: `merma-blue` on a node, `merma-blue-box` on a subgraph. */
+/** The class a preset is written as: `mermaker-blue` on a node, `mermaker-blue-box` on a subgraph. */
 export function presetClass(/** @type {string} */ key, /** @type {'node' | 'subgraph'} */ kind) {
-  return `merma-${key}${kind === 'subgraph' ? '-box' : ''}`;
+  return `mermaker-${key}${kind === 'subgraph' ? '-box' : ''}`;
 }
 
 /** The preset a class name is, as { key, kind }, or null for a class of the file's own. */
 function presetOf(/** @type {string} */ name) {
-  const m = name.match(/^merma-([a-z]+)(-box)?$/);
+  const m = name.match(/^mermaker-([a-z]+)(-box)?$/);
   return m && PRESETS[m[1]] ? { key: m[1], kind: m[2] ? 'subgraph' : 'node' } : null;
 }
 
-/** The `classDef` merma writes for preset class `name`, or null for any other name. */
+/** The `classDef` Mermaker writes for preset class `name`, or null for any other name. */
 function presetDef(/** @type {string} */ name) {
   const p = presetOf(name);
   if (!p) return null;
@@ -899,11 +899,11 @@ export function colorRefusal(/** @type {string} */ text, /** @type {string} */ i
 }
 
 /**
- * Give node or subgraph `id` the preset `key`, or with 'none' take merma's color off it. The color is a `class` line
- * at the end (`class A merma-blue`), the node's own lines untouched; a line of merma's that is the node's last class
- * is changed in place, else merma's lines for it go and a new one is appended, so the color is the last class and
+ * Give node or subgraph `id` the preset `key`, or with 'none' take Mermaker's color off it. The color is a `class` line
+ * at the end (`class A mermaker-blue`), the node's own lines untouched; a line of Mermaker's that is the node's last class
+ * is changed in place, else Mermaker's lines for it go and a new one is appended, so the color is the last class and
  * Mermaid draws it over the file's own. The preset's `classDef` is appended when the file has none by that name; one
- * of merma's that nothing names any longer goes, unless it was changed by hand. An id-less subgraph is given an id
+ * of Mermaker's that nothing names any longer goes, unless it was changed by hand. An id-less subgraph is given an id
  * first. Returns { text, id }.
  */
 export function setColor(/** @type {string} */ text, /** @type {string} */ id, /** @type {string} */ key, /** @type {'node' | 'subgraph'} */ kind) {
@@ -930,7 +930,7 @@ export function setColor(/** @type {string} */ text, /** @type {string} */ id, /
     out = apply(text, off);
     if (name) out = appendLine(out, `class ${id} ${name}`);
   }
-  // merma's own classDefs that nothing names now go; one changed by hand stays.
+  // Mermaker's own classDefs that nothing names now go; one changed by hand stays.
   const used = classesUsed(out);
   const gone = [...new Set(mine.map((c) => c.name))].filter((n) => !used.has(n));
   const defs = classDefs(out);
@@ -1109,7 +1109,7 @@ export function edgeAnimated(/** @type {string} */ text, /** @type {string} */ s
   return animate;
 }
 
-/** Why merma cannot animate the edge drawn as `svgId` or stop it, or null: another edge has its id, or its settings span several lines. */
+/** Why Mermaker cannot animate the edge drawn as `svgId` or stop it, or null: another edge has its id, or its settings span several lines. */
 export function animationRefusal(/** @type {string} */ text, /** @type {string} */ svgId) {
   const { e, s } = locate(text, svgId);
   const userId = e.userId && e.svgId === e.userId ? e.userId : null;

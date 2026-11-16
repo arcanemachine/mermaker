@@ -131,12 +131,12 @@
           continue;
         }
         if (c.kind === 'cut') {
-          /* Drawn where it was sent (above), every other node where it was, and the edges merma reads all drawn. */
+          /* Drawn where it was sent (above), every other node where it was, and the edges Mermaker reads all drawn. */
           if (after.getEdges().length !== c.edges) fails.push(`${c.name}: ${after.getEdges().length} edges, expected ${c.edges}`);
           continue;
         }
         if (c.kind === 'paste') {
-          /* The copy drawn as the original is (shape, label, classes), every other node where it was (above), and the edges merma reads all drawn. */
+          /* The copy drawn as the original is (shape, label, classes), every other node where it was (above), and the edges Mermaker reads all drawn. */
           const o = before.getVertices().get(c.paste.of), n = after.getVertices().get(c.paste.id);
           const look = (v) => JSON.stringify([v?.type ?? 'square', v?.text, [...(v?.classes ?? [])].sort()]);
           if (look(n) !== look(o)) fails.push(`${c.name}: ${c.paste.id} drawn as ${look(n)}, expected ${look(o)}`);
@@ -144,7 +144,7 @@
           continue;
         }
         if (c.kind === 'paste-subgraph') {
-          /* Each copy drawn as its original is, in the subgraph blockOf says, every other node where it was (above), and the edges merma reads all drawn. */
+          /* Each copy drawn as its original is, in the subgraph blockOf says, every other node where it was (above), and the edges Mermaker reads all drawn. */
           const look = (v) => JSON.stringify([v?.type ?? 'square', v?.text, [...(v?.classes ?? [])].sort()]);
           const o = before.getVertices(), n = after.getVertices();
           for (const [of, id] of c.pasteSubgraph.pairs) if (look(n.get(id)) !== look(o.get(of))) fails.push(`${c.name}: ${id} drawn as ${look(n.get(id))}, expected ${look(o.get(of))}`);
@@ -153,7 +153,7 @@
           continue;
         }
         if (c.kind === 'delete-subgraph') {
-          /* The contents gone (with contents), every node left in the subgraph blockOf says now, and the edges merma reads all drawn. */
+          /* The contents gone (with contents), every node left in the subgraph blockOf says now, and the edges Mermaker reads all drawn. */
           const n = after.getVertices();
           for (const id of c.deleteSubgraph.gone) if (n.has(id)) fails.push(`${c.name}: ${id} still drawn`);
           for (const [id, sg] of Object.entries(c.deleteSubgraph.blocks)) {
@@ -165,7 +165,7 @@
           continue;
         }
         if (c.kind === 'merge') {
-          /* The node gone, every other where it was (above), and the edges merma reads all drawn. */
+          /* The node gone, every other where it was (above), and the edges Mermaker reads all drawn. */
           if (after.getVertices().has(c.merge.id)) fails.push(`${c.name}: ${c.merge.id} still drawn`);
           if (after.getEdges().length !== c.merge.edges) fails.push(`${c.name}: ${after.getEdges().length} edges, expected ${c.merge.edges}`);
           continue;

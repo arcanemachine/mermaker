@@ -9,7 +9,7 @@
 //   GET /hostpath?f=<path> where that file is on the host, for a server in a container ('' when unknown)
 //   GET /health            "ok pid=<pid> script=<path>", so a caller can tell which server holds the port
 //
-// Every response carries X-Merma-Build, the build id (build.js), and the page is served with the same id embedded, so
+// Every response carries X-Mermaker-Build, the build id (build.js), and the page is served with the same id embedded, so
 // an open page can tell when the code it is running has been replaced.
 //
 // Every route answers only requests addressed to a known host name (`hosts`), whatever the port. That stops DNS
@@ -58,7 +58,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
   /** @typedef {import('node:http').IncomingMessage} Request */
   /** @typedef {import('node:http').ServerResponse} Response */
   async function handle(/** @type {Request} */ req, /** @type {Response} */ res) {
-    res.setHeader('X-Merma-Build', build.id());
+    res.setHeader('X-Mermaker-Build', build.id());
     if (!allowedHosts.has(hostName(req.headers.host).toLowerCase())) {
       return send(res, 403, `This server does not answer to the host ${req.headers.host || '(none)'}.`);
     }
@@ -83,7 +83,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
 
     return serveWeb(web, url.pathname, res, {
-      MERMA_BUILD: build.id(), MERMA_MAX_EDGES: String(limits.maxEdges ?? ''), MERMA_MAX_TEXT: String(limits.maxTextSize ?? ''),
+      MERMAKER_BUILD: build.id(), MERMAKER_MAX_EDGES: String(limits.maxEdges ?? ''), MERMAKER_MAX_TEXT: String(limits.maxTextSize ?? ''),
     });
   }
 
@@ -124,11 +124,11 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
   return server;
 }
 
-/** Why a file is refused, and how to start merma so that it is served. */
+/** Why a file is refused, and how to start Mermaker so that it is served. */
 function notServed(/** @type {ReturnType<typeof import('./files.js').createFiles>} */ files, /** @type {string | null} */ f) {
   if (!f) return 'No file was given. Open the page as /?f=<absolute path to a .mmd file>.';
   return `This server does not serve ${f}. This server serves only .mmd files in or at ${files.roots.join(', ')}.\n` +
-    `To open this file, run merma ${shellQuote(f)}`;
+    `To open this file, run mermaker ${shellQuote(f)}`;
 }
 
 /** `s` as one shell word: as it is when it has nothing a shell would split or expand, else in single quotes. */

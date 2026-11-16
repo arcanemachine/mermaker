@@ -68,7 +68,7 @@ const END_RUN = 3;
  * @param {string} deps.file the file `source` reads, which its undo history belongs to
  * @param {ReturnType<typeof import('./viewer.mjs').createViewer>} deps.viewer
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
- * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as merma was started with them
+ * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
  * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
@@ -83,7 +83,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   let editable = false;
   // The selection is kept for this tab per file in sessionStorage, so Back, Forward or a reload to a file selects
   // again what was selected there, if it is still drawn (rendered()).
-  const selectionKey = () => 'merma:selection:' + file;
+  const selectionKey = () => 'mermaker:selection:' + file;
   /** The selection kept for the file shown, or null. */
   function keptSelection() {
     try {
@@ -798,7 +798,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
 
   /**
    * Whether the file animates edge `id`, and why its animation cannot be turned on or off here. The file decides; what
-   * is drawn only grays it: a class, a `linkStyle` or a `style` can animate an edge, and merma does not edit those.
+   * is drawn only grays it: a class, a `linkStyle` or a `style` can animate an edge, and Mermaker does not edit those.
    */
   function animation(/** @type {string} */ id) {
     try {
@@ -2438,7 +2438,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const ids = drawnEdges(edges(text), collapse.subs, collapse.overrides).map((e) => e.svgId);
     edgesOk = ids.length === lines.length && lines.every((p, k) => p.dataset.id === ids[k]);
     if (!edgesOk) {
-      ui.notice("merma can't match this diagram's edges to its text, so edges can't be selected and nodes can't be "
+      ui.notice("Mermaker can't match this diagram's edges to its text, so edges can't be selected and nodes can't be "
         + 'deleted here. Edit those in the file.', 'warning');
       return;
     }
@@ -2658,7 +2658,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       for (const g of drawn('g.node')) {
         const id = nodeIdFromSvgId(g.id, renderId);
         if (id) g.dataset.pageNode = id;
-        // A node merma can follow a link from reads as a link (style.css), its blue chosen by its own fill: its first
+        // A node Mermaker can follow a link from reads as a link (style.css), its blue chosen by its own fill: its first
         // shape, the body of one drawn in parts (a cylinder's, a double circle's outer ring, a subroutine's box).
         const link = id ? links.get(id) : undefined;
         if (link && link !== 'about:blank') {
@@ -2666,7 +2666,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
           g.dataset.pageLink = linkTone(shape ? getComputedStyle(shape).fill : '');
         }
       }
-      // A subgraph whose id merma cannot read (`subgraph a-b [X]`) is left unselectable, as such a node's edges are.
+      // A subgraph whose id Mermaker cannot read (`subgraph a-b [X]`) is left unselectable, as such a node's edges are.
       const known = new Set(subgraphs(shownText).map((s) => s.id));
       // A collapsed subgraph is drawn as a node-like box, `<render id>-<subgraph id>` with no `flowchart-`.
       for (const g of drawn('g.cluster, g.node:has(> rect.collapsed-group)')) {

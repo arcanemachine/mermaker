@@ -25,7 +25,7 @@ beforeEach(() => {
     if (req.url.startsWith('/source')) {
       const snapshot = file;
       if (hold) { const h = hold; hold = null; await h; }
-      const headers = { ETag: version(snapshot), 'X-Merma-Build': build };
+      const headers = { ETag: version(snapshot), 'X-Mermaker-Build': build };
       if (req.ifNoneMatch === version(snapshot)) return new Response(null, { status: 304, headers });
       return new Response(snapshot, { headers });
     }

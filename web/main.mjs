@@ -23,11 +23,11 @@ const el = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.ge
 const fileIn = (/** @type {string} */ search) => new URLSearchParams(search).get('f') || '/tmp/mermaid-diagrams/scratch.mmd';
 let file = fileIn(location.search);
 
-// The build of merma this page was served from. When the server reports another, the page reloads to run it, once
+// The build of Mermaker this page was served from. When the server reports another, the page reloads to run it, once
 // nothing is in progress that a reload would lose. Zoom and pan survive the reload: they are kept for this tab in
 // sessionStorage, which is the browser's, never the file's.
-const loadedBuild = /** @type {HTMLMetaElement} */ (document.querySelector('meta[name="merma-build"]')).content;
-const viewKey = () => 'merma:view:' + file;
+const loadedBuild = /** @type {HTMLMetaElement} */ (document.querySelector('meta[name="mermaker-build"]')).content;
+const viewKey = () => 'mermaker:view:' + file;
 function reloadWhenIdle() {
   if (editor && !editor.idle()) { setTimeout(reloadWhenIdle, 500); return; }
   location.reload();
@@ -54,12 +54,12 @@ function restoreView() {
 
 // Collapsed subgraphs (collapse.mjs): the page's own views, never the file's, kept for this tab per file in
 // sessionStorage, so the page's reload for a new build keeps them.
-const collapseKey = () => 'merma:collapse:' + file;
+const collapseKey = () => 'mermaker:collapse:' + file;
 /** @type {import('./collapse.mjs').Overrides} */
 let overrides = new Map();
 /** @type {{ kind: string, id: string } | null} the item the code panel follows */
 let followed = null;
-/** @type {import('./collapse.mjs').SubgraphInfo[]} the subgraphs of the text last drawn, when merma reads them too */
+/** @type {import('./collapse.mjs').SubgraphInfo[]} the subgraphs of the text last drawn, when Mermaker reads them too */
 let shownSubs = [];
 /** @type {import('./collapse.mjs').SubgraphInfo[]} the same, for the text being drawn, from before Mermaid draws it */
 let drawingSubs = [];
@@ -102,7 +102,7 @@ function keepOverrides() {
 // Rotate and flip (turn.mjs): the page's own, as collapses are, kept for this tab per file: the whole diagram's turn
 // and each subgraph's own. `base` is the direction the file had when turned: a file whose own direction changes since
 // (an agent turned it) is not turned again. A subgraph with no id keeps its title, as a collapse does (collapse.mjs).
-const turnKey = () => 'merma:turn:' + file;
+const turnKey = () => 'mermaker:turn:' + file;
 /** @typedef {{ rotate: boolean, flip: boolean, base: string | null }} Turned */
 /** @typedef {Turned & { title: string | null }} SubTurned */
 /** @type {Turned & { subs: [string, SubTurned][] }} */
@@ -125,7 +125,7 @@ function keepTurn() {
 }
 /**
  * The turns that still hold for `text`: each dropped when the direction it was made from has changed. Subgraphs' only
- * when merma and Mermaid agree on them (`subs`, else null), as collapses are.
+ * when Mermaker and Mermaid agree on them (`subs`, else null), as collapses are.
  */
 function pruneTurn(/** @type {string} */ text, /** @type {import('./collapse.mjs').SubgraphInfo[] | null} */ subs) {
   if (isOn(turn) && turn.base !== baseDir(text)) turn = { ...turn, rotate: false, flip: false, base: null };
@@ -310,9 +310,9 @@ const ui = {
 let editor = null;
 let shownOnce = false;   // a diagram has been rendered; until then the view is the initial fit, not worth keeping
 
-// Mermaid's size limits, as merma was started with them (MERMA_MAX_EDGES, MERMA_MAX_TEXT); empty: Mermaid's own.
+// Mermaid's size limits, as Mermaker was started with them (MERMAKER_MAX_EDGES, MERMAKER_MAX_TEXT); empty: Mermaid's own.
 const meta = (/** @type {string} */ name) => /** @type {HTMLMetaElement} */ (document.querySelector(`meta[name="${name}"]`)).content;
-const limits = readLimits(meta('merma-max-edges'), meta('merma-max-text'));
+const limits = readLimits(meta('mermaker-max-edges'), meta('mermaker-max-text'));
 // The Mermaid theme the diagram is drawn with: dark with the Dark page theme (showTheme).
 let drawnDark = document.documentElement.dataset.theme === 'dark';
 const viewer = createViewer({ diagram: el('diagram'), stage: el('stage'), limits }, {
@@ -369,7 +369,7 @@ async function draw(/** @type {string} */ written) {
   codePanel.show(written);
   // A blank file is drawn as an empty flowchart, which the welcome is shown over.
   const text = withHeader(written);
-  // The page's collapses are drawn only when Mermaid's subgraphs are the ones merma reads in the text: an id they
+  // The page's collapses are drawn only when Mermaid's subgraphs are the ones Mermaker reads in the text: an id they
   // disagree on would collapse, or tag, the wrong one.
   let { subs, links } = await viewer.read(text);
   if (of !== file) return;   // before anything below writes this file's collapses or turns under the new file's keys
@@ -447,7 +447,7 @@ let opening = null;
 
 /**
  * Open `next` in this page, fitted to subgraph `nextPart` if given: a new history entry, so Back comes back here. Only
- * once the server has given its text: a file it refuses (missing, outside MERMA_ROOTS) changes nothing but a notice.
+ * once the server has given its text: a file it refuses (missing, outside MERMAKER_ROOTS) changes nothing but a notice.
  */
 function openFile(/** @type {string} */ next, /** @type {string | null} */ nextPart = null) {
   const refused = editor?.switchRefused();
@@ -553,7 +553,7 @@ function showHeader() {
   el('host').replaceChildren();
   delete el('host').dataset.copy;
   el('host').removeAttribute('title');
-  document.title = name + ' · merma';
+  document.title = name + ' · Mermaker';
   source.hostPath().then((host) => { if (host && f === file) showPath('host', 'host: ' + host, host); });
 }
 showHeader();
@@ -586,7 +586,7 @@ window.addEventListener('storage', (e) => { if (e.key === THEME_KEY || e.key ===
 
 // Help shows the keys of one system, Windows and Linux or macOS: the browser's own at first, then the one last chosen
 // in this browser (localStorage: the browser's, never the file's).
-const osKey = 'merma:help-os';
+const osKey = 'mermaker:help-os';
 const osPicks = /** @type {NodeListOf<HTMLButtonElement>} */ (el('help').querySelectorAll('[data-os-pick]'));
 function showOs(/** @type {string} */ os) {
   el('help').dataset.os = os;
@@ -726,7 +726,7 @@ document.addEventListener('keydown', (e) => {
 // For tests: hold polling to set up a stale save, save text directly to exercise the parse check, or open another
 // file in place, as a link will. Each acts on the file shown when it is called.
 const edits = editor;
-window.merma = {
+window.mermaker = {
   start: () => source.start(),
   stop: () => source.stop(),
   save: (/** @type {string} */ text) => edits.save(text),

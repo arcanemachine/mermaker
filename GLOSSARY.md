@@ -1,7 +1,7 @@
 # Glossary
 
-The words merma uses, in the page, the docs and merma's code. Use them as written here, and add a word here when a new
-one comes in. Where Mermaid has a word, it is used; a word of merma's own says why. "Mermaid's word" means the one in
+The words Mermaker uses, in the page, the docs and Mermaker's code. Use them as written here, and add a word here when a new
+one comes in. Where Mermaid has a word, it is used; a word of Mermaker's own says why. "Mermaid's word" means the one in
 the flowchart syntax page of the Mermaid version pinned in `web/viewer.mjs` (12.2.0), or in the ids and `data-*`
 attributes it draws. Where Mermaid has two words, one is used and the other noted, as for edge. A word in `code` is
 Mermaid syntax.
@@ -11,9 +11,9 @@ Mermaid syntax.
 | Word | Meaning |
 |---|---|
 | **diagram** | What a `.mmd` file describes and the page shows. |
-| **file** | The `.mmd` file. The only source of truth: merma reads it, and writes edits into it. |
-| **code** | The diagram's Mermaid code: the file's text (Mermaid's word, "Mermaid code"). merma's own source is "merma's code" wherever a sentence could be read either way. |
-| **flowchart** | A diagram whose header is `flowchart` or `graph`: the only type merma edits. Others are view-only. |
+| **file** | The `.mmd` file. The only source of truth: Mermaker reads it, and writes edits into it. |
+| **code** | The diagram's Mermaid code: the file's text (Mermaid's word, "Mermaid code"). Mermaker's own source is "Mermaker's code" wherever a sentence could be read either way. |
+| **flowchart** | A diagram whose header is `flowchart` or `graph`: the only type Mermaker edits. Others are view-only. |
 | **header** | The `flowchart TD` line (after any frontmatter, directives and comments). |
 | **direction** | `TD` / `TB`, `BT`, `LR`, `RL` on the header: which way the diagram runs. A subgraph can set its own. |
 | **frontmatter** | The `---` block at the top of the file (title, config). |
@@ -26,18 +26,18 @@ Mermaid syntax.
 | **shape** | How a node is drawn: `[box]`, `(rounded)`, `{decision}`, `((circle))`… or `@{ shape: … }`. Each has a name and a **meaning**, Mermaid's "Shape Name" and "Semantic Name": Diamond (Decision). |
 | **edge** | A line between two nodes (Mermaid's term in its ids and current docs; its older docs say "link"). |
 | **start**, **end** | Of an edge: the node or subgraph it is written from, and the one it goes to (Mermaid's words in its edge data; "source" and "target" mean the same). Reassign end… and Reassign start… move them. |
-| **heading** | Of an edge at one of its ends: up, down, left or right, the way it goes as it leaves that end (`docs/ux.md` says how it is measured). merma's own: Mermaid has no word for it, and the arrow keys need one. |
+| **heading** | Of an edge at one of its ends: up, down, left or right, the way it goes as it leaves that end (`docs/ux.md` says how it is measured). Mermaker's own: Mermaid has no word for it, and the arrow keys need one. |
 | **arrow** | An edge's connector syntax without its label: `-->`, `---`, `-.->`, `==>`, `--o`, `--x`, `<-->`, `~~~`… |
 | **arrow type** | Which of those an arrow is, at any length (`---->` is a long `-->`): Arrow, Dotted line, Two-way arrow (Mermaid: "multi directional"), Thick two-way circle and the rest, named in `docs/guide.md`, "The edge panel". |
 | **length** | How much longer than its shortest form an arrow is; it asks Mermaid for a longer edge. |
-| **edge label** | An edge's text, as `-->|label|` (pipe form) or `-- label -->` (text form). merma writes the pipe form. |
+| **edge label** | An edge's text, as `-->|label|` (pipe form) or `-- label -->` (text form). Mermaker writes the pipe form. |
 | **edge id** | A name given to an edge in the file: `A e1@--> B`. Its settings go in an `e1@{ … }` statement. |
 | **edge animation** | An edge's line drawn moving, set in its settings (`e1@{ animate: true }`, or `animation: fast` or `slow`). Mermaid's word. Enable edge animation and Disable edge animation turn it on and off. |
 | **connector** | Everything between an edge's two nodes in the file: edge id, arrow and label. |
 | **chain** | Several edges in one statement: `A --> B --> C`. |
 | **`&` group** | Several nodes on one side of a connector: `A & B --> C`, which is two edges. |
 | **subgraph** | A box around nodes (Mermaid's term): `subgraph id [Title]` … `end`. |
-| **box** | A node or a subgraph (drawn as its box): what an edge can join, and what the arrows land on besides edges. merma's own: Mermaid has no word for the two together. "A subgraph's box" is that subgraph as drawn. |
+| **box** | A node or a subgraph (drawn as its box): what an edge can join, and what the arrows land on besides edges. Mermaker's own: Mermaid has no word for the two together. "A subgraph's box" is that subgraph as drawn. |
 | **self-loop** | An edge from a node or a subgraph back to itself: `A --> A`. |
 | **collapsed** | A subgraph drawn as one box, its contents hidden, by Mermaid's `id@{ view: collapsed }`; **expanded** is the usual way. In the page, collapsing is view state, never written (`docs/ux.md`). |
 | **default state** | Whether the file itself has a subgraph collapsed or expanded: where a new tab starts. |
@@ -47,9 +47,9 @@ Mermaid syntax.
 | **subgraph title** | The text shown on a subgraph. |
 | **title** | The diagram's title, the frontmatter's `title:`, drawn over the diagram (Mermaid's word). Alone, "title" is this one; a subgraph's is its subgraph title. |
 | **connect** | Make an edge between two nodes or subgraphs by pointing (Connect to…, Connect from…). |
-| **pick** | The state a menu item (or its key) puts you in when it needs another node or subgraph, such as Connect to… or Merge into…: you pick that node or subgraph by a click, or by the arrows or find and Enter; Escape or a click anywhere else cancels. merma's code calls it `picking`. Choosing an entry in a picker (below) is a pick too, but needs no node. |
+| **pick** | The state a menu item (or its key) puts you in when it needs another node or subgraph, such as Connect to… or Merge into…: you pick that node or subgraph by a click, or by the arrows or find and Enter; Escape or a click anywhere else cancels. Mermaker's code calls it `picking`. Choosing an entry in a picker (below) is a pick too, but needs no node. |
 | **candidate** | In a pick, the item the arrows or find have reached, outlined solid, which Enter picks. |
-| **glow** | A wide pale red band drawn under what a key would delete, before it does: what Delete subgraph and contents or Delete node and children would take, after a first Shift+D or with the item focused in the menu, and a cut node's edges where the paste would delete them. merma's own; not dashed, which would read as a dotted edge. |
+| **glow** | A wide pale red band drawn under what a key would delete, before it does: what Delete subgraph and contents or Delete node and children would take, after a first Shift+D or with the item focused in the menu, and a cut node's edges where the paste would delete them. Mermaker's own; not dashed, which would read as a dotted edge. |
 | **merge** | Merge into…: a node's edges move to another node, and the node goes. |
 | **`linkStyle`** | Styles an edge by its number: the Nth edge in the file. Why no edit ever reorders edges. |
 | **`classDef`, `class`, `style`** | Named styles, applying them to nodes, and one-off node styles. |
@@ -57,63 +57,63 @@ Mermaid syntax.
 
 ## The page
 
-Mermaid has no words for the page around the diagram, so these are merma's own: plain words where one fits, and a
-note where merma had to make one up.
+Mermaid has no words for the page around the diagram, so these are Mermaker's own: plain words where one fits, and a
+note where Mermaker had to make one up.
 
 | Word | Meaning |
 |---|---|
-| **page** | merma in the browser, showing one file. |
+| **page** | Mermaker in the browser, showing one file. |
 | **rotate**, **flip** | Turn the diagram sideways, or the other way up, in the page only: the directions Mermaid gets are turned, the file's are not. |
 | **view** | Where the diagram sits on screen: **zoom** (wheel, pinch, + and -), **move** (drag, arrows with nothing selected), **fit** (Fit to window, F, double-click). |
-| **part** | The subgraph a page is fitted to (Fit to subgraph), named in its address as `&part=<subgraph id>`: a refit (the window's size changing, a reload) fits it, the rest of the diagram still drawn, until F fits the whole. merma's own; not "focus", which means keyboard focus. |
+| **part** | The subgraph a page is fitted to (Fit to subgraph), named in its address as `&part=<subgraph id>`: a refit (the window's size changing, a reload) fits it, the rest of the diagram still drawn, until F fits the whole. Mermaker's own; not "focus", which means keyboard focus. |
 | **render** | Mermaid drawing the diagram from the file's text. A file that does not parse keeps the last good render. |
-| **item** | A node, an edge, a subgraph or the title: what can be selected, and what a menu belongs to. A menu's entries are **menu items**. merma's own; not "element", which in merma's code means a DOM element. |
+| **item** | A node, an edge, a subgraph or the title: what can be selected, and what a menu belongs to. A menu's entries are **menu items**. Mermaker's own; not "element", which in Mermaker's code means a DOM element. |
 | **select**, **selection**, **deselect** | Clicking a node, an edge or a subgraph marks it: it is **outlined** in blue. One item at a time, for now. Deselect: let go of it (click empty space, or Escape). |
-| **fan** | The edges leaving a box one way (by their heading), left to right, or top to bottom: Down from a node selects the first of its down fan. merma's own. |
-| **step across** | What the cross arrows do on an edge: to the edge beside it in a fan, never onto a node. Not "page", which is merma in the browser. merma's own. |
-| **counted end** | The end a selected edge counts as reached from, whose fan the cross arrows step; marked by the tick, and switched by Space or by clicking the line near the other end. merma's own. |
-| **tick** | The short blue bar across a selected edge near its counted end. merma's own. |
-| **trail** | The arrow moves since the selection was last set another way, steps across left out: the opposite arrow retraces them, and a click, a find, O, I, an edit or Escape starts a new one. merma's own. |
-| **place inside** | For each subgraph, the item you last left it by, which I goes back to; kept while keys select, forgotten on a click, a find or an edit. Not the trail. merma's own. |
+| **fan** | The edges leaving a box one way (by their heading), left to right, or top to bottom: Down from a node selects the first of its down fan. Mermaker's own. |
+| **step across** | What the cross arrows do on an edge: to the edge beside it in a fan, never onto a node. Not "page", which is Mermaker in the browser. Mermaker's own. |
+| **counted end** | The end a selected edge counts as reached from, whose fan the cross arrows step; marked by the tick, and switched by Space or by clicking the line near the other end. Mermaker's own. |
+| **tick** | The short blue bar across a selected edge near its counted end. Mermaker's own. |
+| **trail** | The arrow moves since the selection was last set another way, steps across left out: the opposite arrow retraces them, and a click, a find, O, I, an edit or Escape starts a new one. Mermaker's own. |
+| **place inside** | For each subgraph, the item you last left it by, which I goes back to; kept while keys select, forgotten on a click, a find or an edit. Not the trail. Mermaker's own. |
 | **find** | The / box: every item in the diagram holding what you typed is marked, on screen or off, and Enter selects the current match. The browser's word for the same thing (Find in page); not "search". |
-| **blink** | The find's current match shown on and off a few times as it becomes current, then steady (`docs/ux.md` has the rule). merma's own: Mermaid has no word for it. |
+| **blink** | The find's current match shown on and off a few times as it becomes current, then steady (`docs/ux.md` has the rule). Mermaker's own: Mermaid has no word for it. |
 | **menu** | What right-click (or long-press) opens: the **node menu**, the **edge menu**, the **subgraph menu**, the **title menu**, or the **empty-space menu**. Its items read verb + noun (`docs/ux.md`). |
 | **submenu** | A menu opened from a menu item marked ▸, by a click on it, its key or Right (never by hovering). |
 | **picker** | A grid of choices drawn as small icons, each with its digit, named by what it picks: the **arrow type picker** and the **shape picker**, each under the label box in its panel, and the **color picker** above it. Shows the current one. |
 | **grayed** | A menu item that does not apply right now: still there, with its reason. |
-| **label box** | The text box laid over a node's or an edge's label, or a subgraph's title, to edit it in place (Edit node, Edit edge, Edit title). merma's own. |
-| **node panel** | A node's label box with the color picker above it and the shape picker under it: what Edit node, Enter, F2, a double-click on a node and adding a node open. Enter in the label writes all three. merma's own: one place to edit a node. A subgraph's title box has the color picker too. |
-| **color** | In the page, one of merma's presets: a node's fill, border and text color together, or a subgraph's lighter set, written as a `classDef` named `merma-blue` (`merma-blue-box` on a subgraph) and a `class` line. In a `classDef`, `color` is Mermaid's text color. |
-| **preset** | One of merma's colors, in a fixed order in the color picker. merma's own word for them as a set; the page names each by its color. |
-| **edge panel** | An edge's label box with the arrow type picker under it: what Edit edge, Enter, F2 and a double-click on an edge open. Enter in the label writes both. merma's own, as the node panel. |
-| **code panel** | The file's code beside the diagram, following the file as the diagram does; Code in the footer opens it, and its Edit edits the code. merma's own: Mermaid has no word for it. |
+| **label box** | The text box laid over a node's or an edge's label, or a subgraph's title, to edit it in place (Edit node, Edit edge, Edit title). Mermaker's own. |
+| **node panel** | A node's label box with the color picker above it and the shape picker under it: what Edit node, Enter, F2, a double-click on a node and adding a node open. Enter in the label writes all three. Mermaker's own: one place to edit a node. A subgraph's title box has the color picker too. |
+| **color** | In the page, one of Mermaker's presets: a node's fill, border and text color together, or a subgraph's lighter set, written as a `classDef` named `mermaker-blue` (`mermaker-blue-box` on a subgraph) and a `class` line. In a `classDef`, `color` is Mermaid's text color. |
+| **preset** | One of Mermaker's colors, in a fixed order in the color picker. Mermaker's own word for them as a set; the page names each by its color. |
+| **edge panel** | An edge's label box with the arrow type picker under it: what Edit edge, Enter, F2 and a double-click on an edge open. Enter in the label writes both. Mermaker's own, as the node panel. |
+| **code panel** | The file's code beside the diagram, following the file as the diagram does; Code in the footer opens it, and its Edit edits the code. Mermaker's own: Mermaid has no word for it. |
 | **draft** | The code panel's code while it is being edited, not yet saved. The page says "Editing"; the word is the docs'. |
-| **follow** | The code panel's Follow selection: the code scrolls to the selected item's statement, banded in pale blue. merma's own. |
+| **follow** | The code panel's Follow selection: the code scrolls to the selected item's statement, banded in pale blue. Mermaker's own. |
 | **dock** | Where the code panel sits: left of the diagram, above it or below it. Default is left on a window wider than tall, else below. |
 | **shape picker** | The picker laid under a node's label box: click a shape, or Down from the label goes into it. |
-| **welcome** | The text over an empty flowchart, saying how to start; it goes once anything is drawn. Page text, never in the file. merma's own. |
+| **welcome** | The text over an empty flowchart, saying how to start; it goes once anything is drawn. Page text, never in the file. Mermaker's own. |
 | **toast** | A short message at the top right that fades on its own, for a result not visible on screen: "Copied!", "SVG downloaded". Never an error. |
 | **notice** | The bar above the diagram, of three kinds: **info** (blue: what to do next, or nothing to do), **warning** (amber: something you asked for refused or kept back, or a risk to the file), **error** (red: something you tried that did not happen). `docs/ux.md` says which is which. |
 | **color words** | **info**, **success**, **warning**, **error**: each a background and a text color that reads on it (`--info-bg`, `--info-fg`…, in `web/style.css`). Notices use three; success is the toasts'. |
 | **muted** | Gray: shown, but not to be acted on now: the read-only code, and the diagram while the code is being edited (`--muted-bg`, `--locked-bg`). |
 | **page theme** | The page's own parts dark or light: **System** (the system's setting), **Light** or **Dark**, chosen in the empty-space menu's Page theme ▸. With Dark, the diagram is drawn with Mermaid's dark theme unless its file sets one. Not Mermaid's theme, which is the file's to set. |
 | **edit** | One action that changes the file, written as a small text change and saved over the version it started from. |
-| **copy**, **cut**, **paste**, **clipboard** | Copy node or Copy subgraph (Ctrl+C) keeps a copy of the node or subgraph in the page's **clipboard**, one per tab, as it was then; Paste node or Paste subgraph (Ctrl+V) adds a new one from it, under new ids. Cut node and Cut subgraph (Ctrl+X) mark it instead, and the paste then moves it (Move node here, Move subgraph here); a cut and a copy replace each other. The browser's words. The system clipboard gets the copy's Mermaid text too, but merma never reads it. |
+| **copy**, **cut**, **paste**, **clipboard** | Copy node or Copy subgraph (Ctrl+C) keeps a copy of the node or subgraph in the page's **clipboard**, one per tab, as it was then; Paste node or Paste subgraph (Ctrl+V) adds a new one from it, under new ids. Cut node and Cut subgraph (Ctrl+X) mark it instead, and the paste then moves it (Move node here, Move subgraph here); a cut and a copy replace each other. The browser's words. The system clipboard gets the copy's Mermaid text too, but Mermaker never reads it. |
 | **undo**, **redo** | Taking back the page's own last edit, and putting it back; refused once the file has changed since. |
-| **hit path** | The wide invisible line over each edge that makes it easy to click. merma's own. |
-| **edge match** | Whether merma's reading of the edges agrees, edge for edge, with what Mermaid drew. Without it, edges can't be selected and nodes can't be deleted. merma's own. |
-| **page marker** | A `data-page-…` attribute merma adds to the drawing; the SVG export leaves them out. merma's own. |
+| **hit path** | The wide invisible line over each edge that makes it easy to click. Mermaker's own. |
+| **edge match** | Whether Mermaker's reading of the edges agrees, edge for edge, with what Mermaid drew. Without it, edges can't be selected and nodes can't be deleted. Mermaker's own. |
+| **page marker** | A `data-page-…` attribute Mermaker adds to the drawing; the SVG export leaves them out. Mermaker's own. |
 
-## Working on merma
+## Working on Mermaker
 
 | Word | Meaning |
 |---|---|
-| **scanner** | `edges()` and `statements()` in `web/patch/flowchart.mjs`: merma's reading of a flowchart's text. |
+| **scanner** | `edges()` and `statements()` in `web/patch/flowchart.mjs`: Mermaker's reading of a flowchart's text. |
 | **rewrite** | How an edit changes a statement in place without moving any other edge. |
-| **build id** | Which version of merma's code a page is running; a page reloads itself when the server has another. |
-| **shared server** | The merma server on port 63762, run from the live worktree. |
+| **build id** | Which version of Mermaker's code a page is running; a page reloads itself when the server has another. |
+| **shared server** | The Mermaker server on port 63762, run from the live worktree. |
 | **land** | Put committed, checked, reviewed work on the shared server (`./live.sh land`). |
 | **fixture** | A hand-written test diagram in `test/fixtures/`. |
 | **browser check** | A check that needs Mermaid itself, run in a browser (`checks/README.md`). |
-| **mutation check** | Breaking merma's code on purpose to see a test fail (`checks/mutate.sh`). |
+| **mutation check** | Breaking Mermaker's code on purpose to see a test fail (`checks/mutate.sh`). |
 | **UAT** | Acceptance testing: by Haiku agents for behavior, by a person for look and feel. |

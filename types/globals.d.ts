@@ -3,7 +3,7 @@
 declare global {
   interface Window {
     // Hooks for checks and tests (web/main.mjs).
-    merma: object;
+    mermaker: object;
   }
 
   // User-Agent Client Hints, not yet in TypeScript's DOM types; Chromium has them.

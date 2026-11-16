@@ -1,5 +1,5 @@
 // The colors a node or a subgraph can be given, in a fixed order: an entry's digit picks it, so the order never changes
-// and new entries go at the end. 1 is None, which takes merma's color off; each other is a preset (PRESETS,
+// and new entries go at the end. 1 is None, which takes Mermaker's color off; each other is a preset (PRESETS,
 // patch/flowchart.mjs), drawn as a swatch of its node fill and border.
 
 import { icon } from './icons.mjs';

@@ -1,7 +1,7 @@
-# Using merma
+# Using Mermaker
 
 What the page does, control by control. What goes here: what each gesture, key and menu item does. What does not: why
-the page works the way it does (`docs/ux.md`), what the words mean (`GLOSSARY.md`), how to start merma (`README.md`).
+the page works the way it does (`docs/ux.md`), what the words mean (`GLOSSARY.md`), how to start Mermaker (`README.md`).
 The page's Help panel is a short subset of this guide: the gestures and the keys that work outside menus. Menu letters
 are shown in the menus (at the right of each item), and digits in the pickers, so Help does not list
 them.
@@ -33,15 +33,15 @@ them.
   reader. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
   on any other link it does what L does. L and Shift+L are grayed, with the reason, on a node with no link, a link that runs a
   script (`click A callback`, a `javascript:` link), a link of another kind (`mailto:`), and a path to anything but a
-  `.mmd` file. Hovering over the item shows where it leads. A click on a linked node selects it, as on any node: merma
-  never follows a link on a click. A file the server does not serve (missing, or outside the folders merma serves) is
+  `.mmd` file. Hovering over the item shows where it leads. A click on a linked node selects it, as on any node: Mermaker
+  never follows a link on a click. A file the server does not serve (missing, or outside the folders Mermaker serves) is
   refused with a notice. So is opening one while an edit is saving, while a pick or the label box is open, or while
   the code is being edited. Each file keeps its own view, collapses, turns and undo history in this tab, and a copy
   can be pasted into the other file. Back or Forward to another file while the code is being edited waits until it is
   saved or canceled, and says so.
 - The page follows the file: save it anywhere (your editor, an agent) and the diagram updates within a second. A save
-  with a syntax error keeps the last good render on screen, with the error above it. So does a file over merma's size
-  limits, 500 edges or 50,000 characters of code unless merma was started with higher ones (README.md, Run).
+  with a syntax error keeps the last good render on screen, with the error above it. So does a file over Mermaker's size
+  limits, 500 edges or 50,000 characters of code unless Mermaker was started with higher ones (README.md, Run).
 - **Export ▴** in the footer opens a menu: **Copy SVG** and **Download SVG** export the diagram as the browser drew
   it; **Download Mermaid** saves the file's text, as the page has it (not a draft in the code panel).
 - **Code** in the footer opens the code panel: the file's Mermaid code, read-only until Edit, updated with the file
@@ -90,7 +90,7 @@ that has to name it in the file (Edit title, Connect to…) first gives it an id
 break those lines, so Edit title and Connect to… are grayed and say to give it an id in the file instead. A subgraph
 whose id has `-` or `.` in it (valid in Mermaid, not here) cannot be selected.
 
-Edges can be selected only when merma can match the drawn edges to the text, edge for edge (an edge match). When it
+Edges can be selected only when Mermaker can match the drawn edges to the text, edge for edge (an edge match). When it
 cannot (a node id with `-` or `.`, a label spread over several lines), the page says so, and edges and deleting nodes
 are left to the file.
 
@@ -182,7 +182,7 @@ another click on it closes it.
 - **Enable edge animation** (A, in the menu only) makes the edge's line move, as Mermaid draws it: the edge gets an id
   if it has none, and a settings line after it (`A --> B` becomes `A e1@--> B`, then `e1@{ animate: true }`). On an
   animated edge it reads **Disable edge animation**, which takes `animate` and `animation` out of its settings (and
-  the line, if nothing is left in it); the id stays. Grayed on an edge animated by a class or a style, which merma does
+  the line, if nothing is left in it); the id stays. Grayed on an edge animated by a class or a style, which Mermaker does
   not change, and on one whose settings are written over several lines.
 - **Reassign end…** (C), then a click on a node or a subgraph, moves where the edge goes to there: `A --> B` becomes
   `A --> C`, with the same arrow, label and edge id. **Reassign start…** (Shift+C) moves where it comes from: `C --> B`.
@@ -321,10 +321,10 @@ into view with its panel, and Escape puts the view back, unless you have moved i
   shapes', mirrored: Down from the bottom row goes back to the label. 1 is None, then gray, red, orange, yellow,
   green, teal, blue, purple and pink. Each sets the fill, the border and the text color, so a label reads in either
   page theme.
-- **What a color writes:** `class pack merma-blue` at the end, and the first time a file uses that color, its
-  `classDef merma-blue fill:…,stroke:…,color:…`; the node's own lines stay as they are. A later color changes merma's
+- **What a color writes:** `class pack mermaker-blue` at the end, and the first time a file uses that color, its
+  `classDef mermaker-blue fill:…,stroke:…,color:…`; the node's own lines stay as they are. A later color changes Mermaker's
   line in place. None takes the line off, and the `classDef` too once nothing names it, unless it was changed by hand:
-  a `classDef merma-…` edited in the file keeps your colors. A node with a class of the file's own (`:::hot`,
+  a `classDef mermaker-…` edited in the file keeps your colors. A node with a class of the file's own (`:::hot`,
   `class A hot`) keeps it, and the color is drawn over it (the picker names the file's class as current, with none
   selected). A copy carries the color, and a paste into another diagram brings its `classDef`. The colors are grayed,
   with the reason, on a node or subgraph with a `style` line setting its fill, border or text color: Mermaid draws
@@ -332,7 +332,7 @@ into view with its panel, and Escape puts the view back, unless you have moved i
 - **What is written:** the shape changes where Mermaid takes it from, the node's last mention with one, and the label
   stays as written. Shapes with brackets keep that form (`B{OK?}`); the others are written
   `B@{ shape: doc, label: "OK?" }`, after any `:::class`. A label with a `}`, or a Markdown label, cannot move into
-  that form: Enter says so, and the panel stays open with what you typed. A shape merma does not offer (`bolt`) is
+  that form: Enter says so, and the panel stays open with what you typed. A shape Mermaker does not offer (`bolt`) is
   named on the line, with none selected.
 
 | Digit | Shape | Meaning | Syntax |
@@ -374,7 +374,7 @@ with no label, the picker can cover the arrowhead; the picker shows the current 
   top row or Escape goes back. The arrow changes and keeps its label and its length (`---->` asks for a longer edge,
   and stays longer). In each row the columns go normal, dotted, thick, and Shift swaps the arrowhead for a circle or a
   cross; the last two, with no digit, are centered under the dotted and thick columns. A two-way circle or cross is
-  written with a space before it (`A o--o B`), or Mermaid would read the `o` as part of the node's id. An arrow merma
+  written with a space before it (`A o--o B`), or Mermaid would read the `o` as part of the node's id. An arrow Mermaker
   does not offer (`<--o`, which Mermaid draws as a circle only) is named on the line as written, with none selected,
   and stays as it is unless another is selected.
 
@@ -573,9 +573,9 @@ nothing but say so: press again.
   move down. A node left out of a rewritten statement is kept as a bare statement when it has a shape or label there,
   or when nothing else in its subgraph names it, so no node disappears or moves.
 
-## Updates to merma itself
+## Updates to Mermaker itself
 
-Every response from the server carries the build id of the merma it runs; when that differs from the one the page was
-loaded with, the page reloads itself as soon as no edit is in progress. So open pages pick up a new version of merma
+Every response from the server carries the build id of the Mermaker it runs; when that differs from the one the page was
+loaded with, the page reloads itself as soon as no edit is in progress. So open pages pick up a new version of Mermaker
 without anyone reloading them. The page polls its file once a second with `If-None-Match`, so an unchanged file comes
 back as a bodiless 304 (in the browser's network panel, `-status-code:304` hides those).

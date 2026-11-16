@@ -7,22 +7,22 @@ import {
 } from '../web/patch/flowchart.mjs';
 import { COLORS } from '../web/colors.mjs';
 
-const BLUE = 'classDef merma-blue fill:#dbeafe,stroke:#2563eb,color:#1e3a8a';
-const RED = 'classDef merma-red fill:#fee2e2,stroke:#dc2626,color:#7f1d1d';
+const BLUE = 'classDef mermaker-blue fill:#dbeafe,stroke:#2563eb,color:#1e3a8a';
+const RED = 'classDef mermaker-red fill:#fee2e2,stroke:#dc2626,color:#7f1d1d';
 const src = 'flowchart TD\n  pack[[Pack]] --> send>Send]\n';
 
 test('a first color appends its class line and its classDef; the node\'s own line is untouched', () => {
-  assert.equal(setColor(src, 'pack', 'blue', 'node').text, `${src}  class pack merma-blue\n  ${BLUE}\n`);
+  assert.equal(setColor(src, 'pack', 'blue', 'node').text, `${src}  class pack mermaker-blue\n  ${BLUE}\n`);
 });
 
 test('a second node in the same color reuses the classDef', () => {
   const one = setColor(src, 'pack', 'blue', 'node').text;
-  assert.equal(setColor(one, 'send', 'blue', 'node').text, one + '  class send merma-blue\n');
+  assert.equal(setColor(one, 'send', 'blue', 'node').text, one + '  class send mermaker-blue\n');
 });
 
-test('another color changes merma\'s line in place, and the classDef nothing names goes', () => {
+test('another color changes Mermaker\'s line in place, and the classDef nothing names goes', () => {
   const blue = setColor(src, 'pack', 'blue', 'node').text;
-  assert.equal(setColor(blue, 'pack', 'red', 'node').text, `${src}  class pack merma-red\n  ${RED}\n`);
+  assert.equal(setColor(blue, 'pack', 'red', 'node').text, `${src}  class pack mermaker-red\n  ${RED}\n`);
 });
 
 test('the same color again changes nothing', () => {
@@ -33,27 +33,27 @@ test('the same color again changes nothing', () => {
 test('None takes the class line off, and the classDef once no node uses it: the file is as it was', () => {
   const both = setColor(setColor(src, 'pack', 'blue', 'node').text, 'send', 'blue', 'node').text;
   const one = setColor(both, 'pack', 'none', 'node').text;
-  assert.equal(one, `${src}  ${BLUE}\n  class send merma-blue\n`);
+  assert.equal(one, `${src}  ${BLUE}\n  class send mermaker-blue\n`);
   assert.equal(setColor(one, 'send', 'none', 'node').text, src);
 });
 
 test('None keeps a classDef changed by hand', () => {
-  const hand = `${src}  class pack merma-blue\n  classDef merma-blue fill:#00f,stroke:#2563eb,color:#1e3a8a\n`;
-  assert.equal(setColor(hand, 'pack', 'none', 'node').text, `${src}  classDef merma-blue fill:#00f,stroke:#2563eb,color:#1e3a8a\n`);
+  const hand = `${src}  class pack mermaker-blue\n  classDef mermaker-blue fill:#00f,stroke:#2563eb,color:#1e3a8a\n`;
+  assert.equal(setColor(hand, 'pack', 'none', 'node').text, `${src}  classDef mermaker-blue fill:#00f,stroke:#2563eb,color:#1e3a8a\n`);
 });
 
-test('a file\'s own class after merma\'s line: the color moves to the end, so it is drawn', () => {
-  const after = `${src}  class pack merma-blue\n  ${BLUE}\n  class pack hot\n  classDef hot fill:#fdd\n`;
+test('a file\'s own class after Mermaker\'s line: the color moves to the end, so it is drawn', () => {
+  const after = `${src}  class pack mermaker-blue\n  ${BLUE}\n  class pack hot\n  classDef hot fill:#fdd\n`;
   assert.deepEqual(colorOf(after, 'pack'), { key: null, other: 'hot' });
   assert.equal(setColor(after, 'pack', 'red', 'node').text,
-    `${src}  class pack hot\n  classDef hot fill:#fdd\n  class pack merma-red\n  ${RED}\n`);
+    `${src}  class pack hot\n  classDef hot fill:#fdd\n  class pack mermaker-red\n  ${RED}\n`);
 });
 
 test('a node with a class of the file\'s own keeps it, with the color after', () => {
   const hot = 'flowchart TD\n  pack:::hot --> send\n  classDef hot fill:#fdd\n';
   assert.deepEqual(colorOf(hot, 'pack'), { key: null, other: 'hot' });
   const blue = setColor(hot, 'pack', 'blue', 'node').text;
-  assert.equal(blue, `${hot}  class pack merma-blue\n  ${BLUE}\n`);
+  assert.equal(blue, `${hot}  class pack mermaker-blue\n  ${BLUE}\n`);
   assert.deepEqual(colorOf(blue, 'pack'), { key: 'blue', other: null });
   assert.deepEqual(colorOf(hot, 'send'), { key: 'none', other: null });
 });
@@ -62,14 +62,14 @@ test('a class with hyphens after ::: is read whole: its color, a copy, and wheth
   const own = 'flowchart TD\n  pack:::my-class --> send\n  classDef my-class fill:#fdd\n';
   assert.deepEqual(colorOf(own, 'pack'), { key: null, other: 'my-class' });
   assert.deepEqual(copyNode(own, 'pack').classes, ['my-class']);
-  const both = `flowchart TD\n  pack --> send:::merma-blue\n  class pack merma-blue\n  ${BLUE}\n`;
-  assert.equal(setColor(both, 'pack', 'none', 'node').text, `flowchart TD\n  pack --> send:::merma-blue\n  ${BLUE}\n`);
+  const both = `flowchart TD\n  pack --> send:::mermaker-blue\n  class pack mermaker-blue\n  ${BLUE}\n`;
+  assert.equal(setColor(both, 'pack', 'none', 'node').text, `flowchart TD\n  pack --> send:::mermaker-blue\n  ${BLUE}\n`);
 });
 
-test('a color on a shared line of merma\'s is split, so the other node keeps it', () => {
-  const shared = `${src}  class pack,send merma-blue\n  ${BLUE}\n`;
+test('a color on a shared line of Mermaker\'s is split, so the other node keeps it', () => {
+  const shared = `${src}  class pack,send mermaker-blue\n  ${BLUE}\n`;
   assert.equal(setColor(shared, 'pack', 'red', 'node').text,
-    `${src}  class send merma-blue\n  ${BLUE}\n  class pack merma-red\n  ${RED}\n`);
+    `${src}  class send mermaker-blue\n  ${BLUE}\n  class pack mermaker-red\n  ${RED}\n`);
 });
 
 test('a style line setting a fill, a border or a text color refuses a color; other style lines do not', () => {
@@ -83,7 +83,7 @@ test('a style line setting a fill, a border or a text color refuses a color; oth
 test('a subgraph takes the lighter box preset', () => {
   const sg = 'flowchart TD\n  subgraph pay [Payment]\n    charge --> ok\n  end\n';
   const out = setColor(sg, 'pay', 'blue', 'subgraph');
-  assert.equal(out.text, `${sg}  class pay merma-blue-box\n  classDef merma-blue-box fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a\n`);
+  assert.equal(out.text, `${sg}  class pay mermaker-blue-box\n  classDef mermaker-blue-box fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a\n`);
   assert.deepEqual(colorOf(out.text, 'pay'), { key: 'blue', other: null });
 });
 
@@ -91,20 +91,20 @@ test('a subgraph with no id is given one first', () => {
   const sg = 'flowchart TD\n  subgraph "Order records"\n    mail --- note\n  end\n';
   const out = setColor(sg, 'subGraph0', 'green', 'subgraph');
   assert.equal(out.id, 's1');
-  assert.match(out.text, /subgraph s1 \["Order records"\]\n[\s\S]*class s1 merma-green-box\n/);
+  assert.match(out.text, /subgraph s1 \["Order records"\]\n[\s\S]*class s1 mermaker-green-box\n/);
 });
 
 test('a paste into another file brings the classDef with the class', () => {
   const blue = setColor(src, 'pack', 'blue', 'node').text;
   const other = 'flowchart LR\n  a --> b\n';
   const out = pasteNode(other, copyNode(blue, 'pack'), null, false).text;
-  assert.equal(out, `${other}  n1[[Pack]]\n  class n1 merma-blue\n  ${BLUE}\n`);
+  assert.equal(out, `${other}  n1[[Pack]]\n  class n1 mermaker-blue\n  ${BLUE}\n`);
   const sg = setColor('flowchart TD\n  subgraph pay [Payment]\n    charge\n  end\n', 'pay', 'teal', 'subgraph').text;
-  assert.match(pasteSubgraph(other, copySubgraph(sg, 'pay'), null).text, /class s1 merma-teal-box\n[\s\S]*classDef merma-teal-box /);
+  assert.match(pasteSubgraph(other, copySubgraph(sg, 'pay'), null).text, /class s1 mermaker-teal-box\n[\s\S]*classDef mermaker-teal-box /);
 });
 
 test('withPresetDefs leaves a file\'s own class and a defined preset alone', () => {
-  const t = `${src}  class pack hot\n  class send merma-blue\n  ${BLUE}\n`;
+  const t = `${src}  class pack hot\n  class send mermaker-blue\n  ${BLUE}\n`;
   assert.equal(withPresetDefs(t), t);
 });
 

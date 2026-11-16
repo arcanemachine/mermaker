@@ -9,13 +9,13 @@ import { join } from 'node:path';
 import { createFiles, parsePathMap, parseRoots } from '../server/files.js';
 import { createServer, MAX_EDIT_BYTES } from '../server/server.js';
 
-const ROOT = realpathSync(mkdtempSync(join(tmpdir(), 'merma-root-')));
-const OUTSIDE = realpathSync(mkdtempSync(join(tmpdir(), 'merma-outside-')));
+const ROOT = realpathSync(mkdtempSync(join(tmpdir(), 'mermaker-root-')));
+const OUTSIDE = realpathSync(mkdtempSync(join(tmpdir(), 'mermaker-outside-')));
 let server, base;
 
 before(async () => {
   const files = createFiles({ roots: [ROOT], pathMap: [[ROOT, '/host/diagrams']] });
-  server = createServer({ files, script: '/path/to/merma.js' });
+  server = createServer({ files, script: '/path/to/mermaker.js' });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
@@ -36,7 +36,7 @@ function file(name, text = 'flowchart TD\n  A --> B\n', dir = ROOT) {
 test('health names the process and script', async () => {
   const { status, text } = await get('/health');
   assert.equal(status, 200);
-  assert.equal(text, `ok pid=${process.pid} script=/path/to/merma.js`);
+  assert.equal(text, `ok pid=${process.pid} script=/path/to/mermaker.js`);
 });
 
 test('source returns an allowed file', async () => {
@@ -170,7 +170,7 @@ test('an edit keeps the file mode and leaves no temporary file', async () => {
   chmodSync(path, 0o640);
   await edit(path, 'flowchart TD\n  X\n', { 'If-Match': await versionOf(path) });
   assert.equal(statSync(path).mode & 0o777, 0o640);
-  assert.deepEqual(readdirSync(ROOT).filter((n) => n.startsWith('.merma-')), []);
+  assert.deepEqual(readdirSync(ROOT).filter((n) => n.startsWith('.mermaker-')), []);
 });
 
 test('of several edits from one version, exactly one is saved', async () => {
@@ -188,7 +188,7 @@ function withHost(host, path, method = 'GET', headers = {}) {
     const req = http.request(base + path, { method, agent: false, headers: { ...headers, Host: host } }, (res) => {
       let body = '';
       res.on('data', (c) => { body += c; });
-      res.on('end', () => resolve({ status: res.statusCode, text: body, build: res.headers['x-merma-build'] }));
+      res.on('end', () => resolve({ status: res.statusCode, text: body, build: res.headers['x-mermaker-build'] }));
     });
     req.on('error', reject);
     req.end(method === 'POST' ? 'flowchart TD\n  X\n' : undefined);
@@ -246,9 +246,9 @@ test('a poll naming the current version gets a bodiless 304 with the ETag; any o
 test('every response carries the build id, and the page is served with the same id', async () => {
   const path = file('b1.mmd');
   const page = await get('/');
-  const id = page.headers.get('x-merma-build');
+  const id = page.headers.get('x-mermaker-build');
   assert.match(id, /^[0-9a-f]{12}$/);
-  assert.ok(page.text.includes(`<meta name="merma-build" content="${id}">`));
+  assert.ok(page.text.includes(`<meta name="mermaker-build" content="${id}">`));
   const v = await versionOf(path);
   for (const res of [
     await get('/source?f=' + q(path)),
@@ -257,34 +257,34 @@ test('every response carries the build id, and the page is served with the same 
     await get('/missing.mjs'),
     await withHost('evil.example', '/health'),
   ]) {
-    assert.equal(res.headers?.get?.('x-merma-build') ?? res.build, id);
+    assert.equal(res.headers?.get?.('x-mermaker-build') ?? res.build, id);
   }
 });
 
 test('the page is served with the size limits the server was given, and empty ones when it was given none', async () => {
   const page = await get('/');
-  assert.ok(page.text.includes('<meta name="merma-max-edges" content="">'));
-  assert.ok(page.text.includes('<meta name="merma-max-text" content="">'));
+  assert.ok(page.text.includes('<meta name="mermaker-max-edges" content="">'));
+  assert.ok(page.text.includes('<meta name="mermaker-max-text" content="">'));
   const other = createServer({ files: createFiles({ roots: [ROOT] }), script: 'x', limits: { maxEdges: 2000, maxTextSize: 90000 } });
   await new Promise((resolve) => other.listen(0, '127.0.0.1', resolve));
   try {
     const text = await (await fetch(`http://127.0.0.1:${other.address().port}/`)).text();
-    assert.ok(text.includes('<meta name="merma-max-edges" content="2000">'));
-    assert.ok(text.includes('<meta name="merma-max-text" content="90000">'));
+    assert.ok(text.includes('<meta name="mermaker-max-edges" content="2000">'));
+    assert.ok(text.includes('<meta name="mermaker-max-text" content="90000">'));
   } finally {
     other.close();
   }
 });
 
 test('the build id changes when a page file changes under a running server', async () => {
-  const web = mkdtempSync(join(tmpdir(), 'merma-web-'));
-  writeFileSync(join(web, 'index.html'), '<meta name="merma-build" content="{{MERMA_BUILD}}">');
+  const web = mkdtempSync(join(tmpdir(), 'mermaker-web-'));
+  writeFileSync(join(web, 'index.html'), '<meta name="mermaker-build" content="{{MERMAKER_BUILD}}">');
   writeFileSync(join(web, 'main.mjs'), 'export {};\n');
   const other = createServer({ files: createFiles({ roots: [ROOT] }), script: 'x', web });
   await new Promise((resolve) => other.listen(0, '127.0.0.1', resolve));
   try {
     const at = `http://127.0.0.1:${other.address().port}`;
-    const id = async () => (await fetch(at + '/health')).headers.get('x-merma-build');
+    const id = async () => (await fetch(at + '/health')).headers.get('x-mermaker-build');
     const before = await id();
     assert.equal(await id(), before, 'stable while nothing changes');
     writeFileSync(join(web, 'main.mjs'), 'export const changed = 1;\n');

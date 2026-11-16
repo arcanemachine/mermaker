@@ -2,7 +2,7 @@
 // diagram is drawn with Mermaid's dark themes unless its file sets one. No DOM.
 
 /** Where the chosen theme is kept (localStorage); index.html reads it too, before the page paints. */
-export const THEME_KEY = 'merma:theme';
+export const THEME_KEY = 'mermaker:theme';
 
 /** The page theme choices, in the Page theme submenu's order: System follows the system's setting. */
 export const THEMES = [

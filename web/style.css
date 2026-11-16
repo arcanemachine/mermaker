@@ -222,7 +222,7 @@ main[data-dock="left"] #code-handle { cursor: col-resize; }
 main:is([data-dock="top"], [data-dock="bottom"]) #code-handle { cursor: row-resize; }
 #code-handle:hover, #code-handle:focus-visible { background: var(--focus); outline: none; }
 body.resizing { user-select: none; }
-/* Messages from editing: what to do next (info), what merma cannot do here (warning), what was not saved and why
+/* Messages from editing: what to do next (info), what Mermaker cannot do here (warning), what was not saved and why
    (error). Screen readers hear them from the hidden live regions. */
 #notice { position: relative; z-index: 1; align-self: start; font-size: 13px; line-height: 16px; white-space: pre-wrap; }
 /* Two rows (docs/ux.md, Messages): a mode's notice, and what was refused in it under it; or a notice alone. */

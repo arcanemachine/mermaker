@@ -28,7 +28,7 @@ export function createSource(file, { onText, onError, onBuild = () => {} }) {
       const res = await fetch('/source?f=' + q, { cache: 'no-store', headers: version ? { 'If-None-Match': version } : {} });
       const body = await res.text();
       if (stopped) return;
-      const build = res.headers.get('X-Merma-Build');
+      const build = res.headers.get('X-Mermaker-Build');
       if (build) onBuild(build);
       if (started !== saves) return;
       if (res.status === 304) return;

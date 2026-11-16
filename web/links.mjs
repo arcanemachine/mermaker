@@ -2,12 +2,12 @@
 
 export const NO_LINK = 'No link on this node.';
 /** A callback, or a `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
-export const SCRIPT_LINK = 'This link runs a script. merma does not run it.';
-export const NOT_MMD = 'merma opens only .mmd files from a link to a path.';
+export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
+export const NOT_MMD = 'Mermaker opens only .mmd files from a link to a path.';
 
 /**
  * What a link leads to: a diagram file on this server, shown with its part (a subgraph id, as in the address), a web
- * address, an app's address (`vscode:`), which the system hands to the app, or why merma does not follow it.
+ * address, an app's address (`vscode:`), which the system hands to the app, or why Mermaker does not follow it.
  * @typedef {{ path: string, part: string | null } | { url: string, app: boolean } | { why: string }} LinkTarget
  */
 
@@ -38,7 +38,7 @@ export function linkTarget(/** @type {string | undefined} */ link, /** @type {bo
   const scheme = /^([a-z][a-z\d+.-]*):/i.exec(link)?.[1].toLowerCase();
   if (scheme === 'http' || scheme === 'https') return { url: link, app: false };
   if (scheme === 'vscode') return { url: link, app: true };
-  if (scheme) return { why: `merma does not open ${scheme}: links.` };
+  if (scheme) return { why: `Mermaker does not open ${scheme}: links.` };
   // A path, from the file's folder: `other.mmd?part=pay`, or `?part=pay` for this file.
   const url = new URL(link, new URL('file://' + file));
   const path = decodeURIComponent(url.pathname);

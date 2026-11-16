@@ -1,4 +1,4 @@
-// The build id: which version of merma's code a page is running. A page compares the id it was served with against
+// The build id: which version of Mermaker's code a page is running. A page compares the id it was served with against
 // the one on each response, and reloads when they differ, so open pages pick up new code without anyone reloading
 // them. The server's own code (server/, bin/) only changes with a restart, so it is hashed once; the page's files
 // (web/) can change under a running server, so they are re-hashed whenever a file's size or modification time does.
