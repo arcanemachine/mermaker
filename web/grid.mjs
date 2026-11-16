@@ -31,3 +31,17 @@ export function move(index, key, count, columns) {
   if (key === 'ArrowUp') return at(row > 0 ? row - 1 : bottom, col);
   return null;
 }
+
+/**
+ * Which entry a digit key picks, or -1: by the key's place (`code`), not its character, since on AZERTY the digit row
+ * types &é"' without Shift; the numpad gives a digit only with Num Lock on (`key` is then the digit, else an arrow).
+ * In a picker with a second ten, Shift picks from it and its absence from the first; a picker with no second ten
+ * ignores Shift.
+ * @param {{ digit?: string, shift?: boolean }[]} entries
+ * @param {{ code: string, key: string, shiftKey: boolean }} e
+ */
+export function digitPick(entries, e) {
+  const tens = entries.some((entry) => entry.shift);
+  return entries.findIndex((entry) => entry.digit && (!tens || Boolean(entry.shift) === e.shiftKey)
+    && (e.code === `Digit${entry.digit}` || (e.code === `Numpad${entry.digit}` && e.key === entry.digit)));
+}

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { move } from '../web/grid.mjs';
+import { digitPick, move } from '../web/grid.mjs';
 
 // A full grid of 10 in 5 columns:  0 1 2 3 4 / 5 6 7 8 9
 test('arrows move one step inside the grid', () => {
@@ -72,4 +72,20 @@ test('one row: Up and Down stay put', () => {
 test('a key that is not an arrow is not the grid\'s', () => {
   assert.equal(move(2, 'Enter', 10, 5), null);
   assert.equal(move(2, 'Escape', 10, 5), null);
+});
+
+test('a digit picks by its place: Shift picks the second ten where there is one, and is ignored where there is not', () => {
+  const tens = [{ digit: '1' }, { digit: '2' }, { digit: '1', shift: true }];
+  const key = (code, shiftKey = false, k = code.slice(-1)) => ({ code, key: k, shiftKey });
+  assert.equal(digitPick(tens, key('Digit1')), 0);
+  assert.equal(digitPick(tens, key('Digit1', true, '!')), 2);
+  assert.equal(digitPick(tens, key('Digit2', true, '@')), -1);
+  // On AZERTY the key types & unshifted: its place still picks.
+  assert.equal(digitPick(tens, key('Digit1', false, '&')), 0);
+  // The numpad gives a digit only with Num Lock on.
+  assert.equal(digitPick(tens, key('Numpad2')), 1);
+  assert.equal(digitPick(tens, key('Numpad2', false, 'ArrowDown')), -1);
+  const colors = [{ digit: '1' }, { digit: '2' }, { digit: '3' }];
+  assert.equal(digitPick(colors, key('Digit3')), 2);
+  assert.equal(digitPick(colors, key('Digit3', true, '#')), 2);
 });

@@ -14,10 +14,11 @@
 //
 // A disabled picker (`disable`) is drawn grayed, its reason where the name goes, and takes no focus or pick.
 //
-// While Shift is held the root has `data-shift` (set by the editor), and the digits Shift picks show dark and the plain
-// ones gray, the other way round when it is not (style.css).
+// While Shift is held the root has `data-shift` (set by the editor). In a picker with a second ten, with focus in its
+// grid, the digits Shift picks then show dark and the plain ones gray, the other way round otherwise (style.css). A
+// picker with no second ten (the colors) ignores Shift.
 
-import { move } from './grid.mjs';
+import { digitPick, move } from './grid.mjs';
 
 /**
  * One choice. Lists of them (arrow-types.mjs, shapes.mjs) keep a fixed order, so a digit always picks the same one.
@@ -147,10 +148,7 @@ export function createPicker({ title, entries, onPick, columns = 5, className = 
     const at = buttons.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement));
     // The columns as drawn: CSS may lay the grid out with fewer than it was made with (the shape picker on a narrow screen).
     const across = buttons.filter((b) => b.offsetTop === buttons[0].offsetTop).length;
-    // By the key's place, not its character: on AZERTY the digit row types &é"' without Shift.
-    // Shift picks from the second ten; the numpad gives a digit only with Num Lock on (else it is an arrow).
-    const digit = entries.findIndex((entry) => entry.digit && Boolean(entry.shift) === e.shiftKey
-      && (e.code === `Digit${entry.digit}` || (e.code === `Numpad${entry.digit}` && e.key === entry.digit)));
+    const digit = digitPick(entries, e);
     if (digit >= 0) { e.preventDefault(); e.stopPropagation(); buttons[digit].focus(); onPick(entries[digit].key); return; }
     // The arrow off its edge toward its field is the way back to it.
     const last = buttons.filter((b) => b.offsetTop === buttons[buttons.length - 1].offsetTop).length;
