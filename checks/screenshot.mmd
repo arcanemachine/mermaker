@@ -1,0 +1,10 @@
+flowchart TD
+  start([Start]) --> check{In stock?}
+  check -- no --> wait[/Wait/] -.-> check
+  check -->|yes| charge
+  subgraph pay [Payment]
+    charge[Charge card] ==> ok{Paid?}
+    ok -->|no| retry(Retry) --> charge
+  end
+  ok -->|yes| pack[[Pack]]
+  pack --> send>Send] --> done((Done))

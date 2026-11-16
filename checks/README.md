@@ -83,3 +83,12 @@ VoiceOver or NVDA). Run it once to start listening, do the action (`press`, `mou
 when the action saves and redraws), and run it again: it returns what was announced, as `"polite: …"` or
 `"assertive: …"`. With a selector after the file (`'#help'`) it reads that element from the top instead, item by
 item. It reads the text of the diagram's `<style>` element aloud, which real screen readers skip.
+
+## The README's screenshot
+
+`docs/screenshot.png` is retaken at a release, so it shows the page as it is. Take it on a development server, light
+page theme, of `checks/screenshot.mmd` copied to `/tmp/mermaid-diagrams/order.mmd` and served from there, so the
+header shows no one's own path: the code panel open on the left
+with Follow selection checked, its default width widened until its buttons fit, the whole diagram fitted, and one
+node in the subgraph ("Charge card") selected. `pw-repl send viewport 1120x860`, then `screenshot docs/screenshot.png`. It is left out
+of the npm package (`package.json` `files`).

@@ -18,6 +18,7 @@
     "server/",
     "web/",
     "docs/",
+    "!docs/*.png",
     "skill/",
     "README.md",
     "LICENSE.md",

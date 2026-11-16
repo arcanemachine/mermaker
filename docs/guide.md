@@ -53,7 +53,7 @@ them.
   saved or canceled, and says so.
 - The page follows the file: save it anywhere (your editor, an agent) and the diagram updates within a second. A save
   with a syntax error keeps the last good render on screen, with the error above it. So does a file over Mermaker's size
-  limits, 500 edges or 50,000 characters of code unless Mermaker was started with higher ones (README.md, Run).
+  limits, 500 edges or 50,000 characters of code unless Mermaker was started with higher ones (README.md, Settings).
 - **Export ▴** in the footer opens a menu: **Copy SVG** and **Download SVG** export the diagram as the browser drew
   it; **Download Mermaid** saves the file's text, as the page has it (not a draft in the code panel).
 - **Code** in the footer opens the code panel: the file's Mermaid code, read-only until Edit, updated with the file

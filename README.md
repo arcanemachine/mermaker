@@ -1,34 +1,75 @@
 # Mermaker
 
-A live view of Mermaid diagram files in the browser, with point-and-click editing. Point it at a `.mmd` file and the
-page re-renders within a second whenever the file changes, whoever saves it: you in your editor, or an agent. Edits
-made in the page are written back into the file as small text changes, so the file stays plain Mermaid and the only
-source of truth.
+Mermaker shows a Mermaid diagram file live in your browser, and lets you edit it by pointing and with keys. Each edit
+is written back into the `.mmd` file as a small text change, so the file stays plain Mermaid and is the only source of
+truth. You, your text editor and an AI agent can all work on the same file: the page redraws within a second whenever
+the file changes, whoever saved it.
 
-No runtime dependencies beyond Node (22 or later). The page loads Mermaid 12.2.0 from a CDN.
+Mermaker edits flowcharts (`flowchart` and `graph`). Other diagram types are shown, but not edited.
 
-## Run
+![Mermaker showing a flowchart with subgraphs, in the browser](docs/screenshot.png)
 
-```bash
-./run.sh path/to/diagram.mmd    # from a checkout; the same as: mermaker path/to/diagram.mmd
-```
+## Getting started
 
-It prints the page's address; open it. Only that file is served, on a free port. Give a port as well
-(`mermaker diagram.mmd 6378`) to get the same address each time: if a Mermaker already serves the file there, it prints
-that address instead of starting another (and if the Mermaker there serves other files, it says so and takes a free
-port).
+You need Node 22 or later, and a browser with internet access: the page loads Mermaid from a CDN.
 
-To serve every diagram in some folders, from one long-running server:
+Install Mermaker from a clone of this repository:
 
 ```bash
-mermaker serve [port] [host]       # defaults 63762, 127.0.0.1
+git clone https://github.com/arcanemachine/mermaker.git
+cd mermaker
+npm install -g .
 ```
 
-Then open `http://localhost:<port>/?f=<absolute path to a .mmd file>`, adding `&part=<subgraph id>` to open it fitted to
-one subgraph, or `&node=<node id>` to open it with a node selected (`docs/guide.md`, Viewing). With no `?f=`, the page shows a scratch
-diagram, `/tmp/mermaid-diagrams/scratch.mmd`, created on start if missing.
+(`./run.sh` in the clone does the same as `mermaker`, without installing: use it if npm refuses to install for lack
+of permissions.)
 
-Either way the server runs until you stop it (Ctrl+C), unless `MERMAKER_IDLE` is set.
+**Open one file:**
+
+```bash
+mermaker path/to/diagram.mmd
+```
+
+Mermaker prints the page's address; open it in your browser. Only that file is served. Add a port
+(`mermaker diagram.mmd 6378`) to get the same address each time: if a Mermaker already serves the file there, it
+prints that address instead of starting another.
+
+**Serve a folder of diagrams** from one long-running server:
+
+```bash
+MERMAKER_ROOTS=/path/to/diagrams/ mermaker serve
+```
+
+Then open `http://localhost:63762/?f=<absolute path to a .mmd file>`. With no `MERMAKER_ROOTS`, the folder is
+`/tmp/mermaid-diagrams/`; with no `?f=`, the page shows a scratch diagram there, made if missing. The address can also
+open on one subgraph or node (`docs/guide.md`, Viewing).
+
+Mermaker runs until you stop it (Ctrl+C).
+
+## A skill for agents
+
+Mermaker is made to work with AI agents: an agent edits the file, and the page follows it as you watch and edit
+too. `mermaker skill` prints an agent skill (`SKILL.md`) that teaches an agent to use Mermaker: serve a diagram, give
+you the page, and work on the same file with you. Save it as `mermaker/SKILL.md` in the folder your agent reads skills
+from:
+
+```bash
+mkdir -p <skills folder>/mermaker
+mermaker skill > <skills folder>/mermaker/SKILL.md
+```
+
+The skill is stamped with the version it came from and a hash of its text, so an agent can tell when its saved copy
+differs from the Mermaker in use and offer to update it, keeping its Custom rules section.
+
+## Using the page
+
+Right-click (or touch and hold) a node, an edge, a subgraph or empty space for what you can do there. Double-click a
+node or an edge to edit it. The Help button lists the main keys, and the Code button opens the file's code beside the
+diagram. `docs/guide.md` says what every gesture, menu item and key does.
+
+## Settings
+
+Settings are environment variables, read when Mermaker starts.
 
 | Setting | What it does |
 |---|---|
@@ -40,69 +81,19 @@ Either way the server runs until you stop it (Ctrl+C), unless `MERMAKER_IDLE` is
 | `MERMAKER_MAX_TEXT` | The most characters a diagram's code may have, leaving out comments and frontmatter. Default: Mermaid's 50,000. Mermaid's drawing slows as diagrams grow, so a higher limit is no promise of a quick render |
 | `MERMAKER_HOSTS` | Host names the page may be opened under, besides `localhost`, `127.0.0.1` and `[::1]` (and the bound address, when it is a single one), comma-separated. Requests addressed to any other name are refused, which stops DNS rebinding |
 
+The server listens on `127.0.0.1` unless you give it a host: `mermaker serve [port] [host]`, defaults 63762 and
+`127.0.0.1`.
+
+## Security
+
 Binding to anything other than `127.0.0.1` lets anyone who can reach the machine read and edit the served diagrams:
-there is no login.
+there is no login. Only `.mmd` files inside `MERMAKER_ROOTS` are served, and requests addressed to a host name the
+server does not know are refused (`MERMAKER_HOSTS`).
 
-## A skill for agents
+## Contributing
 
-`mermaker skill` prints an agent skill (`SKILL.md`) that teaches an agent to use mermaker: serve a diagram, hand the page
-to the user, and work on the same file with them. Save it as `mermaker/SKILL.md` in the folder your agent reads skills
-from:
-
-```bash
-mkdir -p <skills folder>/mermaker
-mermaker skill > <skills folder>/mermaker/SKILL.md
-```
-
-It is stamped with the version it came from and a hash of its text, so an agent can tell when its saved copy differs
-from the Mermaker in use and offer to update it, keeping its Custom rules section.
-
-## Using it
-
-`docs/guide.md` says what every gesture, menu item and key does; the page's Help button lists the main ones.
-
-## Layout
-
-| Path | What it is |
-|---|---|
-| `bin/mermaker.js` | The command line: opening one file, serving folders, settings, idle exit |
-| `run.sh` | Runs `bin/mermaker.js` from a checkout |
-| `server/server.js` | The routes (listed at the top of the file) |
-| `server/files.js` | Which files may be served, reading them, and writing over a known version |
-| `server/build.js` | The build id: which version of Mermaker's code a page is running |
-| `web/index.html`, `web/style.css` | The page's markup and styles |
-| `web/main.mjs` | Wires the parts together; the header and footer |
-| `web/source.mjs` | The diagram file: polled from the server, and saved over the version last read |
-| `web/viewer.mjs` | Rendering, zoom, move and fit; reports clicks |
-| `web/limits.mjs` | Mermaid's size limits: telling a render or save over one apart, and what the page says |
-| `web/links.mjs` | Where a node's link leads (Open link), or why Mermaker does not follow it |
-| `web/editor.mjs` | Selection, what each menu item and key does, the label box, saving, undo |
-| `web/keys.mjs` | What the arrows, O and I do to the selection and to Connect to…'s candidate: the trail to retrace, and I's place inside |
-| `web/menu-items.mjs` | What each menu holds, its keys, and the keys the page answers outside menus: data, no DOM |
-| `web/menu.mjs`, `web/picker.mjs` | A menu drawn from its items; a grid of choices (arrow types, shapes), in a menu or under a text field |
-| `web/arrow-types.mjs`, `web/shapes.mjs`, `web/colors.mjs` | The arrow types, the shapes and the colors, each in a fixed, numbered order, with their names and icons |
-| `web/icons.mjs` | The frame every icon shares |
-| `web/grid.mjs` | Where an arrow key moves focus in a picker's grid |
-| `web/navigate.mjs` | Where an arrow key moves the selection: along edges, or to the next thing that way |
-| `web/find.mjs` | Find on /: which drawn items match, best first |
-| `web/blink.mjs` | When find's current match blinks |
-| `web/hold.mjs` | Escape held: when it clears everything at once |
-| `web/notices.mjs` | The notice's rows: a mode's notice, and what was refused in it under it |
-| `web/place.mjs` | Where a menu goes so that it stays on screen |
-| `web/frame.mjs` | The view that shows find's matches all at once |
-| `web/collapse.mjs` | Collapsed subgraphs, page-side: the text the page draws, and what a hidden item is drawn as |
-| `web/turn.mjs` | Rotate and flip, page-side: the directions the page draws the diagram with |
-| `web/theme.mjs` | Dark mode or light mode: the look shown, and what switching keeps |
-| `web/code-panel.mjs` | The code panel: the file's code, its dock, its handle and Follow selection |
-| `web/dock.mjs` | Where the code panel docks, and how big it may be |
-| `web/history.mjs` | The undo stack and when an undo is safe |
-| `web/patch/flowchart.mjs` | The text edits themselves: pure functions, no DOM |
-| `test/` | `npm test`; `test/fixtures/` holds hand-written flowcharts every edit is tested against |
-| `skill/SKILL.md`, `server/skill.js` | The agent skill, and its stamp (`mermaker skill`) |
-| `checks/` | Checks that need a browser (`checks/README.md`); `mutate.sh`; the commit-msg hook's script |
-| `tsconfig.json`, `web/tsconfig.json`, `types/` | Type-checking (`npm run typecheck`): the Node side, the page, and declarations JSDoc cannot make (Mermaid's CDN module). Not shipped |
-| `GLOSSARY.md` | The words Mermaker uses, in the page, the docs and Mermaker's code |
-| `docs/guide.md`, `docs/ux.md` | How to use the page; the rules it follows, and why |
+`AGENTS.md` holds the rules for changing Mermaker and the map of its code; `docs/ux.md` holds the rules the page
+follows, and why.
 
 ## License
 

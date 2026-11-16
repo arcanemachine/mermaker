@@ -1,6 +1,6 @@
 # Agent Instructions — Mermaker
 
-`README.md` says what Mermaker is, how to run it, and where each part lives. Read it first.
+`README.md` says what Mermaker is and how to run it. Read it first; Layout, below, says where each part lives.
 
 If there is a local agent file (e.g. `AGENTS.LOCAL.md`) next to this file, read it too. It adds to the rules here,
 and where the two differ, the local file wins.
@@ -25,7 +25,7 @@ how to write a diagram Mermaker edits). A change to any of those updates it in t
 
 - **No runtime dependencies.** The server uses Node's standard library; the page uses the browser and Mermaid from
   the CDN, at the version pinned in `web/viewer.mjs`. Dev tools (ESLint) are fine.
-- **Each module has one job** (`README.md` → Layout). The viewer knows nothing about files or editing, the source
+- **Each module has one job** (Layout, below). The viewer knows nothing about files or editing, the source
   knows nothing about rendering, and the text edits know nothing about the DOM. `web/main.mjs` is the only place they
   meet.
 - **The `.mmd` file is the only source of truth.** An edit changes only the bytes it must, and nothing the page adds
@@ -61,6 +61,49 @@ how to write a diagram Mermaker edits). A change to any of those updates it in t
   meaning whoever uses the page is fine.
 - Conventional commits (`feat:`, `fix:`, `docs:`…), one commit per feature, with a short subject (at most 72
   characters).
+
+## Layout
+
+| Path | What it is |
+|---|---|
+| `bin/mermaker.js` | The command line: opening one file, serving folders, settings, idle exit |
+| `run.sh` | Runs `bin/mermaker.js` from a checkout |
+| `server/server.js` | The routes (listed at the top of the file) |
+| `server/files.js` | Which files may be served, reading them, and writing over a known version |
+| `server/build.js` | The build id: which version of Mermaker's code a page is running |
+| `web/index.html`, `web/style.css` | The page's markup and styles |
+| `web/main.mjs` | Wires the parts together; the header and footer |
+| `web/source.mjs` | The diagram file: polled from the server, and saved over the version last read |
+| `web/viewer.mjs` | Rendering, zoom, move and fit; reports clicks |
+| `web/limits.mjs` | Mermaid's size limits: telling a render or save over one apart, and what the page says |
+| `web/links.mjs` | Where a node's link leads (Open link), or why Mermaker does not follow it |
+| `web/editor.mjs` | Selection, what each menu item and key does, the label box, saving, undo |
+| `web/keys.mjs` | What the arrows, O and I do to the selection and to Connect to…'s candidate: the trail to retrace, and I's place inside |
+| `web/menu-items.mjs` | What each menu holds, its keys, and the keys the page answers outside menus: data, no DOM |
+| `web/menu.mjs`, `web/picker.mjs` | A menu drawn from its items; a grid of choices (arrow types, shapes), in a menu or under a text field |
+| `web/arrow-types.mjs`, `web/shapes.mjs`, `web/colors.mjs` | The arrow types, the shapes and the colors, each in a fixed, numbered order, with their names and icons |
+| `web/icons.mjs` | The frame every icon shares |
+| `web/grid.mjs` | Where an arrow key moves focus in a picker's grid |
+| `web/navigate.mjs` | Where an arrow key moves the selection: along edges, or to the next thing that way |
+| `web/find.mjs` | Find on /: which drawn items match, best first |
+| `web/blink.mjs` | When find's current match blinks |
+| `web/hold.mjs` | Escape held: when it clears everything at once |
+| `web/notices.mjs` | The notice's rows: a mode's notice, and what was refused in it under it |
+| `web/place.mjs` | Where a menu goes so that it stays on screen |
+| `web/frame.mjs` | The view that shows find's matches all at once |
+| `web/collapse.mjs` | Collapsed subgraphs, page-side: the text the page draws, and what a hidden item is drawn as |
+| `web/turn.mjs` | Rotate and flip, page-side: the directions the page draws the diagram with |
+| `web/theme.mjs` | Dark mode or light mode: the look shown, and what switching keeps |
+| `web/code-panel.mjs` | The code panel: the file's code, its dock, its handle and Follow selection |
+| `web/dock.mjs` | Where the code panel docks, and how big it may be |
+| `web/history.mjs` | The undo stack and when an undo is safe |
+| `web/patch/flowchart.mjs` | The text edits themselves: pure functions, no DOM |
+| `test/` | `npm test`; `test/fixtures/` holds hand-written flowcharts every edit is tested against |
+| `skill/SKILL.md`, `server/skill.js` | The agent skill, and its stamp (`mermaker skill`) |
+| `checks/` | Checks that need a browser (`checks/README.md`); `mutate.sh`; the commit-msg hook's script |
+| `tsconfig.json`, `web/tsconfig.json`, `types/` | Type-checking (`npm run typecheck`): the Node side, the page, and declarations JSDoc cannot make (Mermaid's CDN module). Not shipped |
+| `GLOSSARY.md` | The words Mermaker uses, in the page, the docs and Mermaker's code |
+| `docs/guide.md`, `docs/ux.md` | How to use the page; the rules it follows, and why |
 
 ## Checks
 
