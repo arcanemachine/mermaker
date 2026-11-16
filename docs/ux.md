@@ -443,7 +443,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   so the page knows each file by one name. Copy link copies the node's link as the file writes it, not as Mermaid
   reads it, as Show link shows it.
 - A node's tooltip shows as Mermaid shows it, on hover, and by keyboard when Shift is held alone on the selected node
-  for 200 ms: Mermaker fires the mouseover Mermaid's tooltip listens for, so the box, its place and its sanitizing are
+  for 500 ms (long enough that a slow Shift+F does not flash it): Mermaker fires the mouseover Mermaid's tooltip listens for, so the box, its place and its sanitizing are
   Mermaid's. Any other key, a pointer press or Shift's release hides it, and a Shift key pressed quickly (Shift+F)
   never shows it. Not in a pick, nor with Shift+D or Shift+X armed, where Shift is pressed again to confirm.
 - Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
