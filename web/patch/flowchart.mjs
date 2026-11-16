@@ -1801,6 +1801,18 @@ export function writtenScript(/** @type {string} */ text, /** @type {string} */ 
 }
 
 /**
+ * The tooltip node `id`'s `click` line gives it, as written (`click A href "a.mmd" "Payment flow"`, `click A charge
+ * "Charge the card"`), or null for none. Read from the last line, as the link is; Mermaid also keeps a tooltip from an
+ * earlier line that a later one without one does not replace (rare, and not read here).
+ */
+export function writtenTooltip(/** @type {string} */ text, /** @type {string} */ id) {
+  const line = clickLine(text, id);
+  if (!line) return null;
+  const after = line.link ? line.link.after.slice(1) : line.rest.replace(/^\s+call\s+[^(]*\([^)]*\)|^\s+[^\s"(]+/s, '');
+  return after.match(/^\s+"([^"]*)"/)?.[1] ?? null;
+}
+
+/**
  * Give node `id` the link `link`, or with null remove it. A link already written keeps its form, tooltip and target;
  * one on a line shared with other nodes is moved to a line of its own, so their links stay as they were. Removing
  * takes the node off every link line naming it, since an earlier one would take over. A `"` is written `%22`, since

@@ -224,6 +224,9 @@ main:is([data-dock="top"], [data-dock="bottom"]) #code-handle { cursor: row-resi
 body.resizing { user-select: none; }
 /* Messages from editing: what to do next (info), what Mermaker cannot do here (warning), what was not saved and why
    (error). Screen readers hear them from the hidden live regions. */
+/* Mermaid's tooltip box (viewer.mjs) sets its own pale background inline, and no text color: the page's light text on
+   the dark theme would not read on it. */
+body > div.mermaidTooltip { color: #1f2328; }
 #notice { position: relative; z-index: 1; align-self: start; font-size: 13px; line-height: 16px; white-space: pre-wrap; }
 /* Two rows (docs/ux.md, Messages): a mode's notice, and what was refused in it under it; or a notice alone. */
 #notice > div { display: none; padding: 8px 16px; }

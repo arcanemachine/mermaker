@@ -378,7 +378,7 @@ test('Run script (Shift+X) in the node menu: grayed, saying why, on a node with 
   assert.equal(whyNot(item, { ...base, script: null }), NO_SCRIPT);
 });
 
-test('Show link (Ctrl+Shift+L) in the node menu: any address, grayed as Open link is with none or a script', () => {
+test('Show link (Ctrl+Shift+L) in the node menu: any address or a script, grayed with none or a javascript: link', () => {
   const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS.node.find((i) => i.action === 'show-link'));
   assert.equal(item.key, 'ctrl+shift+l');
   assert.deepEqual(GLOBAL_KEYS['ctrl+shift+l'], ['show-link']);
@@ -389,4 +389,6 @@ test('Show link (Ctrl+Shift+L) in the node menu: any address, grayed as Open lin
   assert.equal(whyNot(item, { ...base, linkText: 'about:blank', link: { why: SCRIPT_LINK } }), SCRIPT_LINK);
   assert.equal(applies(item, { ...base, linkText: null }), false);
   assert.equal(whyNot(item, { ...base, linkText: null }), NO_LINK);
+  // A script shows too: what it calls.
+  assert.equal(applies(item, { ...base, linkText: null, script: 'charge("eu", 3)' }), true);
 });

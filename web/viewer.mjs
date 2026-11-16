@@ -99,7 +99,17 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
     apply();
   }
 
+  /**
+   * Hide Mermaid's tooltip box, which hides only on a node's mouseout: a view change moves the node from under it, and
+   * the label box opens where it lies.
+   */
+  const hideTooltip = () => {
+    const tip = /** @type {HTMLElement | null} */ (document.querySelector('body > div.mermaidTooltip'));
+    if (tip) tip.style.opacity = '0';
+  };
+
   function apply(byUser = false) {
+    hideTooltip();
     stage.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`;
     onViewChange({ byUser });
   }
@@ -367,6 +377,8 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
       mermaid.initialize(merged);
     },
     /** Empty the stage, for another file: its next render is a first one again, fitted, the view no longer touched. */
+    hideTooltip,
+
     clear() {
       stage.replaceChildren();
       renderId = null;
@@ -404,7 +416,7 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
     async show(/** @type {string} */ text) {
       const id = 'd' + n++;
       try {
-        const { svg } = await mermaid.render(id, text, scratch);
+        const { svg, bindFunctions } = await mermaid.render(id, text, scratch);
         // Over maxTextSize Mermaid draws a stand-in diagram rather than failing; the last good render is kept.
         if (svg.includes(TEXT_LIMIT_LABEL)) {
           const drawn = document.createElement('template');
@@ -415,6 +427,13 @@ export function createViewer({ diagram, stage, limits = {} }, hooks = {}) {
         const first = renderId === null;
         stage.innerHTML = svg;
         renderId = id;
+        // Mermaid's own tooltips (a `click` line's "tip"): under the strict security level its bindings are only those.
+        // Its tooltip box, which it adds to the body, is made anew for each drawing, since a node drawn again under the
+        // pointer gets no mouseout, and a fade still running would show the old box again; hidden from screen readers,
+        // which hear the tooltip with the selection.
+        document.querySelector('body > div.mermaidTooltip')?.remove();
+        bindFunctions?.(stage);
+        document.querySelector('body > div.mermaidTooltip')?.setAttribute('aria-hidden', 'true');
         const rect = /** @type {SVGSVGElement} */ (stage.querySelector('svg')).getBoundingClientRect();
         size = { w: rect.width / view.k, h: rect.height / view.k };
         if (first) fit();

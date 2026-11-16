@@ -146,9 +146,12 @@ const linkItem = {
   why: (/** @type {MenuState} */ s) => (s.link && 'why' in s.link ? s.link.why : NO_LINK),
   title: (/** @type {MenuState} */ s) => (!s.link || 'why' in s.link ? null : 'url' in s.link ? s.link.url : s.link.path),
 };
-/** Show link: any address, followed or not (`mailto:` too); grayed as Open link is with none, or one that runs a script. */
+/**
+ * Show link: any address, followed or not (`mailto:` too), or a script; grayed as Open link is with none, or a
+ * `javascript:` link.
+ */
 const showLinkItem = {
-  applies: (/** @type {MenuState} */ s) => Boolean(s.linkText) && s.linkText !== 'about:blank',
+  applies: (/** @type {MenuState} */ s) => (Boolean(s.linkText) && s.linkText !== 'about:blank') || Boolean(s.script),
   why: (/** @type {MenuState} */ s) => (s.link && 'why' in s.link ? s.link.why : NO_LINK),
 };
 /** Fit to subgraph, in a subgraph's menu and a box's. */

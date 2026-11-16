@@ -4,7 +4,7 @@
 declare module 'https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.esm.min.mjs' {
   const mermaid: {
     initialize(config: object): void;
-    render(id: string, text: string, svgContainingElement?: Element): Promise<{ svg: string }>;
+    render(id: string, text: string, svgContainingElement?: Element): Promise<{ svg: string, bindFunctions?: (element: Element) => void }>;
     parse(text: string): Promise<unknown>;
     mermaidAPI: {
       // Mermaid's own defaults, a section per diagram type: viewer.mjs reads which types have a theme of their own.

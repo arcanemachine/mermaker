@@ -440,7 +440,13 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   reads it, as Show link shows it.
 - Show link puts the address in the info notice, as the file writes it (a notice's text can be selected
   and copied, a hover tip's cannot), and selecting a linked node says it aloud ("…selected, links to …"), so the
-  keyboard and a screen reader learn what the mouse sees. No hover tip on the node: the notice does the job.
+  keyboard and a screen reader learn what the mouse sees. A script shows and is said the same way ("calls …"), and so
+  is a tooltip. The tooltip itself is Mermaid's own, shown on hover as Mermaid shows it (Mermaker hooks into Mermaid
+  rather than drawing one), with its text dark on the dark page theme, since Mermaid sets only its pale background;
+  hidden from screen readers, which hear it with the selection, and hidden at each redraw, view change and label
+  box, none of which a mouseout follows.
+- A `click` line's target (`_blank`, `_self`) is ignored on purpose: the key chooses, L in place and Shift+L in a new
+  tab, so the same key always does the same thing whatever the file says.
 - Edit link asks in the browser's own prompt (keep it simple), not a box of Mermaker's: a link is one line of
   text, rarely changed. Emptying it removes the link, as an emptied edge label does, so there is no Remove link
   item. It edits the link as the file writes it, never Mermaid's sanitized reading, so a `javascript:` link can be

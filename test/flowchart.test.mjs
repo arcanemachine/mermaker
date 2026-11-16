@@ -10,7 +10,7 @@ import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
-  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink, writtenScript,
+  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink, writtenScript, writtenTooltip,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -1579,6 +1579,17 @@ test('writtenScript reads a callback as Mermaid does: its call, name and argumen
   for (const line of ['click A href "x.mmd"', 'click A "x.mmd"', 'click A call charge', '%% none']) assert.equal(on(line), null, line);
   // The last click line naming the node is the one Mermaid takes.
   assert.equal(on('click A charge\n  click A href "x.mmd"'), null);
+});
+
+test("writtenTooltip reads the tooltip after a link or a script, as written, or null for none", () => {
+  const on = (line) => writtenTooltip(`flowchart TD\n  A --> B\n  ${line}\n`, 'A');
+  assert.equal(on('click A href "a.mmd" "Payment flow"'), 'Payment flow');
+  assert.equal(on('click A "a.mmd" "Payment flow" _blank'), 'Payment flow');
+  assert.equal(on('click A charge "Charge the card"'), 'Charge the card');
+  assert.equal(on('click A call charge("eu", 3) "Charge the card"'), 'Charge the card');
+  for (const line of ['click A href "a.mmd"', 'click A href "a.mmd" _blank', 'click A charge', 'click A call charge("x")', '%% none']) {
+    assert.equal(on(line), null, line);
+  }
 });
 
 test('writtenLink reads the address as written from the last click line naming the node, javascript: too; a callback is a script', () => {

@@ -17,7 +17,7 @@ import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, writtenScript, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
@@ -637,9 +637,15 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'merge-into': () => startMerge(),
     'open-link': () => openLink(false),
     'open-link-tab': () => openLink(true),
+    // The link as Mermaid reads it, or the script, then the tooltip, as the file writes them: one notice, selectable.
     'show-link': () => {
-      const link = links.get(selection().id);
-      if (link) ui.notice(`This node links to: ${link}`, 'info');
+      const { id } = selection();
+      const link = links.get(id);
+      const script = writtenScript(shownText, id);
+      const tip = writtenTooltip(shownText, id);
+      const does = link ? `links to: ${link}` : script ? `calls ${script.call}.` : null;
+      if (!does) return;
+      ui.notice(`This node ${does}${tip === null ? '' : `\nIts tooltip says "${tip}".`}`, 'info');
     },
     'edit-link': () => editLink(),
     'copy-link': () => {
@@ -1789,10 +1795,17 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const top = Math.min(...rects.map((r) => r.top)), bottom = Math.max(...rects.map((r) => r.bottom));
     viewer.reveal(new DOMRect(left, top, right - left, bottom - top));
   }
-  /** What a selection says aloud: the item, and where a node links, so the keyboard hears what the mouse sees. */
+  /**
+   * What a selection says aloud: the item, and where a node links or the script it calls, and its tooltip, so the
+   * keyboard hears what the mouse sees.
+   */
   function selectedSaid(/** @type {Item} */ item) {
-    const link = item.kind === 'node' ? links.get(item.id) : undefined;
-    return `${named(item)} selected${link && link !== 'about:blank' ? `, links to ${link}` : ''}`;
+    if (item.kind !== 'node') return `${named(item)} selected`;
+    const link = links.get(item.id);
+    const script = writtenScript(shownText, item.id);
+    const tip = writtenTooltip(shownText, item.id);
+    const does = link && link !== 'about:blank' ? `, links to ${link}` : script ? `, calls ${script.call}` : '';
+    return `${named(item)} selected${does}${tip === null ? '' : `, tooltip "${tip}"`}`;
   }
   /**
    * Select from the keyboard: said aloud, since nothing else tells a screen reader, and brought into view; `moving`,
@@ -2298,6 +2311,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const r = labelBoxRect(target);
     if (!r) return;
     closeMenus();
+    viewer.hideTooltip();
     labelling = target;
     // innerText, not textContent: a label's line breaks (<br>) come through as newlines.
     // An SVG element (a label Mermaid drew as SVG text) has no innerText.

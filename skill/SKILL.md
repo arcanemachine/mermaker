@@ -81,7 +81,8 @@ syntax and features as far as they go, and add no markers, comments or metadata 
   an edge or a `@{ view }` line in the file cannot rely on it.
 - To link a node to another diagram, add Mermaid's `click charge href "payment.mmd"` on a line of its
   own, the path read from this file's folder (`payment.mmd?part=pay` opens it fitted to its "pay"
-  subgraph, `payment.mmd?node=charge` with its "charge" node selected). The user follows it with L, in the same page, and comes back with the browser's Back. The
+  subgraph, `payment.mmd?node=charge` with its "charge" node selected). A quoted text after the address is
+  a tooltip, shown when the pointer is over the node (`click charge href "payment.mmd" "Payment flow"`). The user follows it with L, in the same page, and comes back with the browser's Back. The
   other file must be one the server serves (`MERMAKER_ROOTS`). A web or `vscode://` address works too, and
   opens outside the page.
 - A node can name a script instead of a link (`click charge call charge("eu", 3)`, Mermaid's callback).

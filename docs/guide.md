@@ -39,7 +39,10 @@ them.
   (above), keeping the part shown. A web address opens in a new tab. A `vscode://` link
   goes to VS Code, and the page stays as it is. **Show link** (Ctrl+Shift+L, ⌘⇧L on a Mac) shows the link as the file
   writes it in a notice, where it can be selected and copied, and **Copy link** (Y) copies it as the file writes it;
-  selecting a linked node also says it to a screen reader. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
+  selecting a linked node also says it to a screen reader. A `click` line's target (`_blank`) is not followed: L opens
+  in place and Shift+L in a new tab. A tooltip in the `click` line (`click A href "payment.mmd" "Payment flow"`) shows
+  as Mermaid shows it, when the pointer is over the node; Show link shows it too, and a script's call (`click A call
+  charge("eu", 3)`), and selecting the node says both. **Open link in new tab** (Shift+L) opens a `.mmd` file in a new tab;
   on any other link it does what L does. L and Shift+L are grayed, with the reason, on a node with no link, a script
   (`click A callback`, which Run script runs, below), a `javascript:` link, a link of another kind (`mailto:`), and a path to anything but a
   `.mmd` file. Hovering over the item shows where it leads. A click on a linked node selects it, as on any node: Mermaker
