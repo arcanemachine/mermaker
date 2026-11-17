@@ -542,7 +542,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   // Shift held alone on a selected node shows its tooltip (docs/ux.md), as hovering does: Mermaid's own, by firing the
   // mouseover its tooltip listens for on the node, and mouseout to hide it. Not in a pick, with a Shift key armed, in a
   // field or a menu: only with the node selected and nothing else under way.
-  const TIP_DELAY = 500;
+  const TIP_DELAY = 400;
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let tipTimer;
   /** @type {Element | null} the node whose tooltip shows */
