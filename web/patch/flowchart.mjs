@@ -154,6 +154,22 @@ export function setTitle(/** @type {string} */ text, /** @type {string} */ title
 }
 
 /**
+ * Each line masked (mask), and Mermaid's accessibility lines blanked whole: `accTitle: …`, `accDescr: …` and an
+ * `accDescr { … }` block, whose text Mermaid never reads as statements.
+ */
+function masks(/** @type {string[]} */ ls) {
+  const blank = (/** @type {string} */ line) => line.replace(/[^\n]/g, ' ');
+  let inBlock = false;
+  return ls.map((line) => {
+    if (inBlock) { inBlock = !line.includes('}'); return blank(line); }
+    if (/^\s*acc(Title|Descr)\s*:/.test(line)) return blank(line);
+    const open = /^\s*accDescr\s*\{/.exec(line);
+    if (open) { inBlock = !line.slice(open[0].length).includes('}'); return blank(line); }
+    return mask(line);
+  });
+}
+
+/**
  * The line with everything that is not syntax blanked out: quoted strings, shape and edge labels, `@{…}` blocks and
  * comments become spaces. Positions are kept, so an index into the mask is an index into the line.
  */
@@ -223,11 +239,12 @@ function shapeSpan(/** @type {string} */ line, /** @type {number} */ at) {
 /** Each place `id` appears as a node reference in the diagram body: [{ line, col }]. */
 function mentions(/** @type {string} */ text, /** @type {string} */ id) {
   const ls = lines(text);
+  const ms = masks(ls);
   const found = [];
   const re = new RegExp(String.raw`(?<![\p{L}\p{N}_])${escapeRe(id)}(?![\p{L}\p{N}_])`, 'gu');
   for (let n = headerIndex(ls) + 1; n < ls.length; n++) {
     // A class is not a node, even one named as a node is (`A:::error --> error`).
-    const m = mask(ls[n]).replace(new RegExp(`:::${CLASS}`, 'gu'), (c) => ' '.repeat(c.length));
+    const m = ms[n].replace(new RegExp(`:::${CLASS}`, 'gu'), (c) => ' '.repeat(c.length));
     for (const hit of m.matchAll(re)) found.push({ line: n, col: hit.index });
   }
   return found;
@@ -315,9 +332,10 @@ export function subgraphs(/** @type {string} */ text) {
   let closed = 0;
   let offset = 0;
   const header = headerIndex(ls);
+  const ms = masks(ls);
   for (let k = 0; k < ls.length; offset += ls[k].length, k++) {
     if (k <= header) continue;
-    const line = ls[k], m = mask(line);
+    const line = ls[k], m = ms[k];
     const kw = m.match(/^\s*subgraph(?=[\s;]|$)/);
     if (kw) {
       const semi = m.indexOf(';', kw[0].length);
@@ -728,6 +746,7 @@ export function edgeBySvgId(/** @type {string} */ text, /** @type {string} */ sv
  */
 function statements(/** @type {string} */ text) {
   const ls = lines(text);
+  const ms = masks(ls);
   const header = headerIndex(ls);
   /** @type {Statement[]} */
   const out = [];
@@ -735,7 +754,7 @@ function statements(/** @type {string} */ text) {
   for (let n = 0; n < ls.length; offset += ls[n].length, n++) {
     if (n < header) continue;
     const line = ls[n];
-    let m = mask(line);
+    let m = ms[n];
     // The header line can carry statements too, after a `;`: `flowchart LR; A --> B`.
     if (n === header) {
       const semi = m.indexOf(';');

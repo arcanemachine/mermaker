@@ -237,6 +237,15 @@ test('setSubgraphTitle rewrites only the title, keeping the id, in every form', 
   assert.throws(() => setSubgraphTitle(src, 'nope', 'X'), /not in the file/);
 });
 
+test("accessibility lines are not statements: no node, edge or subgraph is read from accTitle, accDescr or an accDescr block", () => {
+  const text = 'flowchart TD\n  accTitle: Order flow\n  accDescr: Goes from A --> B then end\n  accDescr {\n  subgraph x\n  C --> D\n  }\n  A --> B\n';
+  for (const id of ['accTitle', 'Order', 'Goes', 'accDescr', 'C', 'x']) assert.equal(hasNode(text, id), false, id);
+  assert.deepEqual(edges(text).map((e) => [e.from, e.to]), [['A', 'B']]);
+  assert.deepEqual(subgraphs(text), []);
+  // A one-line block ends where it opens.
+  assert.equal(hasNode('flowchart TD\n  accDescr { One line }\n  A --> B\n', 'A'), true);
+});
+
 test("naming an id-less subgraph renames the lines that name it by Mermaid's subGraph<k>, leaving the others' k", () => {
   const src = 'flowchart TD\n  subgraph "A b"\n    x\n  end\n  subgraph "C d"\n    y\n  end\n  style subGraph0 fill:#eee\n  x --> subGraph0\n'
     + '  subGraph0@{ view: collapsed }\n  class subGraph1 hot\n';
