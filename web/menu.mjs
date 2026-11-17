@@ -267,6 +267,44 @@ export function createChoices({ title, entries, onPick }) {
   };
 }
 
+/**
+ * A submenu of actions, each with its key: run by a click, Enter or its key; Up and Down move round it. The keys work
+ * only here, while the submenu has focus.
+ * @param {{ title: string, entries: { action: string, label: string, key: string }[], onPick(action: string): void }} options
+ */
+export function createActions({ title, entries, onPick }) {
+  const el = document.createElement('div');
+  el.className = 'choices';
+  el.setAttribute('role', 'menu');
+  el.setAttribute('aria-label', title);
+  const os = () => document.documentElement.dataset.os ?? 'pc';
+  const buttons = entries.map((entry) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    b.setAttribute('aria-keyshortcuts', keyAria(entry.key, os()));
+    const key = Object.assign(document.createElement('kbd'), { className: 'key', textContent: keyLabel(entry.key, os()) });
+    key.setAttribute('aria-hidden', 'true');
+    b.append(Object.assign(document.createElement('span'), { textContent: entry.label }), key);
+    b.addEventListener('pointerenter', () => b.focus());
+    b.addEventListener('click', () => onPick(entry.action));
+    el.append(b);
+    return b;
+  });
+  el.addEventListener('keydown', (e) => {
+    const at = buttons.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement));
+    const byKey = !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && entries.find((x) => x.key === e.key.toLowerCase());
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      buttons[(at + (e.key === 'ArrowDown' ? 1 : buttons.length - 1)) % buttons.length].focus();
+    } else if (byKey) {
+      e.preventDefault();
+      onPick(byKey.action);
+    }
+  });
+  return { el, focus() { buttons[0].focus(); } };
+}
+
 function popover(/** @type {string} */ className) {
   const box = document.createElement('div');
   box.className = className;

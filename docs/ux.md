@@ -154,7 +154,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   letter of its label where one fits: M is Merge into… on a node. A letter keeps one meaning across kinds: C picks what
   an edge goes to and Shift+C what it comes from, on a node (Connect to…, Connect from…) and on an edge (Reassign end…,
   Reassign start…) alike. The Edit items have no menu key at all: Enter and F2 already edit the
-  selection, quicker than opening a menu, and in an open menu Enter runs the item in focus. So E is free. S is Add
+  selection, quicker than opening a menu, and in an open menu Enter runs the item in focus. So E is free of editing, and
+  opens Accessibility ▸ in the empty-space menu, whose T and P no other menu uses. S is Add
   subgraph, inside a selected subgraph or at the top level; on a node it is left for wrapping it in a subgraph.
 - The selection's menu opens with . (period), the menu key or Shift+F10 (M is kept for a letter; "." is
   Gmail's key for its "More" menu). Keys are matched by the character typed, so on AZERTY . is Shift+;.

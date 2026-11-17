@@ -230,6 +230,8 @@ const ui = {
   },
   /** What an edit did, for screen readers only: on screen, the redrawn diagram shows it. */
   announce: (/** @type {string} */ message) => speak('notice-status', message),
+  /** A result not visible on screen (docs/ux.md, toast). */
+  toast: (/** @type {string} */ message) => toast(message),
   /** Hide the notice, or in a mode what shows over its notice; whether one was showing. */
   hideNotice() {
     cancelAnimationFrame(speakFrame);

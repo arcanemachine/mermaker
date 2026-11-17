@@ -323,8 +323,18 @@ export const MENUS = {
     { action: 'fit-view', label: 'Fit to window', key: 'f', view: true },
     ...turnItems(),
     { action: 'page-theme', label: 'Page theme', submenu: 'page-theme', view: true, separated: true, setting: true },
+    { action: 'accessibility', label: 'Accessibility', submenu: 'accessibility', key: 'e' },
   ],
 };
+
+/**
+ * The empty-space menu's Accessibility ▸ (E): the diagram's accessible title (T) and description (P), keys only in it.
+ * Letters no other menu uses, so each keeps one meaning (docs/ux.md).
+ */
+export const ACCESSIBILITY = [
+  { action: 'edit-acc-title', label: 'Edit accessible title', key: 't' },
+  { action: 'edit-acc-descr', label: 'Edit accessible description', key: 'p' },
+];
 
 /** The footer's Export menu. Its items act on the page, not the diagram, so it is not one of MENUS. */
 export const EXPORT_MENU = [

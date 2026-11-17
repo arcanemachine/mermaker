@@ -1890,6 +1890,43 @@ export function setTooltip(/** @type {string} */ text, /** @type {string} */ id,
   return appendLine(apply(text, [{ s: line.s, parts: [{ text: others }] }]), own);
 }
 
+/**
+ * The diagram's accessible title (`accTitle: …`) or description (`accDescr: …`) as the file writes it: { value, line },
+ * `block` for a description over several lines (`accDescr { … }`), or null for none. The first one written.
+ * @returns {{ value: string, line: number } | 'block' | null}
+ */
+export function accText(/** @type {string} */ text, /** @type {'accTitle' | 'accDescr'} */ which) {
+  const ls = lines(text);
+  for (let n = headerIndex(ls) + 1; n < ls.length; n++) {
+    if (which === 'accDescr' && /^\s*accDescr\s*\{/.test(ls[n])) return 'block';
+    const m = new RegExp(`^\\s*${which}\\s*:\\s*(.*?)\\s*$`).exec(ls[n]);
+    if (m) return { value: m[1], line: n };
+  }
+  return null;
+}
+
+/**
+ * Give the diagram the accessible title or description `value`, or with null remove it: a line written is changed in
+ * place, else one is added after the header (a description after the title, if there is one). Never empty: Mermaid
+ * would take the next line as the text. Throws on a description over several lines, which is left to the code.
+ */
+export function setAccText(/** @type {string} */ text, /** @type {'accTitle' | 'accDescr'} */ which, /** @type {string | null} */ value) {
+  const now = accText(text, which);
+  if (now === 'block') throw new Error('This description runs over several lines. Edit it in the code.');
+  const v = value?.trim() || null;
+  const ls = lines(text);
+  if (now) {
+    const eol = /\r?\n$/.exec(ls[now.line])?.[0] ?? '';
+    if (v === null) ls.splice(now.line, 1);
+    else ls[now.line] = `${indentOf(ls[now.line])}${which}: ${v}${eol}`;
+    return ls.join('');
+  }
+  if (v === null) return text;
+  const title = which === 'accDescr' ? accText(text, 'accTitle') : null;
+  const after = title && title !== 'block' ? title.line : headerIndex(ls);
+  return insertAfter(text, after, `${which}: ${v}`, title && title !== 'block' ? null : statementIndent(text));
+}
+
 /** The `style`, `class` and `click` lines naming `id`: what follows the ids in each. */
 function settingsOf(/** @type {string} */ text, /** @type {string} */ id) {
   const settings = [];

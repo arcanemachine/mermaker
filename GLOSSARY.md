@@ -46,6 +46,7 @@ Mermaid syntax.
 | **subgraph id** | The name a subgraph has in the file (`pay` in `subgraph pay [Payment]`, or `Payment` in `subgraph Payment`). One written with none (`subgraph "Order log"`) is `subGraph<k>` to Mermaid, k counting every subgraph in the order their `end`s come. |
 | **subgraph title** | The text shown on a subgraph. |
 | **title** | The diagram's title, the frontmatter's `title:`, drawn over the diagram (Mermaid's word). Alone, "title" is this one; a subgraph's is its subgraph title. |
+| **accessible title**, **accessible description** | The text screen readers give the diagram, never drawn: `accTitle: …` and `accDescr: …` (Mermaid's words, from its accessibility docs). Not the title, which is drawn. |
 | **connect** | Make an edge between two nodes or subgraphs by pointing (Connect to…, Connect from…). |
 | **pick** | The state a menu item (or its key) puts you in when it needs another node or subgraph, such as Connect to… or Merge into…: you pick that node or subgraph by a click, or by the arrows or find and Enter; Escape or a click anywhere else cancels. Mermaker's code calls it `picking`. Choosing an entry in a picker (below) is a pick too, but needs no node. |
 | **candidate** | In a pick, the item the arrows or find have reached, outlined solid, which Enter picks. |

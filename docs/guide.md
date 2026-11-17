@@ -317,6 +317,12 @@ nothing selected, leaving a part (Viewing, above).
 with Mermaid's dark themes, unless the file sets a theme of its own; the find bar stays amber. Export gives the diagram
 as drawn. This browser keeps the choice, in every tab.
 
+**Accessibility ▸** (E) holds **Edit accessible title** (T) and **Edit accessible description** (P), the text screen
+readers give the diagram (Mermaid's `accTitle:` and `accDescr:`); nothing on the page shows it. Each asks in the
+browser's own box, holding what the file has, and writes one line after the header: `accTitle: Order flow`. Empty it to
+remove the line. A description written over several lines (`accDescr { … }`) is left to the code. The keys work only in
+this submenu.
+
 **Rotate** (R) turns the diagram sideways, top-down to left-to-right and back (bottom-up to right-to-left), and
 **Flip** (Shift+R) turns it the other way up, top-down to bottom-up, left-to-right to right-to-left; each reads
 **Rotate back** or **Flip back** while it is on. For fitting a wide or a tall window: the file is not changed, the page

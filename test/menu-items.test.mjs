@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
-import { applies, EXPORT_MENU, GLOBAL_KEYS, keyAria, keyLabel, LOCKED, MENUS, NOTHING_COPIED, PART_UNNAMED, SUBGRAPH_BARE, SUBGRAPH_ON_EDGE, VERBS, whyNot } from '../web/menu-items.mjs';
+import { ACCESSIBILITY, applies, EXPORT_MENU, GLOBAL_KEYS, keyAria, keyLabel, LOCKED, MENUS, NOTHING_COPIED, PART_UNNAMED, SUBGRAPH_BARE, SUBGRAPH_ON_EDGE, VERBS, whyNot } from '../web/menu-items.mjs';
 import { NO_CLICK, NO_LINK, NO_SCRIPT, SCRIPT_LINK } from '../web/links.mjs';
 import { ARROW_TYPES } from '../web/arrow-types.mjs';
 import { ARROWS, arrowType, BRACKETS } from '../web/patch/flowchart.mjs';
@@ -12,12 +12,12 @@ const STATES = [
   { edgesOk: true, selfLoop: true },
   { edgesOk: false, selfLoop: false, idWhy: 'This subgraph already has an id: pay.', collapseWhy: 'No subgraph match' },
 ];
-const ALL_MENUS = { ...MENUS, export: EXPORT_MENU };
+const ALL_MENUS = { ...MENUS, export: EXPORT_MENU, accessibility: ACCESSIBILITY };
 const items = Object.entries(ALL_MENUS).flatMap(([menu, list]) => list.map((item) => ({ menu, item })));
 
-test('every menu label starts with one of the verbs, in sentence case', () => {
-  for (const { item: { label, setting } } of items) {
-    assert.ok(setting || VERBS.includes(label.split(' ')[0].replace(/…$/, '')), `${label}: not a listed verb`);
+test('every menu label starts with one of the verbs, in sentence case; a submenu is named for what it holds', () => {
+  for (const { item: { label, setting, submenu } } of items) {
+    assert.ok(setting || submenu || VERBS.includes(label.split(' ')[0].replace(/…$/, '')), `${label}: not a listed verb`);
     // An acronym (SVG) and a name (Mermaid) keep their capitals.
     assert.ok(label.split(' ').slice(1).every((w) => w === w.toLowerCase() || /^[A-Z]{2,}$/.test(w) || w === 'Mermaid'),
       `${label}: not sentence case`);
@@ -378,6 +378,16 @@ test('Run script (Shift+X) in the node menu: grayed, saying why, on a node with 
   assert.equal(applies(item, { ...base, script: 'charge("eu", 3)' }), true);
   assert.equal(applies(item, { ...base, script: null }), false);
   assert.equal(whyNot(item, { ...base, script: null }), NO_SCRIPT);
+});
+
+test('Accessibility ▸ (E) in the empty-space menu holds the accessible title (T) and description (P), letters no other menu uses', () => {
+  const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS.space.find((i) => i.submenu === 'accessibility'));
+  assert.equal(item.key, 'e');
+  assert.deepEqual(ACCESSIBILITY.map((i) => i.key), ['t', 'p']);
+  const elsewhere = Object.values(MENUS).flat().filter((i) => i !== item).map((i) => i.key);
+  for (const k of ['e', 't', 'p']) assert.ok(!(k in GLOBAL_KEYS) && !elsewhere.includes(k), k);
+  // Not a view item: grayed while the code is edited, as the edits are.
+  assert.equal(applies(item, { edgesOk: true, selfLoop: false, locked: true }), false);
 });
 
 test('Give subgraph an id (Alt+I) in the subgraph and box menus: grayed, saying why, on a subgraph with an id', () => {

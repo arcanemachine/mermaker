@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
-  setSubgraphTitle, addSubgraph, giveSubgraphId, idRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
+  setSubgraphTitle, addSubgraph, giveSubgraphId, idRefusal, accText, setAccText, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
   moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
@@ -235,6 +235,28 @@ test('setSubgraphTitle rewrites only the title, keeping the id, in every form', 
   assert.deepEqual(['pay', 'Shipping', 'Single', 'subGraph1'].map((id) => setSubgraphTitle(src, id, 'X').id),
     ['pay', 'Shipping', 'Single', 's1']);
   assert.throws(() => setSubgraphTitle(src, 'nope', 'X'), /not in the file/);
+});
+
+test('setAccText adds the accessible title and description after the header, the description after the title, and changes or removes one in place', () => {
+  const base = 'flowchart TD\n  A --> B\n';
+  const d = setAccText(base, 'accDescr', ' How it goes ');
+  assert.equal(d, 'flowchart TD\n  accDescr: How it goes\n  A --> B\n');
+  const both = setAccText(d, 'accTitle', 'Flow');
+  assert.equal(both, 'flowchart TD\n  accTitle: Flow\n  accDescr: How it goes\n  A --> B\n');
+  assert.equal(setAccText(setAccText(base, 'accTitle', 'T'), 'accDescr', 'D'), 'flowchart TD\n  accTitle: T\n  accDescr: D\n  A --> B\n');
+  assert.equal(setAccText(both, 'accTitle', 'New'), 'flowchart TD\n  accTitle: New\n  accDescr: How it goes\n  A --> B\n');
+  // Never written empty: Mermaid would read the next line as the text.
+  assert.equal(setAccText(both, 'accTitle', '  '), d);
+  assert.equal(setAccText(base, 'accTitle', null), base);
+  assert.equal(setAccText('flowchart TD\r\n  accTitle: Old\r\n  A\r\n', 'accTitle', 'New'), 'flowchart TD\r\n  accTitle: New\r\n  A\r\n');
+  assert.deepEqual(accText(both, 'accDescr'), { value: 'How it goes', line: 2 });
+  assert.equal(accText(base, 'accTitle'), null);
+});
+
+test('a description over several lines is read as a block and left to the code', () => {
+  const text = 'flowchart TD\n  accDescr {\n  Two\n  lines\n  }\n  A\n';
+  assert.equal(accText(text, 'accDescr'), 'block');
+  assert.throws(() => setAccText(text, 'accDescr', 'One'), /several lines/);
 });
 
 test("accessibility lines are not statements: no node, edge or subgraph is read from accTitle, accDescr or an accDescr block", () => {

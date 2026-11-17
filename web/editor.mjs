@@ -10,14 +10,14 @@ import { drawnAs, drawnEdges } from './collapse.mjs';
 import { turnable } from './turn.mjs';
 import { createHistory } from './history.mjs';
 import { find, firstShown, countText } from './find.mjs';
-import { createChoices, createMenu } from './menu.mjs';
-import { ANIMATED_BY_STYLE, applies, GLOBAL_KEYS, INSERT_COLLAPSED, LOCKED, MENUS, NO_EDGE_MATCH, NO_SUBGRAPH_MATCH, PART_UNNAMED, whyNot } from './menu-items.mjs';
+import { createActions, createChoices, createMenu } from './menu.mjs';
+import { ACCESSIBILITY, ANIMATED_BY_STYLE, applies, GLOBAL_KEYS, INSERT_COLLAPSED, LOCKED, MENUS, NO_EDGE_MATCH, NO_SUBGRAPH_MATCH, PART_UNNAMED, whyNot } from './menu-items.mjs';
 import { createKeys } from './keys.mjs';
 import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  freeId, giveSubgraphId, idRefusal, subgraphs, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  accText, freeId, giveSubgraphId, idRefusal, setAccText, subgraphs, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
@@ -70,7 +70,7 @@ const END_RUN = 3;
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
  * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
- * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
+ * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, toast(message: string): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
  * @param {Record<'stage'|'diagram'|'labelBox'|'find'|'findBox'|'findCount'|'findPrev'|'findNext'|'findCancel'|'findToggle', HTMLElement>} deps.els
  */
@@ -753,12 +753,18 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       ui.announce(`Page theme: ${THEMES.find((t) => t.key === choice)?.name}`);
     },
   });
+  const accessibility = createActions({
+    title: 'Accessibility',
+    entries: ACCESSIBILITY,
+    onPick: (action) => { closeMenus(); editAcc(action === 'edit-acc-title' ? 'accTitle' : 'accDescr'); },
+  });
   const menuOptions = {
     parent: els.diagram,
     bounds: () => els.diagram.getBoundingClientRect(),
     returnFocus: els.diagram,
     submenus: {
       'page-theme': themeChoices,
+      accessibility,
     },
     onRun: (/** @type {string} */ action) => handlers[action](),
     onRefuse: (/** @type {string} */ why) => { refused = true; refuse(why); },
@@ -920,6 +926,25 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     edit((text) => giveSubgraphId(text, sg.id, answer), {
       after: () => ({ item: { kind: 'subgraph', id: answer } }),
       afterSave: () => ui.announce(`Subgraph id ${answer} saved`),
+    });
+  }
+
+  /**
+   * Edit accessible title or description: the browser's prompt, holding what the file writes; emptied, the line goes.
+   * Nothing on screen changes, so a toast says what was saved. A description over several lines is left to the code.
+   */
+  function editAcc(/** @type {'accTitle' | 'accDescr'} */ which) {
+    if (busy) { ui.notice(BUSY, 'error'); return; }
+    const name = which === 'accTitle' ? 'accessible title' : 'accessible description';
+    const now = accText(shownText, which);
+    if (now === 'block') { refuse('This description runs over several lines. Edit it in the code.'); return; }
+    const answer = window.prompt(`Edit the ${name} of this diagram, read by screen readers. Leave the box empty to remove it.`, now?.value ?? '');
+    if (answer === null || answer.trim() === (now?.value ?? '')) return;
+    const removed = !answer.trim();
+    const told = `${name[0].toUpperCase()}${name.slice(1)} ${removed ? 'removed' : 'saved'}`;
+    edit((text) => ({ text: setAccText(text, which, answer) }), {
+      after: () => (selected ? { item: selected } : null),
+      afterSave: () => { ui.toast(told); ui.announce(told); },
     });
   }
 
