@@ -713,7 +713,7 @@ const exportMenu = createMenu(EXPORT_MENU, {
 });
 exportButton.addEventListener('click', () => {
   if (exportMenu.isOpen()) { exportMenu.close(); return; }
-  exportMenu.open(exportButton.getBoundingClientRect(), { edgesOk: true, selfLoop: false, nameWhy: null }, { gap: 4 });
+  exportMenu.open(exportButton.getBoundingClientRect(), { edgesOk: true, selfLoop: false }, { gap: 4 });
   exportButton.setAttribute('aria-expanded', 'true');
 });
 // A click anywhere else closes it and Help, the diagram included, as for the diagram's own menus; a drag does not.

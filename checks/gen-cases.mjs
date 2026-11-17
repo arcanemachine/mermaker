@@ -22,7 +22,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ARROWS, BRACKETS, addConnected, addNode, addSubgraph, blockOf, connect, copyNode, copySubgraph, deleteEdge, deleteNode, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, edges, freeId, quoteLabel,
-  editEdge, mergeNode, moveCut, moveEdges, moveIntoEdge, moveNode, moveSubgraph, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setEdgeArrow, setEdgeLabel, setLink, setShape, setSubgraphTitle, setTitle, subgraphRefusal,
+  editEdge, mergeNode, moveCut, moveEdges, moveIntoEdge, moveNode, moveSubgraph, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setEdgeArrow, setEdgeLabel, setLink, setShape, setSubgraphTitle, setTitle,
   subgraphs, writtenLink, animationRefusal, edgeAnimated, setEdgeAnimation, setColor, colorRefusal, presetClass, PRESETS,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -125,7 +125,7 @@ for (const [name, list, src] of sources) {
       cases.push({ name: `${name} arrow ${arrow} ${e.svgId}`, kind: 'change', src, out: setEdgeArrow(src, e.svgId, arrow).text, at, want });
     }
     // Each end moved to every node, and to every subgraph that can be named.
-    const sgs = subgraphs(src).filter((s) => s.end !== null && !subgraphRefusal(src, s.id));
+    const sgs = subgraphs(src).filter((s) => s.end !== null);
     for (const [end, side] of [['start', 'from'], ['end', 'to']]) {
       for (const to of [...list, ...sgs.map((s) => s.id)]) {
         if (to === e[side]) continue;
@@ -140,7 +140,7 @@ for (const [name, list, src] of sources) {
 }
 // Each node's and subgraph's edges moved, each side and both, to a node at either end of the list and to each subgraph.
 for (const [name, list, src] of sources) {
-  const sgs = subgraphs(src).filter((s) => s.end !== null && !subgraphRefusal(src, s.id));
+  const sgs = subgraphs(src).filter((s) => s.end !== null);
   for (const id of [...list, ...sgs.filter((s) => s.written).map((s) => s.id)]) {
     if (!edges(src).some((e) => e.from === id || e.to === id)) continue;
     const targets = new Set([list.find((n) => n !== id), list.findLast((n) => n !== id), ...sgs.map((s) => s.id)]);

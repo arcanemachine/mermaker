@@ -17,7 +17,7 @@ import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  freeId, giveSubgraphId, idRefusal, subgraphs, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
@@ -237,15 +237,6 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
    * known by Mermaid's `subGraph<k>`, which renumbers when subgraphs come and go.
    */
   const drawnOnly = (/** @type {string} */ id) => !subgraphs(shownText).find((s) => s.id === id)?.written;
-  /**
-   * Refuse, with a warning, an edit that would need an id written for a subgraph the file already names otherwise: for
-   * the ways in that pass no menu, which grays its items instead.
-   */
-  function refuseUnnamed(/** @type {string} */ id) {
-    const why = subgraphRefusal(shownText, id);
-    if (why) ui.notice(why, 'warning');
-    return Boolean(why);
-  }
   /** What a node or subgraph is drawn as: itself, or the collapsed subgraph's box hiding it. */
   const drawnEnd = (/** @type {string} */ id) => drawnAs(id, collapse.subs, collapse.overrides);
   /** A drawn edge, its ends as drawn: one hidden in a collapsed subgraph is that subgraph's box. */
@@ -675,6 +666,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     },
     'edit-link': () => editLink(),
     'edit-tooltip': () => editTooltip(),
+    'give-subgraph-id': () => giveId(),
     'copy-link': () => {
       const link = writtenLink(shownText, selection().id);
       if (!link || link === 'script') return;
@@ -788,7 +780,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     return {
       edgesOk,
       selfLoop: selected?.kind === 'edge' && shownEdge(selected.id)?.from === shownEdge(selected.id)?.to,
-      nameWhy: selected?.kind === 'subgraph' ? subgraphRefusal(shownText, selected.id) : null,
+      idWhy: selected?.kind === 'subgraph' && !drawnOnly(selected.id) ? `This subgraph already has an id: ${selected.id}.` : null,
       collapseWhy: selected?.kind === 'subgraph' && !collapse.subs.some((s) => s.id === selected?.id) ? NO_SUBGRAPH_MATCH : null,
       turn: ui.turned(selectedSubgraph()),
       turnWhy: selected?.kind === 'subgraph' ? turnWhy(selected.id) : null,
@@ -911,6 +903,23 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     edit((text) => ({ text: setTooltip(text, node.id, change.tip) }), {
       after: () => ({ item: node }),
       afterSave: () => ui.announce(change.tip === null ? 'Tooltip removed' : 'Tooltip saved'),
+    });
+  }
+
+  /**
+   * Give subgraph an id: the browser's prompt, holding the first free `s<n>`, for a subgraph the file writes with no id.
+   * Lines naming it by Mermaid's `subGraph<k>` name it by the new id after. It stays selected.
+   */
+  function giveId() {
+    if (busy) { ui.notice(BUSY, 'error'); return; }
+    const sg = selection();
+    const answer = window.prompt('Give this subgraph an id. Links and the code name it by its id.', freeId(shownText, 's'))?.trim();
+    if (!answer) return;
+    const why = idRefusal(shownText, answer);
+    if (why) { refuse(why); return; }
+    edit((text) => giveSubgraphId(text, sg.id, answer), {
+      after: () => ({ item: { kind: 'subgraph', id: answer } }),
+      afterSave: () => ui.announce(`Subgraph id ${answer} saved`),
     });
   }
 
@@ -1268,9 +1277,9 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     };
   };
 
-  /** Open the label box on a subgraph's title, unless writing it would need an id the file cannot take. */
+  /** Open the label box on a subgraph's title. */
   function editTitle(/** @type {Item} */ sel) {
-    if (!refuseLocked() && !refuseUnnamed(sel.id)) openLabelBox(sel);
+    if (!refuseLocked()) openLabelBox(sel);
   }
 
   /**
@@ -1387,7 +1396,6 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     picking = null;
     ui.mode(null);
     if (!to) { deselect(); return; }
-    if (to.kind === 'subgraph' && refuseUnnamed(to.id)) { select(edge); return; }
     // Onto the end it has: nothing changed, so nothing is written (the outline starts there).
     if (shownEdge(edge.id)?.[end === 'start' ? 'from' : 'to'] === to.id) { select(edge); return; }
     const name = named(to);
@@ -1408,7 +1416,6 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     picking = null;
     ui.mode(null);
     if (!to) { deselect(); return; }
-    if (to.kind === 'subgraph' && refuseUnnamed(to.id)) { select(sel); return; }
     deselect();
     const [from, end] = back ? [to, sel] : [sel, to];
     const names = [named(from), named(end)];
@@ -1656,6 +1663,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'ctrl+shift+l': () => itemKey('show-link'),
     k: () => itemKey('edit-link'),
     'shift+k': () => itemKey('edit-tooltip'),
+    'alt+i': () => itemKey('give-subgraph-id'),
     'shift+x': () => shiftRun(),
     // Y copies a node's link; Shift+Y the address of the node or subgraph itself. An address cannot name an edge.
     y: () => itemKey('copy-link'),
@@ -2122,6 +2130,18 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // `shift+` only where the key has a Shift entry of its own, so letters stay case-insensitive. Off a Mac, Alt is the
     // browser's (Alt+Left and Alt+Right go back and forward). The system is Help's, as its key labels show.
     const mac = document.documentElement.dataset.os === 'mac';
+    // Alt keys of the page's own (docs/ux.md: Alt+I, the exception to Alt being the browser's): Alt alone, so AltGr
+    // (Ctrl and Alt together) types as usual; by the key's place on a Mac, where Option types another character.
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      const letter = mac ? /^Key([A-Z])$/.exec(e.code)?.[1].toLowerCase() : e.key.length === 1 ? e.key.toLowerCase() : null;
+      const alt = letter && `alt+${e.shiftKey ? 'shift+' : ''}${letter}`;
+      if (alt && keys[alt]) {
+        if (!selectable) return;
+        clearRefusal();
+        if (keys[alt]()) e.preventDefault();
+        return;
+      }
+    }
     if (e.altKey && !mac) return;
     // A Mac's menus show Ctrl+Shift+L as ⌘⇧L (keyLabel), so ⌘ works for it as it does for copy and paste.
     const meta = mac && e.metaKey && e.shiftKey && !e.ctrlKey && !e.altKey && key === 'l';

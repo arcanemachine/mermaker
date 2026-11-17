@@ -100,8 +100,8 @@ touch screen) for its menu. Other diagram types are view-only.
 A subgraph written with no id (`subgraph "Order log"`, or a title with spaces) is known only by the name Mermaid gives
 it, which changes as subgraphs come and go: such a subgraph stays selected only while the file is unchanged. An edit
 that has to name it in the file (Edit title, Connect to…) first gives it an id of its own, `s1`, in the same edit:
-`subgraph s1 ["Order log"]`. When the file already names it by Mermaid's name (`style subGraph1 …`), that would
-break those lines, so Edit title and Connect to… are grayed and say to give it an id in the file instead. A subgraph
+`subgraph s1 ["Order log"]`. Lines that name it by Mermaid's name (`style subGraph1 …`) name it by the new id after,
+in the same edit. **Give subgraph an id** (Alt+I, Option+I on a Mac) gives it an id you choose. A subgraph
 whose id has `-` or `.` in it (valid in Mermaid, not here) cannot be selected.
 
 Edges can be selected only when Mermaker can match the drawn edges to the text, edge for edge (an edge match). When it
@@ -285,6 +285,10 @@ another click on it closes it.
   the pointer, what it would take is marked. Both work on a collapsed box too, and one undo brings it all back.
 - **Copy link to this subgraph** (Shift+Y) copies an address that opens this page fitted to the subgraph, as Fit to
   subgraph does (Viewing, Links to a node or a subgraph). Grayed on a subgraph with no id in the file.
+- **Give subgraph an id** (Alt+I; Option+I on a Mac) asks for an id for a subgraph the file writes with none, holding
+  the first free `s1`, `s2`…: `subgraph "Order log"` becomes `subgraph orders ["Order log"]`, and lines naming it by
+  Mermaid's name (`style subGraph1 …`, an edge) name it by the new one. An id is letters, digits and `_`, not one
+  already in the file, nor a word Mermaid reads as its own (`end`). Grayed on a subgraph that has an id.
 
 ### Title menu
 
@@ -521,6 +525,7 @@ here does just what it does in the selected item's menu:
 | O | Select the subgraph the selection is in; from a top-level item, nothing |
 | I with a subgraph selected | Go into it: the item you last left it by, else its top-left one; a collapsed one is expanded first |
 | I with nothing selected | Select again what O or Escape let go of |
+| Alt+I (Option+I on a Mac) with a subgraph selected | Give subgraph an id |
 | H with a subgraph selected | Collapse it, or expand it: this tab's view only, never the file |
 | Up from the top row, Down from the title | Select the diagram's title, and back to the nearest node below it |
 | D, Delete or Backspace | Delete the selected node or edge, or the selected subgraph alone (what it held stays) |

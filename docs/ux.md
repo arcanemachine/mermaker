@@ -413,7 +413,9 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   `` ` `` (the code panel) is likewise the key left of 1, or whichever key types it, and Shift+`` ` `` likewise by `~` (that place reports another key on ISO
   keyboards on a Mac); where it is a dead key, it waits for no accent. Option stands in for Ctrl on a Mac only, where
   macOS keeps Ctrl+Arrows; on Windows and Linux Alt is left to the browser, so Alt+Left and Alt+Right go back and
-  forward, through links between diagrams too. Which system is Help's choice, the one its key labels show.
+  forward, through links between diagrams too. The exception is the page's own Alt keys, which write to the file
+  (Alt+I, Give subgraph an id): Alt alone, never with Ctrl, so AltGr types as usual, and read by the key's place on a
+  Mac, where Option with a letter types another character. Which system is Help's choice, the one its key labels show.
 - The selection is kept per file for the tab (sessionStorage, as the view is), so Back, Forward, a link and a reload
   select again what was selected there, if it is still drawn, and say nothing: it is not your act. An edge is
   kept by Mermaid's id for it, so after the file changes it may be gone, and then nothing is selected.
@@ -598,8 +600,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash. Text
   Mermaker did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
 - Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally.
-- Mermaker refuses only what it cannot write correctly, or what would break the file (a subgraph with no id that the file
-  already names by Mermaid's name for it, `style subGraph1 …`, which an edge would have to name); a legal edit that
+- Mermaker refuses only what it cannot write correctly, or what would break the file; a legal edit that
   Mermaid draws badly is yours to make, with Undo as the net (a legal edit is not Mermaker's to refuse). A subgraph
   connected to itself is allowed, though Mermaid draws it as a frame round the box and may rearrange what is inside.
 - A mode's notice (a pick's, the code panel's while the code is being edited) stays while the mode lasts;

@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
-  setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
+  setSubgraphTitle, addSubgraph, giveSubgraphId, idRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
   moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
@@ -237,13 +237,29 @@ test('setSubgraphTitle rewrites only the title, keeping the id, in every form', 
   assert.throws(() => setSubgraphTitle(src, 'nope', 'X'), /not in the file/);
 });
 
-test('a subgraph with no id is not given one when the file already names it by Mermaid\'s id', () => {
-  const src = 'flowchart TD\n  subgraph "A b"\n    x\n  end\n  style subGraph0 fill:#eee\n';
-  assert.match(subgraphRefusal(src, 'subGraph0'), /name it subGraph0/);
-  assert.throws(() => setSubgraphTitle(src, 'subGraph0', 'X'), /name it subGraph0/);
-  assert.throws(() => connect(src, 'x', 'subGraph0'), /name it subGraph0/);
-  assert.equal(subgraphRefusal(fixture('12-subgraph-ids.mmd'), 'subGraph1'), null);
-  assert.equal(subgraphRefusal(fixture('12-subgraph-ids.mmd'), 'pay'), null);
+test("naming an id-less subgraph renames the lines that name it by Mermaid's subGraph<k>, leaving the others' k", () => {
+  const src = 'flowchart TD\n  subgraph "A b"\n    x\n  end\n  subgraph "C d"\n    y\n  end\n  style subGraph0 fill:#eee\n  x --> subGraph0\n'
+    + '  subGraph0@{ view: collapsed }\n  class subGraph1 hot\n';
+  const named = 'flowchart TD\n  subgraph pay ["A b"]\n    x\n  end\n  subgraph "C d"\n    y\n  end\n  style pay fill:#eee\n  x --> pay\n'
+    + '  pay@{ view: collapsed }\n  class subGraph1 hot\n';
+  assert.deepEqual(giveSubgraphId(src, 'subGraph0', 'pay'), { text: named, id: 'pay' });
+  assert.equal(subgraphs(named).find((s) => !s.written)?.id, 'subGraph1');
+  // Edit title and Connect to… name it the same way, under the first free s<n>.
+  assert.equal(setSubgraphTitle(src, 'subGraph0', 'X').text, named.replace('pay ["A b"]', 's1 ["X"]').replaceAll('pay', 's1'));
+  assert.equal(connect(src, 'y', 'subGraph0').text, named.replaceAll('pay', 's1') + '  y --> s1\n');
+});
+
+test('giveSubgraphId refuses a subgraph with an id, and an id that is taken, a word of Mermaid\'s or not an id', () => {
+  const src = 'flowchart TD\n  subgraph pay [Payment]\n    x\n  end\n  subgraph "A b"\n    y\n  end\n';
+  assert.throws(() => giveSubgraphId(src, 'pay', 'p2'), /already has an id: pay/);
+  assert.match(idRefusal(src, 'x'), /already names/);
+  assert.match(idRefusal(src, 'pay'), /already names/);
+  assert.match(idRefusal(src, 'end'), /Mermaid reads/);
+  assert.match(idRefusal(src, 'End'), /Mermaid reads/);
+  assert.match(idRefusal(src, 'subGraph4'), /Mermaid gives/);
+  assert.match(idRefusal(src, 'two words'), /no spaces/);
+  assert.equal(idRefusal(src, 'orders'), null);
+  assert.throws(() => giveSubgraphId(src, 'subGraph1', 'x'), /already names/);
 });
 
 test('connect to and from a subgraph appends the edge; one with no id gets one in the same edit', () => {

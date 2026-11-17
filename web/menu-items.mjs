@@ -9,11 +9,12 @@ import { CALLBACK, CALLBACK_EDIT, NO_CLICK, NO_LINK, NO_SCRIPT } from './links.m
  * removes the thing. */
 export const VERBS = ['Add', 'Insert', 'Edit', 'Remove', 'Delete', 'Connect', 'Reverse', 'Reassign', 'Move', 'Merge', 'Open', 'Show', 'Find', 'Fit', 'Center', 'Copy', 'Run',
   'Cut', 'Paste',
-  'Download', 'Collapse', 'Expand', 'Rotate', 'Flip', 'Enable', 'Disable'];
+  'Download', 'Collapse', 'Expand', 'Rotate', 'Flip', 'Enable', 'Disable', 'Give'];
 
 /**
  * Keys the page answers outside menus, and the menu actions each one runs. A key is named by KeyboardEvent.key,
- * lower-cased, after its modifiers: `ctrl+` (Ctrl or Alt), then `shift+`.
+ * lower-cased, after its modifiers: `ctrl+` (Ctrl, or Option on a Mac) or `alt+` (Alt alone: the page's own Alt keys),
+ * then `shift+`.
  */
 export const GLOBAL_KEYS = {
   n: ['add-node', 'add-connected-node', 'insert-node'],
@@ -30,6 +31,7 @@ export const GLOBAL_KEYS = {
   'shift+x': ['run-script'],
   k: ['edit-link'],
   'shift+k': ['edit-tooltip'],
+  'alt+i': ['give-subgraph-id'],
   s: ['add-subgraph'],
   enter: ['edit-node', 'edit-edge', 'edit-title'],
   f2: ['edit-node', 'edit-edge', 'edit-title'],
@@ -90,7 +92,7 @@ export const LOCKED = 'The code is being edited. Save or cancel the code to edit
  * @property {string | null} [insertWhy] why a node cannot be inserted into the selected edge
  * @property {boolean} [animated] the selected edge is animated
  * @property {string | null} [animateWhy] why the selected edge's animation cannot be turned on or off, or null
- * @property {string | null} nameWhy why the selected subgraph cannot be given an id, or null
+ * @property {string | null} [idWhy] why the selected subgraph cannot be given an id (it has one), or null
  * @property {string | null} [collapseWhy] why the selected subgraph cannot be collapsed or expanded, or null
  * @property {{ rotate: boolean, flip: boolean }} [turn] how the page turns the diagram, or the selected subgraph
  * @property {string | null} [turnWhy] why the selected subgraph cannot be turned on its own, or null
@@ -141,7 +143,7 @@ export const ANIMATED_BY_STYLE = 'A class or style in the file animates this edg
 export const INSERT_COLLAPSED = 'This edge is inside a collapsed subgraph. Expand the subgraph first (H) to insert a node.';
 const EXPAND_FIRST = 'This subgraph is collapsed. Expand it first (H) to add to it.';
 /** Why a subgraph with no id in the file cannot be fitted as the part: the address names it by its id. */
-export const PART_UNNAMED = "This subgraph has no id in the file, so a link can't name it. Give it an id in the file first.";
+export const PART_UNNAMED = "This subgraph has no id in the file, so a link can't name it. Give it an id first (Alt+I).";
 /** Open link and Open link in new tab: grayed with the reason a node's link is not followed, its address the title. */
 const linkItem = {
   applies: (/** @type {MenuState} */ s) => Boolean(s.link && !('why' in s.link)),
@@ -205,15 +207,15 @@ const deleteItems = () => [
 
 /** How a menu shows `key`, on a Mac (`mac`) or another system: `⇧C`, `Ctrl+⇧V`, `⌘⇧V`. */
 export function keyLabel(/** @type {string} */ key, /** @type {string} */ os) {
-  const ctrl = key.startsWith('ctrl+') ? (os === 'mac' ? '⌘' : 'Ctrl+') : '';
-  return ctrl + key.replace(/^ctrl\+/, '').replace(/^shift\+/, '⇧').toUpperCase();
+  const ctrl = key.startsWith('ctrl+') ? (os === 'mac' ? '⌘' : 'Ctrl+') : key.startsWith('alt+') ? (os === 'mac' ? '⌥' : 'Alt+') : '';
+  return ctrl + key.replace(/^(ctrl|alt)\+/, '').replace(/^shift\+/, '⇧').toUpperCase();
 }
 
 /** `key` as aria-keyshortcuts writes it: `Shift+C`, `Control+Shift+V`, `Meta+V`. */
 export function keyAria(/** @type {string} */ key, /** @type {string} */ os) {
   const parts = key.split('+');
   const last = /** @type {string} */ (parts.pop()).toUpperCase();
-  return [...parts.map((p) => (p === 'ctrl' ? (os === 'mac' ? 'Meta' : 'Control') : 'Shift')), last].join('+');
+  return [...parts.map((p) => (p === 'ctrl' ? (os === 'mac' ? 'Meta' : 'Control') : p === 'alt' ? 'Alt' : 'Shift')), last].join('+');
 }
 
 /**
@@ -277,9 +279,10 @@ export const MENUS = {
   subgraph: [
     { action: 'add-node', label: 'Add node', key: 'n' },
     { action: 'add-subgraph', label: 'Add subgraph', key: 's' },
-    { action: 'connect', label: 'Connect to…', key: 'c', mode: true, applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
-    { action: 'connect-from', label: 'Connect from…', key: 'shift+c', mode: true, applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
-    { action: 'edit-title', label: 'Edit title', applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
+    { action: 'connect', label: 'Connect to…', key: 'c', mode: true },
+    { action: 'connect-from', label: 'Connect from…', key: 'shift+c', mode: true },
+    { action: 'edit-title', label: 'Edit title' },
+    { action: 'give-subgraph-id', label: 'Give subgraph an id', key: 'alt+i', applies: (s) => !s.idWhy, why: (s) => s.idWhy ?? null },
     { action: 'copy-subgraph', label: 'Copy subgraph', key: 'ctrl+c', separated: true, view: true },
     { action: 'cut-subgraph', label: 'Cut subgraph', key: 'ctrl+x', view: true },
     ...pasteItems(),
@@ -294,9 +297,10 @@ export const MENUS = {
   box: [
     { action: 'add-node', label: 'Add node', key: 'n', applies: () => false, why: () => EXPAND_FIRST },
     { action: 'add-subgraph', label: 'Add subgraph', key: 's', applies: () => false, why: () => EXPAND_FIRST },
-    { action: 'connect', label: 'Connect to…', key: 'c', mode: true, applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
-    { action: 'connect-from', label: 'Connect from…', key: 'shift+c', mode: true, applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
-    { action: 'edit-title', label: 'Edit title', applies: (s) => !s.nameWhy, why: (s) => s.nameWhy },
+    { action: 'connect', label: 'Connect to…', key: 'c', mode: true },
+    { action: 'connect-from', label: 'Connect from…', key: 'shift+c', mode: true },
+    { action: 'edit-title', label: 'Edit title' },
+    { action: 'give-subgraph-id', label: 'Give subgraph an id', key: 'alt+i', applies: (s) => !s.idWhy, why: (s) => s.idWhy ?? null },
     { action: 'copy-subgraph', label: 'Copy subgraph', key: 'ctrl+c', separated: true, view: true },
     { action: 'cut-subgraph', label: 'Cut subgraph', key: 'ctrl+x', view: true },
     ...pasteItems(() => EXPAND_FIRST),

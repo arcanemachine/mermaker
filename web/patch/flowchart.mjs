@@ -424,25 +424,46 @@ function endpoint(/** @type {string} */ text, /** @type {string} */ id) {
   return nameSubgraph(text, sg);
 }
 
+// Words Mermaid reads as its own in a flowchart, where an id goes: an id like these would end or change a statement.
+const KEYWORDS = ['end', 'subgraph', 'graph', 'flowchart', 'direction', 'style', 'class', 'classDef', 'click', 'linkStyle',
+  'accTitle', 'accDescr'];
+
 /**
- * Why subgraph `id` cannot be given an id, or null when it can (or has one). The file can name an id-less subgraph
- * only by Mermaid's `subGraph<k>`, in a `style` or `class` line or an edge; giving it an id of its own would break
- * them.
+ * Why `id` cannot be a new subgraph id in `text`, or null when it can: not an id the scanner reads, one already naming a
+ * node or a subgraph, one of Mermaid's words, or `subGraph<k>`, which Mermaid gives subgraphs with no id.
  */
-export function subgraphRefusal(/** @type {string} */ text, /** @type {string} */ id) {
-  const sg = subgraphBlock(text, id);
-  if (!sg || sg.written || !mentions(text, id).length) return null;
-  return `This subgraph has no id in the file, and lines there name it ${id}. Give it an id in the file first.`;
+export function idRefusal(/** @type {string} */ text, /** @type {string} */ id) {
+  if (!new RegExp(`^${ID}$`, 'u').test(id)) return 'An id is letters, digits and _ only, with no spaces.';
+  if (KEYWORDS.some((k) => k.toLowerCase() === id.toLowerCase())) return `${id} is a word Mermaid reads as its own.`;
+  if (/^subGraph\d+$/.test(id)) return `${id} is the kind of id Mermaid gives a subgraph with no id.`;
+  if (mentions(text, id).length || subgraphs(text).some((s) => s.id === id)) return `${id} already names something in the file.`;
+  return null;
 }
 
-/** Give id-less subgraph `sg` an id of its own (`subgraph "A b"` → `subgraph s1 ["A b"]`), with `title` if given. */
-function nameSubgraph(/** @type {string} */ text, /** @type {Subgraph} */ sg, /** @type {string | null} */ title = null) {
-  const why = subgraphRefusal(text, /** @type {string} */ (sg.id));   // a closed subgraph has one
-  if (why) throw new Error(why);
-  const id = freeId(text, 's');
+/**
+ * Give id-less subgraph `sg` an id of its own, `id` or the first free `s<n>` (`subgraph "A b"` → `subgraph s1 ["A b"]`),
+ * with `title` if given. Lines naming it by Mermaid's `subGraph<k>` (an edge, a `style` or `class` line) name it by the
+ * new id after: the other id-less subgraphs keep their k, which counts every subgraph.
+ */
+function nameSubgraph(/** @type {string} */ text, /** @type {Subgraph} */ sg, /** @type {string | null} */ title = null, id = freeId(text, 's')) {
+  const old = /** @type {string} */ (sg.id);   // a closed subgraph has one
   const raw = text.slice(sg.title.start, sg.title.end);
   const shown = title ?? (/^".*"$/.test(raw) ? raw : `"${raw}"`);
-  return { text: text.slice(0, sg.title.start) + `${id} [${shown}]` + text.slice(sg.title.end), id };
+  let out = text.slice(0, sg.title.start) + `${id} [${shown}]` + text.slice(sg.title.end);
+  const ls = lines(out);
+  for (const { line, col } of mentions(out, old).reverse()) ls[line] = ls[line].slice(0, col) + id + ls[line].slice(col + old.length);
+  out = ls.join('');
+  return { text: out, id };
+}
+
+/** Give id-less subgraph `id` (Mermaid's `subGraph<k>`) the id `name`, refused as idRefusal says. Returns { text, id }. */
+export function giveSubgraphId(/** @type {string} */ text, /** @type {string} */ id, /** @type {string} */ name) {
+  const sg = subgraphBlock(text, id);
+  if (!sg) throw new Error('That subgraph is not in the file.');
+  if (sg.written) throw new Error(`This subgraph already has an id: ${id}.`);
+  const why = idRefusal(text, name);
+  if (why) throw new Error(why);
+  return nameSubgraph(text, sg, null, name);
 }
 
 /**
@@ -887,13 +908,9 @@ export function colorOf(/** @type {string} */ text, /** @type {string} */ id) {
 /**
  * Why node or subgraph `id` cannot be given a color, or null when it can. A `style` line setting its fill, border or
  * text color draws over any class, so a preset would change little or nothing. An id-less subgraph is given an id
- * first, which some files refuse (subgraphRefusal).
+ * first.
  */
 export function colorRefusal(/** @type {string} */ text, /** @type {string} */ id, /** @type {'node' | 'subgraph'} */ kind) {
-  if (kind === 'subgraph') {
-    const why = subgraphRefusal(text, id);
-    if (why) return why;
-  }
   const styled = settingsOf(text, id).some((s) => s.keyword === 'style' && /(^|[\s,])(fill|stroke|color)\s*:/.test(s.rest));
   return styled ? `This ${kind} has its own style line, which Mermaid draws over a color.` : null;
 }
