@@ -101,7 +101,7 @@ how to write a diagram Mermaker edits). A change to any of those updates it in t
 | `web/patch/flowchart.mjs` | The text edits themselves: pure functions, no DOM |
 | `test/` | `npm test`; `test/fixtures/` holds hand-written flowcharts every edit is tested against |
 | `skill/SKILL.md`, `server/skill.js` | The agent skill, and its stamp (`mermaker skill`) |
-| `checks/` | Checks that need a browser (`checks/README.md`); `mutate.sh`; the commit-msg hook's script |
+| `checks/` | Checks that need a browser (`checks/README.md`); `mutate.sh`; the commit-msg hook's script. Not type-checked or tested: grep it when an export is removed or renamed |
 | `tsconfig.json`, `web/tsconfig.json`, `types/` | Type-checking (`npm run typecheck`): the Node side, the page, and declarations JSDoc cannot make (Mermaid's CDN module). Not shipped |
 | `GLOSSARY.md` | The words Mermaker uses, in the page, the docs and Mermaker's code |
 | `docs/guide.md`, `docs/ux.md` | How to use the page; the rules it follows, and why |
