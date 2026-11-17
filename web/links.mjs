@@ -4,7 +4,7 @@ export const NO_LINK = 'No link on this node.';
 /** A `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
 export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
 /** A callback (`click A charge`): a script for Run script, not a link. */
-export const CALLBACK = 'This node has no link. Shift+X runs its script.';
+export const CALLBACK = 'This node has no link. Press Shift+X to run its script.';
 /** Edit link on a callback, which a link would overwrite. */
 export const CALLBACK_EDIT = 'This node has a script, not a link. Change it in the code.';
 /** Run script on a node with no callback. */
