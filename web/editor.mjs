@@ -17,11 +17,11 @@ import { countedEnd, heading, nearest, nest, otherEnd } from './navigate.mjs';
 import {
   addConnected, addNode, addSubgraph, arrowType, connect, contentsOf, copiedSubgraphText, copiedText, copyNode, copySubgraph, deleteEdge, deleteSubgraph, deleteSubgraphContents, childrenOf, deleteChildren, editEdge, hasNode, moveCut, moveIntoEdge, blockOf, deleteNode, edges, insertNode, isFlowchart, mergeNode, moveSubgraph,
   nodeIdFromSvgId, pasteNode, pasteSubgraph, relabel, retarget, reverseEdge, setShape, setSubgraphTitle, setTitle, shapeOf, subgraphIdFromSvgId,
-  subgraphRefusal, subgraphs, hasClick, setLink, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
+  subgraphRefusal, subgraphs, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip, animationRefusal, edgeAnimated, setEdgeAnimation, colorOf,
   colorRefusal, setColor, withHeader,
 } from './patch/flowchart.mjs';
 import { COLORS } from './colors.mjs';
-import { linkEdit, linkTarget, linkTone, noHandler } from './links.mjs';
+import { linkEdit, linkTarget, linkTone, noHandler, tooltipEdit } from './links.mjs';
 import { limitOf, limitSentence } from './limits.mjs';
 import { createPicker } from './picker.mjs';
 import { THEMES } from './theme.mjs';
@@ -674,6 +674,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       ui.notice(`This node ${does}`, 'info');
     },
     'edit-link': () => editLink(),
+    'edit-tooltip': () => editTooltip(),
     'copy-link': () => {
       const link = writtenLink(shownText, selection().id);
       if (!link || link === 'script') return;
@@ -803,6 +804,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       linkScript: selected?.kind === 'node' && writtenLink(shownText, selected.id) === 'script',
       linkWritten: selected?.kind === 'node' ? linkWrittenOf(selected.id) : null,
       script: selected?.kind === 'node' ? writtenScript(shownText, selected.id)?.call ?? null : null,
+      clicked: selected?.kind === 'node' && hasClick(shownText, selected.id),
     };
   }
 
@@ -896,6 +898,19 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     edit((text) => ({ text: setLink(text, node.id, change.link) }), {
       after: () => ({ item: node }),
       afterSave: () => ui.announce(change.link === null ? 'Link removed' : 'Link saved'),
+    });
+  }
+
+  /** Edit tooltip: the browser's prompt, as Edit link's, holding the tooltip the node's `click` line gives it. */
+  function editTooltip() {
+    if (busy) { ui.notice(BUSY, 'error'); return; }
+    const node = selection();
+    const current = writtenTooltip(shownText, node.id)?.replaceAll('#quot;', '"') ?? null;
+    const change = tooltipEdit(current, window.prompt('Edit the tooltip of this node. Leave the box empty to remove the tooltip.', current ?? ''));
+    if (!change) return;
+    edit((text) => ({ text: setTooltip(text, node.id, change.tip) }), {
+      after: () => ({ item: node }),
+      afterSave: () => ui.announce(change.tip === null ? 'Tooltip removed' : 'Tooltip saved'),
     });
   }
 
@@ -1640,6 +1655,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     'shift+l': () => itemKey('open-link-tab'),
     'ctrl+shift+l': () => itemKey('show-link'),
     k: () => itemKey('edit-link'),
+    'shift+k': () => itemKey('edit-tooltip'),
     'shift+x': () => shiftRun(),
     // Y copies a node's link; Shift+Y the address of the node or subgraph itself. An address cannot name an edge.
     y: () => itemKey('copy-link'),

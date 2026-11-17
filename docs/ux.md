@@ -459,7 +459,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   text, rarely changed. Emptying it removes the link, as an emptied edge label does, so there is no Remove link
   item. It edits the link as the file writes it, never Mermaid's sanitized reading, so a `javascript:` link can be
   fixed; only a callback line is left to the code, which a link would overwrite. In an embedded page from another
-  site the browser shows no prompt, and Edit link does nothing (accepted: an embed is for viewing).
+  site the browser shows no prompt, and Edit link does nothing (accepted: an embed is for viewing). Edit tooltip asks
+  the same way, for the same reasons.
 - A linked node looks like a link, by a stylesheet rule only, nothing drawn: its label underlined, since WCAG asks a
   link to differ by more than color, and blue where the diagram gives the label no color of its own, so the diagram's
   styling always wins. The blue is chosen by the node's own fill, light or dark, each keeping 4.5:1. A callback

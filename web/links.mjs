@@ -7,6 +7,8 @@ export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
 export const CALLBACK = 'This node has no link. Press Shift+X to run its script.';
 /** Edit link on a callback, which a link would overwrite. */
 export const CALLBACK_EDIT = 'This node has a script, not a link. Change it in the code.';
+/** Edit tooltip on a node with no `click` line: Mermaid writes a tooltip only after a link or a script. */
+export const NO_CLICK = 'This node has no link or script. Add a link first (K).';
 /** Run script on a node with no callback. */
 export const NO_SCRIPT = 'This node has no script to run.';
 /** Run script with no script file and nothing on the page handling `mermaker:run`, naming the call. */
@@ -77,6 +79,18 @@ export function linkEdit(/** @type {string | null} */ now, /** @type {string | n
   const link = answer.trim();
   if (link === (now ?? '')) return null;
   return { link: link || null };
+}
+
+/**
+ * What Edit tooltip writes, from the tooltip the file has now (null for none, `#quot;` read as `"`) and the prompt's
+ * answer (null: cancelled): nothing (null), or the tooltip to write, null removing it. The same answer is no edit.
+ * @returns {{ tip: string | null } | null}
+ */
+export function tooltipEdit(/** @type {string | null} */ now, /** @type {string | null} */ answer) {
+  if (answer === null) return null;
+  const tip = answer.trim();
+  if (tip === (now ?? '')) return null;
+  return { tip: tip || null };
 }
 
 /**

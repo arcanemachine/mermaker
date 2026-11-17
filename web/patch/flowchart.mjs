@@ -1832,6 +1832,28 @@ export function setLink(/** @type {string} */ text, /** @type {string} */ id, /*
   return appendLine(apply(text, [off(line)]), own);
 }
 
+/**
+ * Give node `id` the tooltip `tip`, or with null remove it, on the last `click` line naming it: after a link's address
+ * or a script's call, before any target. One on a line shared with other nodes is moved to a line of its own, so
+ * theirs stay as they were. A `"` is written `#quot;`, which Mermaid decodes. Throws when no `click` line names it:
+ * Mermaid writes a tooltip only after a link or a script.
+ */
+export function setTooltip(/** @type {string} */ text, /** @type {string} */ id, /** @type {string | null} */ tip) {
+  assertNode(text, id);
+  const line = clickLine(text, id);
+  if (!line) throw new Error('This node has no link or script, so it cannot have a tooltip.');
+  const quoted = tip === null ? '' : ` "${tip.replaceAll('"', '#quot;')}"`;
+  const rest = line.rest;
+  // What the tooltip follows: a link's address with its closing quote, or the script's call or name.
+  const head = line.link ? line.link.before.length + line.link.url.length + 1
+    : /** @type {RegExpMatchArray} */ (rest.match(/^\s+call\s+[^(]*\([^)]*\)|^\s+[^\s"(]+/s))[0].length;
+  const after = rest.slice(head).replace(/^\s+"[^"]*"/, '');
+  const own = `${line.start}${id}${rest.slice(0, head)}${quoted}${after}`;
+  if (line.ids.length === 1) return apply(text, [{ s: line.s, parts: [{ text: own }] }]);
+  const others = line.start + line.ids.filter((x) => x !== id).join(',') + line.rest;
+  return appendLine(apply(text, [{ s: line.s, parts: [{ text: others }] }]), own);
+}
+
 /** The `style`, `class` and `click` lines naming `id`: what follows the ids in each. */
 function settingsOf(/** @type {string} */ text, /** @type {string} */ id) {
   const settings = [];

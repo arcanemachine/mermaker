@@ -148,6 +148,9 @@ another click on it closes it.
   writes it as `click A href "payment.mmd"`; empty it to remove the link. A link already in the file keeps its tooltip
   and target, and a `click` line shared with other nodes (`click A,B href …`) keeps their link. Grayed on a node whose
   `click` line runs a script (`click A callback`): change that in the code.
+- **Edit tooltip** (Shift+K) asks for the node's tooltip in the same way: OK writes it after the link or the script
+  (`click A href "payment.mmd" "Payment flow"`); empty it to remove the tooltip. Grayed on a node with no `click`
+  line, since Mermaid gives a tooltip only to a node with a link or a script: add a link first (K).
 - **Run script** (Shift+X) runs the node's script, Mermaid's callback (`click A charge`, `click A call charge("eu",
   3)`), through a script of your own (Scripts of your own, below). Outside menus it takes two presses: the first asks
   for Shift+X again. The menu item runs at once. Grayed on a node with no script.
@@ -498,6 +501,7 @@ here does just what it does in the selected item's menu:
 | Shift+L with a node selected | Open link in new tab |
 | Ctrl+Shift+L with a node selected | Show link |
 | K with a node selected | Edit link |
+| Shift+K with a node selected | Edit tooltip |
 | Y with a node selected | Copy link |
 | Shift+Y with a node or subgraph selected | Copy link to this node or subgraph |
 | Shift+X with a node selected, twice | Run script |

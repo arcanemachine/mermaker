@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { applies, EXPORT_MENU, GLOBAL_KEYS, keyAria, keyLabel, LOCKED, MENUS, NOTHING_COPIED, PART_UNNAMED, SUBGRAPH_BARE, SUBGRAPH_ON_EDGE, VERBS, whyNot } from '../web/menu-items.mjs';
-import { NO_LINK, NO_SCRIPT, SCRIPT_LINK } from '../web/links.mjs';
+import { NO_CLICK, NO_LINK, NO_SCRIPT, SCRIPT_LINK } from '../web/links.mjs';
 import { ARROW_TYPES } from '../web/arrow-types.mjs';
 import { ARROWS, arrowType, BRACKETS } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -377,6 +377,16 @@ test('Run script (Shift+X) in the node menu: grayed, saying why, on a node with 
   assert.equal(applies(item, { ...base, script: 'charge("eu", 3)' }), true);
   assert.equal(applies(item, { ...base, script: null }), false);
   assert.equal(whyNot(item, { ...base, script: null }), NO_SCRIPT);
+});
+
+test('Edit tooltip (Shift+K) in the node menu: grayed, saying why, on a node with no click line', () => {
+  const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS.node.find((i) => i.action === 'edit-tooltip'));
+  assert.equal(item.key, 'shift+k');
+  assert.deepEqual(GLOBAL_KEYS['shift+k'], ['edit-tooltip']);
+  const base = { edgesOk: true, selfLoop: false, nameWhy: null };
+  assert.equal(applies(item, { ...base, clicked: true }), true);
+  assert.equal(applies(item, { ...base, clicked: false }), false);
+  assert.equal(whyNot(item, { ...base, clicked: false }), NO_CLICK);
 });
 
 test('Show link (Ctrl+Shift+L) in the node menu: any address or a script, grayed with none or a javascript: link', () => {

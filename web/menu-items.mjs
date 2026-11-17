@@ -3,7 +3,7 @@
 // its menu and is shown at the item's right, a key the page also uses outside menus runs the same action here, and only
 // an item that waits for a further click or typing (mode) ends in "…".
 
-import { CALLBACK, CALLBACK_EDIT, NO_LINK, NO_SCRIPT } from './links.mjs';
+import { CALLBACK, CALLBACK_EDIT, NO_CLICK, NO_LINK, NO_SCRIPT } from './links.mjs';
 
 /** The verbs menu labels start with: Add makes a thing, Edit changes one of its properties, Remove clears one, Delete
  * removes the thing. */
@@ -29,6 +29,7 @@ export const GLOBAL_KEYS = {
   'shift+y': ['copy-node-link', 'copy-subgraph-link'],
   'shift+x': ['run-script'],
   k: ['edit-link'],
+  'shift+k': ['edit-tooltip'],
   s: ['add-subgraph'],
   enter: ['edit-node', 'edit-edge', 'edit-title'],
   f2: ['edit-node', 'edit-edge', 'edit-title'],
@@ -102,6 +103,7 @@ export const LOCKED = 'The code is being edited. Save or cancel the code to edit
  * @property {boolean} [linkScript] the selected node's `click` line, as the file writes it, runs a script
  * @property {string | null} [linkWritten] the selected node's link as the file writes it, or null for none
  * @property {string | null} [script] the call the selected node's `click` line makes, or null for none
+ * @property {boolean} [clicked] a `click` line names the selected node: a link or a script, which a tooltip can follow
  */
 
 /** Whether `item` can be chosen in `state`. */
@@ -244,6 +246,7 @@ export const MENUS = {
       why: (s) => (s.linkScript ? CALLBACK : NO_LINK) },
     { action: 'copy-node-link', label: 'Copy link to this node', key: 'shift+y', view: true },
     { action: 'edit-link', label: 'Edit link', key: 'k', applies: (s) => !s.linkScript, why: () => CALLBACK_EDIT },
+    { action: 'edit-tooltip', label: 'Edit tooltip', key: 'shift+k', applies: (s) => Boolean(s.clicked), why: () => NO_CLICK },
     // Shift guards a key that runs a script; outside menus it takes two presses, as Shift+D does.
     { action: 'run-script', label: 'Run script', key: 'shift+x', view: true, applies: (s) => Boolean(s.script), why: () => NO_SCRIPT },
     { action: 'copy-node', label: 'Copy node', key: 'ctrl+c', separated: true, view: true },

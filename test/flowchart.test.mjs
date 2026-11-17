@@ -10,7 +10,7 @@ import {
   addConnected, addNode, connect, isBlank, withHeader, relabel, freeId, isFlowchart, quoteLabel, nodeIdFromSvgId, subgraphIdFromSvgId, edges,
   edgeBySvgId, deleteEdge, deleteNode, editEdge, setEdgeLabel, setEdgeArrow, reverseEdge, arrowType, ARROWS, subgraphs,
   setSubgraphTitle, addSubgraph, subgraphRefusal, setShape, shapeOf, BRACKETS, setTitle, itemLines, retarget,
-  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, writtenLink, writtenScript, writtenTooltip,
+  moveEdges, mergeNode, insertNode, blockOf, moveNode, moveSubgraph, copyNode, copiedText, pasteNode, copySubgraph, copiedSubgraphText, pasteSubgraph, deleteSubgraph, deleteSubgraphContents, contentsOf, childrenOf, deleteChildren, moveCut, moveIntoEdge, hasNode, hasClick, setLink, setTooltip, writtenLink, writtenScript, writtenTooltip,
   setEdgeAnimation, edgeAnimated, animationRefusal,
 } from '../web/patch/flowchart.mjs';
 import { NODE_SHAPES } from '../web/shapes.mjs';
@@ -1629,4 +1629,26 @@ test('setLink removes the node from every link line naming it, since an earlier 
 test('setLink writes a quote as %22, and refuses to overwrite a callback', () => {
   assert.equal(setLink('flowchart TD\n  A\n', 'A', 'a"b.mmd'), 'flowchart TD\n  A\n  click A href "a%22b.mmd"\n');
   assert.throws(() => setLink('flowchart TD\n  A\n  click A callback\n', 'A', 'a.mmd'), /runs a script/);
+});
+
+test('setTooltip writes the tooltip after a link or a script, before a target, replacing one written or removing it', () => {
+  const base = 'flowchart TD\n  A --> B\n';
+  const on = (line, tip) => setTooltip(`${base}  ${line}\n`, 'B', tip).slice(base.length);
+  assert.equal(on('click B href "a.mmd"', 'Payment flow'), '  click B href "a.mmd" "Payment flow"\n');
+  assert.equal(on('click B href "a.mmd" "Old" _blank', 'New'), '  click B href "a.mmd" "New" _blank\n');
+  assert.equal(on('click B "a.mmd" _blank', 'New'), '  click B "a.mmd" "New" _blank\n');
+  assert.equal(on('click B charge', 'Charge it'), '  click B charge "Charge it"\n');
+  assert.equal(on('click B call charge("eu", 3) "Old"', 'New'), '  click B call charge("eu", 3) "New"\n');
+  assert.equal(on('click B href "a.mmd" "Old" _blank', null), '  click B href "a.mmd" _blank\n');
+  assert.equal(on('click B call charge("eu", 3) "Old"', null), '  click B call charge("eu", 3)\n');
+});
+
+test('setTooltip edits the last click line naming the node, moves it off a shared one, and writes a quote as #quot;', () => {
+  const base = 'flowchart TD\n  A --> B\n';
+  assert.equal(setTooltip(`${base}  click B href "first.mmd"\n  click B href "last.mmd"\n`, 'B', 'Tip'),
+    `${base}  click B href "first.mmd"\n  click B href "last.mmd" "Tip"\n`);
+  assert.equal(setTooltip(`${base}  click A,B href "x.mmd" "Shared"\n`, 'B', 'Own'),
+    `${base}  click A href "x.mmd" "Shared"\n  click B href "x.mmd" "Own"\n`);
+  assert.equal(setTooltip(`${base}  click B charge\n`, 'B', 'Say "hi"'), `${base}  click B charge "Say #quot;hi#quot;"\n`);
+  assert.throws(() => setTooltip(base, 'B', 'Tip'), /no link or script/);
 });

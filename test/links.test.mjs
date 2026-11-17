@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CALLBACK, itemAddress, runExport, linkEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
+import { CALLBACK, itemAddress, runExport, linkEdit, tooltipEdit, linkTarget, linkTone, NO_LINK, NOT_MMD, SCRIPT_LINK } from '../web/links.mjs';
 
 const FILE = '/diagrams/flows/order.mmd';
 
@@ -69,6 +69,15 @@ test('Edit link writes the answer trimmed, removes the link when emptied, and do
   assert.equal(linkEdit('a.mmd', null), null);
   assert.equal(linkEdit('a.mmd', 'a.mmd '), null);
   assert.equal(linkEdit(null, ''), null);
+});
+
+test('Edit tooltip writes the trimmed answer, removes the tooltip on an empty one, and writes nothing on a cancel or no change', () => {
+  assert.deepEqual(tooltipEdit(null, ' Payment flow '), { tip: 'Payment flow' });
+  assert.deepEqual(tooltipEdit('Old', 'New'), { tip: 'New' });
+  assert.deepEqual(tooltipEdit('Old', '  '), { tip: null });
+  assert.equal(tooltipEdit('Old', null), null);
+  assert.equal(tooltipEdit('Old', 'Old '), null);
+  assert.equal(tooltipEdit(null, ''), null);
 });
 
 test("Run script calls only a function the script file exports itself, with exactly the call's arguments", async () => {
