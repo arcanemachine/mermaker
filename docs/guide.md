@@ -272,6 +272,8 @@ another click on it closes it.
   where Mermaid lays the subgraph out with the rest of the diagram, which is whenever one of its nodes links to a node
   outside it (or to one in a subgraph inside it): only a subgraph whose nodes link among themselves can run its own way.
   Grayed on a collapsed box too. A change to its own `direction` line in the file drops its turn.
+- **Rotate in the file** (Alt+R; Option+R on a Mac) and **Flip in the file** (Alt+Shift+R) write that turn into this
+  subgraph's own `direction` line, as the whole diagram's do (Empty space, below). Grayed as Rotate is.
 
 - **Delete subgraph** (D, or Delete or Backspace outside menus) takes the box away and keeps what it held: the
   `subgraph`, its own `direction` and `end` lines go, and so do the edges to the subgraph itself (with their
@@ -328,7 +330,14 @@ this submenu.
 **Rotate back** or **Flip back** while it is on. For fitting a wide or a tall window: the file is not changed, the page
 fits the diagram after, and a reload keeps it for this tab. Every subgraph's own `direction` turns with it. A change to
 the file's own direction (someone else's save) drops the turn. R and Shift+R do this with nothing selected; on an edge,
-R reverses it; on a subgraph, they turn just its inside (below).
+R reverses it; on a subgraph, they turn just its inside (below). While a turn is on, the strip above the footer's
+buttons says so, one line for each, with the keys to undo it or write it.
+
+**Rotate in the file** (Alt+R; Option+R on a Mac) and **Flip in the file** (Alt+Shift+R) write the turn into the file
+instead: the header's direction and every subgraph's own `direction` line, as Rotate draws them (`flowchart TD` becomes
+`flowchart LR`). With the page already turned that way, the page's turn is dropped as the file takes it, so nothing
+moves and a toast says what was written. Undo takes back the file's change only, so the diagram then turns back; R
+turns the page again. With a turn of the page left on, the file's new direction keeps it.
 
 ## The node panel
 
@@ -539,6 +548,8 @@ here does just what it does in the selected item's menu:
 | ? (wherever it is on your keyboard) | Open Help, or close it |
 | R or Shift+R with nothing selected | Rotate, or Flip, the diagram (this tab only) |
 | R or Shift+R with a subgraph selected | Rotate, or Flip, its inside (this tab only) |
+| Alt+R or Alt+Shift+R (Option on a Mac) with nothing selected | Rotate, or Flip, the diagram in the file |
+| Alt+R or Alt+Shift+R (Option on a Mac) with a subgraph selected | Rotate, or Flip, its inside in the file |
 | . (or the menu key, or Shift+F10) | Open the selection's menu; with nothing selected, the empty-space menu |
 | F | Fit the whole diagram to the window (in any diagram, not only flowcharts), leaving a part; with an item selected, center it instead (the title fits) |
 | Shift+F with a node, an edge or a subgraph selected | Fit the selection to the window: Fit to node, Fit to edge, or Fit to subgraph (the part) |

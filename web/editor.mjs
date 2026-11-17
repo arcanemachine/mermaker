@@ -7,7 +7,7 @@
 import { ARROW_TYPES } from './arrow-types.mjs';
 import { createBlink } from './blink.mjs';
 import { drawnAs, drawnEdges } from './collapse.mjs';
-import { turnable } from './turn.mjs';
+import { baseDir, subgraphDir, turnable, turnText } from './turn.mjs';
 import { createHistory } from './history.mjs';
 import { find, firstShown, countText } from './find.mjs';
 import { createActions, createChoices, createMenu } from './menu.mjs';
@@ -70,7 +70,7 @@ const END_RUN = 3;
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
  * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
- * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, toast(message: string): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
+ * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, toast(message: string): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, fileTurned(which: 'rotate' | 'flip', id: string | null, text: string): void, rebased(text: string): void, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
  * @param {Record<'stage'|'diagram'|'labelBox'|'find'|'findBox'|'findCount'|'findPrev'|'findNext'|'findCancel'|'findToggle', HTMLElement>} deps.els
  */
@@ -630,6 +630,29 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     ui.turn(which, id).then((on) => { viewer.fit(); ui.announce(`${verb} ${what}${on ? '' : ' back'}`); });
   }
 
+  /**
+   * Rotate or flip in the file: the selected subgraph's own direction, or with nothing selected the whole diagram's,
+   * written as the page draws a turn (turn.mjs). With the page already turned that way, the page's turn is dropped and
+   * nothing moves, so a toast says what was written; otherwise the view turns as Rotate's does.
+   */
+  function writeTurn(/** @type {'rotate' | 'flip'} */ which) {
+    if (busy) { ui.notice(BUSY, 'error'); return; }
+    const id = selectedSubgraph();
+    const sel = selected;
+    const by = { rotate: which === 'rotate', flip: which === 'flip' };
+    const turned = ui.turned(id)[which];
+    const what = id ? named({ kind: 'subgraph', id }) : 'the diagram';
+    edit((text) => ({ text: id ? turnText(text, { rotate: false, flip: false }, new Map([[id, by]])) : turnText(text, by) }), {
+      after: () => (sel ? { item: sel } : null),
+      afterSave: (result) => {
+        ui.fileTurned(which, id, result.text);
+        const dir = id ? subgraphDir(result.text, id) : baseDir(result.text);
+        if (turned) ui.toast(`Direction ${dir} written to the file.`);
+        ui.announce(`${which === 'rotate' ? 'Rotated' : 'Flipped'} ${what} in the file, direction ${dir}`);
+      },
+    }).then(() => { if (!turned) viewer.fit(); });
+  }
+
   /** @type {Record<string, string>} what each pick asks for: what is picked */
   const PICKED = {
     connect: 'node or subgraph to connect to', 'connect-from': 'node or subgraph to connect from',
@@ -725,6 +748,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // fitting the window, so it fits after.
     'rotate': () => turnIt('rotate'),
     'flip': () => turnIt('flip'),
+    'rotate-file': () => writeTurn('rotate'),
+    'flip-file': () => writeTurn('flip'),
     'find': () => openFind(),
     // The selection in the middle of the view, at the zoom it has.
     'center-view': () => {
@@ -1654,6 +1679,8 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     // menu's R and Shift+R do. Nothing on a node or a subgraph, nor in a pick.
     r: () => edgeKey('reverse-edge') || spaceKey('rotate') || itemKey('rotate'),
     'shift+r': () => spaceKey('flip') || itemKey('flip'),
+    'alt+r': () => spaceKey('rotate-file') || itemKey('rotate-file'),
+    'alt+shift+r': () => spaceKey('flip-file') || itemKey('flip-file'),
     enter: () => {
       // Enter on the edge being reassigned: nothing to do, as Enter at once on a node's own pick writes nothing.
       if (movingEnd() && candidate && same(candidate, selection())) return true;
@@ -2747,6 +2774,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       closeLabelBox();
       if (stayed) pending = sel ? { text: redoing.text, ...sel, reveal: true, say: 'Redone' } : null;
       else pending = was ? { text: redoing.text, item: was, others: chain } : null;
+      ui.rebased(redoing.text);
       await display(redoing.text);
       if (!(stayed && sel && selected)) ui.announce('Redone');
       settled = selected;
@@ -2773,6 +2801,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       closeLabelBox();
       const sel = entry && selections.get(entry)?.before;
       pending = sel ? { text: undoing.text, item: sel.item, came: sel.came, reveal: true, say: 'Undone' } : null;
+      ui.rebased(undoing.text);
       await display(undoing.text);
       if (!selected) ui.announce('Undone');
       settled = selected;

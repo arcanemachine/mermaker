@@ -32,6 +32,8 @@ export const GLOBAL_KEYS = {
   k: ['edit-link'],
   'shift+k': ['edit-tooltip'],
   'alt+i': ['give-subgraph-id'],
+  'alt+r': ['rotate-file'],
+  'alt+shift+r': ['flip-file'],
   s: ['add-subgraph'],
   enter: ['edit-node', 'edit-edge', 'edit-title'],
   f2: ['edit-node', 'edit-edge', 'edit-title'],
@@ -228,6 +230,8 @@ const turnItems = () => [
     view: true, separated: true, applies: (s) => !s.turnWhy, why: (s) => s.turnWhy ?? null },
   { action: 'flip', label: 'Flip', labelBack: 'Flip back', back: (s) => Boolean(s.turn?.flip), key: 'shift+r', view: true,
     applies: (s) => !s.turnWhy, why: (s) => s.turnWhy ?? null },
+  { action: 'rotate-file', label: 'Rotate in the file', key: 'alt+r', applies: (s) => !s.turnWhy, why: (s) => s.turnWhy ?? null },
+  { action: 'flip-file', label: 'Flip in the file', key: 'alt+shift+r', applies: (s) => !s.turnWhy, why: (s) => s.turnWhy ?? null },
 ];
 
 /**

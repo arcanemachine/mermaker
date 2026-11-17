@@ -68,6 +68,7 @@ note where Mermaker had to make one up.
 |---|---|
 | **page** | Mermaker in the browser, showing one file. |
 | **rotate**, **flip** | Turn the diagram sideways, or the other way up, in the page only: the directions Mermaid gets are turned, the file's are not. |
+| **modes strip** | The line above the footer's buttons saying what the page shows differently from the file and keeps doing (a rotate or a flip), and how to undo it or write it. Mermaker's own. |
 | **view** | Where the diagram sits on screen: **zoom** (wheel, pinch, + and -), **move** (drag, arrows with nothing selected), **fit** (Fit to window, F, double-click). |
 | **part** | The subgraph a page is fitted to (Fit to subgraph), named in its address as `&part=<subgraph id>`: a refit (the window's size changing, a reload) fits it, the rest of the diagram still drawn, until F fits the whole. Mermaker's own; not "focus", which means keyboard focus. |
 | **render** | Mermaid drawing the diagram from the file's text. A file that does not parse keeps the last good render. |

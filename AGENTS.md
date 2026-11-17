@@ -46,7 +46,7 @@ how to write a diagram Mermaker edits). A change to any of those updates it in t
   - it exercises real code, not a mock standing in for the thing under test, and not constants or the language;
   - for a new test, break the code on purpose once and watch the test fail: `checks/mutate.sh <file> <text>
     <replacement>` does it and always puts the file back;
-  - logic with no DOM goes in a module Node can test (`web/patch/`, `web/history.mjs`, `web/menu-items.mjs`, `web/place.mjs`, `web/grid.mjs`, `web/navigate.mjs`, `web/find.mjs`, `web/blink.mjs`, `web/hold.mjs`, `web/notices.mjs`, `web/frame.mjs`, `web/dock.mjs`, `web/collapse.mjs`, `web/turn.mjs`, `web/limits.mjs`, `web/links.mjs`, `web/theme.mjs`), rather than untested in the
+  - logic with no DOM goes in a module Node can test (`web/patch/`, `web/history.mjs`, `web/menu-items.mjs`, `web/place.mjs`, `web/grid.mjs`, `web/navigate.mjs`, `web/find.mjs`, `web/blink.mjs`, `web/hold.mjs`, `web/notices.mjs`, `web/frame.mjs`, `web/dock.mjs`, `web/collapse.mjs`, `web/turn.mjs`, `web/modes.mjs`, `web/limits.mjs`, `web/links.mjs`, `web/theme.mjs`), rather than untested in the
     page.
 - **Fixtures and examples are generic.** Test files, sample diagrams and examples in docs are written for Mermaker:
   plain names (`A[Start] --> B{OK?}`, `charge --> record`) that show the syntax under test, never copied from, or
@@ -93,6 +93,7 @@ how to write a diagram Mermaker edits). A change to any of those updates it in t
 | `web/frame.mjs` | The view that shows find's matches all at once |
 | `web/collapse.mjs` | Collapsed subgraphs, page-side: the text the page draws, and what a hidden item is drawn as |
 | `web/turn.mjs` | Rotate and flip, page-side: the directions the page draws the diagram with |
+| `web/modes.mjs` | The modes strip's rows: what the page shows differently from the file, and how to leave it |
 | `web/theme.mjs` | Dark mode or light mode: the look shown, and what switching keeps |
 | `web/code-panel.mjs` | The code panel: the file's code, its dock, its handle and Follow selection |
 | `web/dock.mjs` | Where the code panel docks, and how big it may be |

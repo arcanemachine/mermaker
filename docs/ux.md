@@ -31,6 +31,14 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   of its own, seen in 12.2.0: none of its nodes linked to a node outside it, nor its own nodes to one in a subgraph
   inside it (edges to a subgraph's box do not count). That is most subgraphs grayed, all of the "Simple" demo's; it is
   Mermaid's layout rule, not a setting. The view fits after a turn.
+  Rotate in the file and Flip in the file (Alt+R, Alt+Shift+R) write a turn, the same text the page draws, so the
+  turn in the page and the one in the file are one idea. Each touches only its own turn: with the page turned that
+  way, the page's turn goes as the file takes it and nothing moves. Undo is the file's alone, never the page's turns,
+  which are modes: turned on and off, never undone.
+- **The modes strip**, a line above the footer's buttons for each page-only state that lasts (today the turns): what
+  it is, how to undo it, how to write it. It takes room from the diagram rather than covering its bottom, and it is
+  plain text, not a live region: the act that changes it is announced already, and two live regions would talk over
+  each other.
 - No edit moves an edge: `linkStyle N` styles the Nth edge in the file, so moving one restyles others. The one exception
   is a move of an edge's end (Reassign end… and Reassign start…, and Merge into…, which moves each of the node's edges so) on
   an edge written inside a subgraph block when its new end is named outside that block: an edge line pulls both its ends
@@ -415,7 +423,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   keyboards on a Mac); where it is a dead key, it waits for no accent. Option stands in for Ctrl on a Mac only, where
   macOS keeps Ctrl+Arrows; on Windows and Linux Alt is left to the browser, so Alt+Left and Alt+Right go back and
   forward, through links between diagrams too. The exception is the page's own Alt keys, which write to the file
-  (Alt+I, Give subgraph an id): Alt alone, never with Ctrl, so AltGr types as usual, and read by the key's place on a
+  (Alt+I, Give subgraph an id; Alt+R and Alt+Shift+R, Rotate and Flip in the file): Alt alone, never with Ctrl, so AltGr types as usual, and read by the key's place on a
   Mac, where Option with a letter types another character. Which system is Help's choice, the one its key labels show.
 - The selection is kept per file for the tab (sessionStorage, as the view is), so Back, Forward, a link and a reload
   select again what was selected there, if it is still drawn, and say nothing: it is not your act. An edge is

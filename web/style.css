@@ -125,8 +125,11 @@ header .status { color: var(--text-muted); white-space: nowrap; }
 #welcome[data-titled] { top: calc(50% + 2.5em); transform: translateX(-50%); }
 #welcome p { margin: 0 0 1em; }
 #welcome p:last-child { margin-bottom: 0; }
-footer { grid-row: 4; padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: center;
+footer { grid-row: 4; padding: 12px 16px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: center;
          font-size: 13px; }
+/* The modes strip: a row of its own above the buttons, taking room from the diagram rather than covering it. */
+#modes { flex-basis: 100%; margin: -4px 0 10px; color: var(--text); text-align: center; }
+#modes p { margin: 0; }
 /* One width for every button, the widest label's: equal columns in a grid only as wide as its content. */
 footer .buttons { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 footer button { font: inherit; padding: 6px 12px; border: 1px solid var(--frame-border); border-radius: 6px;

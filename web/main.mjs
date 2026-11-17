@@ -9,6 +9,7 @@ import { createHold } from './hold.mjs';
 import { createCodePanel } from './code-panel.mjs';
 import { drawnAs, prune, setView, viewText } from './collapse.mjs';
 import { baseDir, subgraphDir, turnText } from './turn.mjs';
+import { modeRows } from './modes.mjs';
 import { isFlowchart, itemLines, subgraphs as scannedSubgraphs, withHeader } from './patch/flowchart.mjs';
 import { createViewer, parse } from './viewer.mjs';
 import { fileTheme, shownTheme, themeChoice, THEME_KEY } from './theme.mjs';
@@ -143,6 +144,19 @@ function keepTurn() {
     if (isOn(turn) || turn.subs.length) sessionStorage.setItem(turnKey(), JSON.stringify(turn));
     else sessionStorage.removeItem(turnKey());
   } catch { /* storage unavailable: the turn just is not kept */ }
+  drawModes();
+}
+/** Make every turn left on from the directions `text` has, as if turned now. */
+function rebaseTurn(/** @type {string} */ text) {
+  if (isOn(turn)) turn.base = baseDir(text);
+  turn.subs = turn.subs.map(([k, t]) => [k, { ...t, base: subgraphDir(text, k) }]);
+}
+/** The modes strip, under the diagram: one row per page-only turn, hidden with none (modes.mjs). */
+function drawModes() {
+  const subs = turn.subs.map(([id, t]) => ({ ...t, title: t.title ?? shownSubs.find((s) => s.id === id)?.title ?? id }));
+  const rows = modeRows(turn, subs, document.documentElement.dataset.os ?? 'pc');
+  el('modes').replaceChildren(...rows.map((r) => Object.assign(document.createElement('p'), { textContent: r })));
+  el('modes').hidden = !rows.length;
 }
 /**
  * The turns that still hold for `text`: each dropped when the direction it was made from has changed. Subgraphs' only
@@ -275,6 +289,26 @@ const ui = {
   setTheme(/** @type {string} */ choice) {
     try { localStorage.setItem(THEME_KEY, choice); } catch { /* not remembered */ }
     showTheme();
+  },
+  /**
+   * The file now has turn `which` written in it, of the whole diagram or of subgraph `id` (`text` is the file after):
+   * the page's own turn of that is dropped, so the drawing stays as it was, and every turn left is made from the
+   * file's new directions, so none is taken for an outside change.
+   */
+  fileTurned(/** @type {'rotate' | 'flip'} */ which, /** @type {string | null} */ id, /** @type {string} */ text) {
+    rebaseTurn(text);
+    if (id === null) turn = { ...turn, [which]: false };
+    else turn.subs = turn.subs.map(([k, t]) => [k, k === id ? { ...t, [which]: false } : t]);
+    if (!isOn(turn)) turn.base = null;
+    keepTurn();
+  },
+  /**
+   * The page itself changed the file to `text` (an undo or a redo): every turn left on is made from the file's
+   * directions now, so a direction the undo puts back is not taken for an outside change. Undo is the file's alone.
+   */
+  rebased(/** @type {string} */ text) {
+    rebaseTurn(text);
+    keepTurn();
   },
   /** How the page turns the diagram, or subgraph `id` on its own, for the menus. */
   turned(/** @type {string | null} */ id = null) {
@@ -660,6 +694,7 @@ function showOs(/** @type {string} */ os) {
   el('undo').title = os === 'mac' ? 'Undo (⌘Z)' : 'Undo (Ctrl+Z)';
   el('redo').title = os === 'mac' ? 'Redo (⌘⇧Z)' : 'Redo (Ctrl+Shift+Z or Ctrl+Y)';
   for (const b of osPicks) b.setAttribute('aria-pressed', String(b.dataset.osPick === os));
+  drawModes();
 }
 /** @type {string | null} */
 let savedOs = null;

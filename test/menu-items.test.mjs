@@ -390,6 +390,19 @@ test('Accessibility ▸ (E) in the empty-space menu holds the accessible title (
   assert.equal(applies(item, { edgesOk: true, selfLoop: false, locked: true }), false);
 });
 
+test('Rotate in the file (Alt+R) and Flip in the file (Alt+Shift+R) in the empty-space and subgraph menus, grayed as Rotate is', () => {
+  for (const menu of ['space', 'subgraph']) {
+    for (const [action, key] of [['rotate-file', 'alt+r'], ['flip-file', 'alt+shift+r']]) {
+      const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS[menu].find((i) => i.action === action));
+      assert.equal(item.key, key, menu);
+      assert.deepEqual(GLOBAL_KEYS[key], [action]);
+      assert.equal(whyNot(item, { edgesOk: true, selfLoop: false, turnWhy: 'ignored' }), 'ignored', menu);
+      // Not a view item: it writes, so it is grayed while the code is edited.
+      assert.equal(applies(item, { edgesOk: true, selfLoop: false, locked: true }), false, menu);
+    }
+  }
+});
+
 test('Give subgraph an id (Alt+I) in the subgraph and box menus: grayed, saying why, on a subgraph with an id', () => {
   for (const menu of ['subgraph', 'box']) {
     const item = /** @type {import('../web/menu-items.mjs').MenuItem} */ (MENUS[menu].find((i) => i.action === 'give-subgraph-id'));
