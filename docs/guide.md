@@ -66,6 +66,8 @@ them.
   back into a draft) and Escape goes back to the diagram, the panel staying open; Escape in the code, or on a control
   in the panel's bar, goes out to the panel, which Tab reaches too (just before the bar). Escape on the diagram closes the panel, once nothing is selected and no notice shows. Shift+`` ` `` closes it from anywhere at once, the selection staying (in the label box, find or a draft it types `~`); with a changed draft it asks first, as Escape does. The arrows on the panel scroll the
   code (Page Up, Page Down, Home and End too); to move the diagram, `` ` `` to it first.
+- **Copy**, in the code panel's bar, copies the code the panel shows: while you edit, the draft as it is (Download
+  Mermaid gives the file instead).
 - **Follow selection**, a box in the code panel's bar (checked at first, remembered in the browser): selecting a
   node, an edge, a subgraph or the title scrolls the code to its line, marked in pale blue, so Edit, or `` ` `` and
   Enter, starts there. With it unchecked, Edit starts at the first line in view.

@@ -609,10 +609,16 @@ for (const id of ['path', 'host']) {
   el(id).addEventListener('click', async () => {
     const text = el(id).dataset.copy;
     if (!text) return;
-    try { await copyText(text); } catch { ui.notice('The browser refused to copy the code.', 'error'); return; }
+    try { await copyText(text); } catch { ui.notice('The browser refused to copy the path.', 'error'); return; }
     toast('Copied!');
   });
 }
+// Copy in the code panel: what the panel shows, a draft while one is being edited. Copied straight from the click, as
+// the fallback off a secure context needs the click's gesture.
+el('code-copy').addEventListener('click', () => {
+  copyText(/** @type {HTMLTextAreaElement} */ (el('code')).value).then(() => toast('Copied!'),
+    () => ui.notice('The browser refused to copy the code.', 'error'));
+});
 
 // The user's script file (MERMAKER_SCRIPT, served at /script): imported once, when the page loads, so its top level
 // runs then, as a userscript's does. Run script calls its exported functions by name (ui.runScript).
