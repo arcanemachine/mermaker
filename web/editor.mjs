@@ -683,7 +683,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       const { id } = selection();
       const link = links.get(id);
       const script = writtenScript(shownText, id);
-      const does = link ? `links to ${link}.` : script ? `calls ${script.call}.` : null;
+      const does = link ? `links to: ${link}` : script ? `calls: ${script.call}` : null;
       if (!does) return;
       ui.notice(`This node ${does}`, 'info');
     },
