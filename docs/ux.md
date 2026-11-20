@@ -30,7 +30,11 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   the drawn text (on its own line: on the `subgraph` line it does not parse). Only where Mermaid draws it in a direction
   of its own, seen in 12.2.0: none of its nodes linked to a node outside it, nor its own nodes to one in a subgraph
   inside it (edges to a subgraph's box do not count). That is most subgraphs grayed, all of the "Simple" demo's; it is
-  Mermaid's layout rule, not a setting. The view fits after a turn.
+  Mermaid's layout rule, not a setting. The view fits whenever the direction the page draws changes: a turn, an undo
+  or redo of Rotate in the file, someone else's save. Mermaid lays a turned drawing out anew, so the view from before
+  shows nothing in particular, even a view you zoomed. The header counts, and each subgraph there before and after,
+  TD and TB as one: a subgraph added, deleted or renamed is an edit, which keeps the view. Known: a `direction` line
+  Mermaid ignores (a subgraph linked outside itself) refits too.
   Rotate in the file and Flip in the file (Alt+R, Alt+Shift+R) write a turn, the same text the page draws, so the
   turn in the page and the one in the file are one idea. Each touches only its own turn: with the page turned that
   way, the page's turn goes as the file takes it and nothing moves. Undo is the file's alone, never the page's turns,
@@ -217,8 +221,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 - Nothing moves under the pointer: a menu or picker never changes its items while it is open, and a notice lies over the
   top of the diagram instead of pushing it down (a fitted diagram leaves room for one line of it), since a diagram that
   moved as Connect to… asked for a click would put another node under the click aimed at. For the same reason an edit
-  keeps the view: the diagram is fitted when the page opens, and again only on Fit to window or, until the view is
-  zoomed or moved, a change in the window's size. A diagram that grows can run past the edge; that is the price of nodes
+  keeps the view: the diagram is fitted when the page opens, and again only on Fit to window, a change in the drawn
+  direction (Rotate and flip, above) or, until the view is zoomed or moved, a change in the window's size. A diagram that grows can run past the edge; that is the price of nodes
   staying put. An add is the one exception, since its label box must be in view to be used: the view moves the least
   that shows the new item, its label box and the pickers centered by it, zoomed out only if they cannot fit, and not
   again while the box grows. The colors above a box are the other: opening a panel whose colors or shapes would be cut

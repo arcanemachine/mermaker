@@ -30,6 +30,32 @@ export function subgraphDir(/** @type {string} */ text, /** @type {string} */ id
   return directions(text)?.blocks.find((b) => b.id === id)?.dir ?? null;
 }
 
+/** @typedef {{ header: string, subs: Map<string, string | null> }} Dirs */
+
+// TD is Mermaid's other name for TB.
+const same = (/** @type {string | null} */ dir) => (dir === 'TD' ? 'TB' : dir);
+
+/**
+ * The directions `text` is drawn with: the header's (none written is TB) and each subgraph's own `direction` line, or
+ * null for one with none; null when it is not a flowchart. What the view refits on (dirsChanged).
+ * @returns {Dirs | null}
+ */
+export function drawnDirs(/** @type {string} */ text) {
+  const found = directions(text);
+  if (!found) return null;
+  return { header: same(found.header.dir) ?? 'TB', subs: new Map(found.blocks.map((b) => [b.id, same(b.dir)])) };
+}
+
+/**
+ * Whether the drawing turned between `before` and `after` (drawnDirs): the header, or a subgraph in both. A subgraph
+ * that comes or goes, or is renamed, is an edit like any other, which keeps the view.
+ */
+export function dirsChanged(/** @type {Dirs | null} */ before, /** @type {Dirs | null} */ after) {
+  if (!before || !after) return false;
+  if (before.header !== after.header) return true;
+  return [...after.subs].some(([id, dir]) => before.subs.has(id) && before.subs.get(id) !== dir);
+}
+
 /**
  * The text the page draws for `text` turned: the whole diagram by `turn` (the header's direction and every subgraph's
  * own), then each subgraph in `subs` by its own turn, on top of what it would be drawn with: its own line turned, or

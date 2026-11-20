@@ -8,7 +8,7 @@ import { createSource } from './source.mjs';
 import { createHold } from './hold.mjs';
 import { createCodePanel } from './code-panel.mjs';
 import { drawnAs, prune, setView, viewText } from './collapse.mjs';
-import { baseDir, subgraphDir, turnText } from './turn.mjs';
+import { baseDir, dirsChanged, drawnDirs, subgraphDir, turnText } from './turn.mjs';
 import { modeRows } from './modes.mjs';
 import { isFlowchart, itemLines, subgraphs as scannedSubgraphs, withHeader } from './patch/flowchart.mjs';
 import { createViewer, parse } from './viewer.mjs';
@@ -380,6 +380,8 @@ const ui = {
 /** @type {ReturnType<typeof createEditor> | null} set once the source and viewer it needs exist */
 let editor = null;
 let shownOnce = false;   // a diagram has been rendered; until then the view is the initial fit, not worth keeping
+/** @type {import('./turn.mjs').Dirs | null} the directions the drawing on screen was turned to, for this file */
+let shownDirs = null;
 
 // Mermaid's size limits, as Mermaker was started with them (MERMAKER_MAX_EDGES, MERMAKER_MAX_TEXT); empty: Mermaid's own.
 const meta = (/** @type {string} */ name) => /** @type {HTMLMetaElement} */ (document.querySelector(`meta[name="${name}"]`)).content;
@@ -463,6 +465,7 @@ async function draw(/** @type {string} */ written) {
   // Mermaid's dark themes draw on a dark canvas; a file's own theme keeps the light one.
   el('diagram').toggleAttribute('data-dark', drawnDark && !fileTheme(text));
   let shown = await viewer.show(drawn);
+  let shownTurned = turned;
   // Drawn as the other file opened: clear it again, so that file's first drawing, queued after this one, is fitted.
   if (of !== file) { viewer.clear(); return; }
   if (!shown.ok && drawn !== text) {
@@ -473,6 +476,7 @@ async function draw(/** @type {string} */ written) {
       keepOverrides();
       turn = { rotate: false, flip: false, base: null, subs: [] };
       keepTurn();
+      shownTurned = text;
       warning = "Couldn't collapse or turn the diagram: showing the file as written.";
     }
   }
@@ -488,6 +492,11 @@ async function draw(/** @type {string} */ written) {
   if (!shownOnce) { shownOnce = true; restoreView(); }
   el('status').textContent = 'updated ' + new Date().toLocaleTimeString();
   shownSubs = subs;
+  // A drawing turned another way (Rotate, an undo of Rotate in the file, someone else's save) is laid out anew, so
+  // the view kept from before shows nothing in particular: fit it, before the editor shows the selection in it.
+  const dirs = drawnDirs(shownTurned);
+  if (dirsChanged(shownDirs, dirs)) viewer.fit();
+  shownDirs = dirs;
   const stage = el('stage');
   el('welcome').toggleAttribute('data-titled', Boolean(stage.querySelector('text.flowchartTitleText')));
   welcome(isFlowchart(text) && !stage.querySelector('g.node, g.cluster'));
@@ -598,6 +607,7 @@ function showFile(/** @type {ReturnType<typeof createSource>} */ s, /** @type {s
   shownSubs = [];
   drawingSubs = [];
   shownOnce = false;
+  shownDirs = null;
   ui.hideNotice();
   showError('');
   clearTimeout(toastTimer);

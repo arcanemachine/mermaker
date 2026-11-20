@@ -1,7 +1,7 @@
 // Rotate and flip (web/turn.mjs): the directions the page draws a flowchart with, the file untouched.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { baseDir, subgraphDir, turnable, turnDir, turnText } from '../web/turn.mjs';
+import { baseDir, dirsChanged, drawnDirs, subgraphDir, turnable, turnDir, turnText } from '../web/turn.mjs';
 
 const R = { rotate: true, flip: false }, F = { rotate: false, flip: true }, RF = { rotate: true, flip: true };
 const NONE = { rotate: false, flip: false };
@@ -63,4 +63,33 @@ test('turnable: only a subgraph none of whose nodes links out, nor its direct no
   assert.equal(turnable('t', subs, [{ from: 'c', to: 'd' }, { from: 'a', to: 'b' }]), true);
   assert.equal(turnable('t', subs, [{ from: 'b', to: 'c' }]), false);
   assert.equal(turnable('nope', subs, []), false);
+});
+
+test('the view refits when the drawing turns: the header, or a subgraph that is there before and after', () => {
+  const src = 'flowchart TD\n  subgraph s\n    direction LR\n    a --> b\n  end\n  c --> d\n';
+  const dirs = drawnDirs(src);
+  assert.equal(dirsChanged(dirs, drawnDirs(turnText(src, R))), true);
+  assert.equal(dirsChanged(drawnDirs('flowchart TD\n  a --> b\n'), drawnDirs('flowchart LR\n  a --> b\n')), true);
+  assert.equal(dirsChanged(dirs, drawnDirs(src.replace('direction LR', 'direction RL'))), true);
+  assert.equal(dirsChanged(dirs, drawnDirs(src.replace('    direction LR\n', ''))), true);
+  assert.equal(dirsChanged(dirs, drawnDirs(src.replace('c --> d', 'c --> e'))), false);
+});
+
+test('TD and TB are one direction, and a header with none is TB', () => {
+  const src = 'flowchart TD\n  subgraph s\n    direction TD\n    a --> b\n  end\n';
+  assert.equal(dirsChanged(drawnDirs(src), drawnDirs(src.replaceAll('TD', 'TB'))), false);
+  assert.equal(dirsChanged(drawnDirs('flowchart\n  a --> b\n'), drawnDirs('flowchart TB\n  a --> b\n')), false);
+});
+
+test('a subgraph that comes, goes or is renamed keeps the view, as any edit does', () => {
+  const src = 'flowchart TD\n  subgraph s\n    direction LR\n    a --> b\n  end\n';
+  const without = 'flowchart TD\n  a --> b\n';
+  assert.equal(dirsChanged(drawnDirs(src), drawnDirs(without)), false);
+  assert.equal(dirsChanged(drawnDirs(without), drawnDirs(src)), false);
+  assert.equal(dirsChanged(drawnDirs(src), drawnDirs(src.replace('subgraph s', 'subgraph t'))), false);
+});
+
+test('no refit with nothing drawn before, or for a diagram that is not a flowchart', () => {
+  assert.equal(dirsChanged(null, drawnDirs('flowchart LR\n  a --> b\n')), false);
+  assert.equal(drawnDirs('sequenceDiagram\n  A->>B: hi\n'), null);
 });

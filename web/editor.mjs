@@ -627,7 +627,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const id = selectedSubgraph();
     const what = id ? named({ kind: 'subgraph', id }) : 'the diagram';
     const verb = which === 'rotate' ? 'Rotated' : 'Flipped';
-    ui.turn(which, id).then((on) => { viewer.fit(); ui.announce(`${verb} ${what}${on ? '' : ' back'}`); });
+    ui.turn(which, id).then((on) => ui.announce(`${verb} ${what}${on ? '' : ' back'}`));
   }
 
   /**
@@ -650,7 +650,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         if (turned) ui.toast(`Direction ${dir} written to the file.`);
         ui.announce(`${which === 'rotate' ? 'Rotated' : 'Flipped'} ${what} in the file, direction ${dir}`);
       },
-    }).then(() => { if (!turned) viewer.fit(); });
+    });
   }
 
   /** @type {Record<string, string>} what each pick asks for: what is picked */

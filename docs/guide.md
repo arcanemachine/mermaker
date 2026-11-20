@@ -336,8 +336,8 @@ buttons says so, one line for each, with the keys to undo it or write it.
 **Rotate in the file** (Alt+R; Option+R on a Mac) and **Flip in the file** (Alt+Shift+R) write the turn into the file
 instead: the header's direction and every subgraph's own `direction` line, as Rotate draws them (`flowchart TD` becomes
 `flowchart LR`). With the page already turned that way, the page's turn is dropped as the file takes it, so nothing
-moves and a toast says what was written. Undo takes back the file's change only, so the diagram then turns back; R
-turns the page again. With a turn of the page left on, the file's new direction keeps it.
+moves and a toast says what was written. Undo takes back the file's change only, so the diagram then turns back and
+the page fits it; R turns the page again. With a turn of the page left on, the file's new direction keeps it.
 
 ## The node panel
 
