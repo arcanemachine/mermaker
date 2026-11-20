@@ -70,7 +70,7 @@ const END_RUN = 3;
  * @param {(text: string) => Promise<unknown>} deps.parse throws when the text is not valid Mermaid
  * @param {import('./limits.mjs').Limits} deps.limits Mermaid's size limits as Mermaker was started with them
  * @param {(text: string) => Promise<void>} deps.display show saved text as the page shows any new version
- * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, toast(message: string): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, fileTurned(which: 'rotate' | 'flip', id: string | null, text: string): void, rebased(text: string): void, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
+ * @param {{ notice(message: string, kind: 'info'|'warning'|'error'): void, toast(message: string): void, hideNotice(): boolean, mode(message: string | null): void, escape(): boolean, setView(id: string, view: 'collapsed' | 'expanded'): Promise<void>, turn(which: 'rotate' | 'flip', id?: string | null): Promise<boolean>, turned(id?: string | null): { rotate: boolean, flip: boolean }, fileTurned(which: 'rotate' | 'flip', id: string | null, text: string): void, rebased(text: string): void, selected(item: Item | null): void, announce(message: string): void, history(can: { undo: boolean, redo: boolean }): void, copied(text: string, kind: 'node' | 'subgraph'): void, copyLink(text: string): Promise<boolean>, runScript(name: string, args: string[], call: string): Promise<{ ran: true } | { none: true } | { why: string, kind: 'warning' | 'error' }>, itemAddress(to: { node: string } | { part: string }): string, showPart(id: string | null): void, openLink(to: { path: string, part: string | null } | { url: string, app: boolean }, tab: boolean): void, theme(): string, setTheme(choice: string): void }} deps.ui
  *   `history`: whether there is anything to undo or redo, told whenever that may have changed
  * @param {Record<'stage'|'diagram'|'labelBox'|'find'|'findBox'|'findCount'|'findPrev'|'findNext'|'findCancel'|'findToggle', HTMLElement>} deps.els
  */
@@ -342,7 +342,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
         : { kind: 'node', copy: copyNode(shownText, sel.id), name: named(sel) };
     } catch (e) { refuse(e.message || String(e)); return; }
     dropCut();
-    ui.copied(copied.kind === 'subgraph' ? copiedSubgraphText(copied.copy) : copiedText(copied.copy));
+    ui.copied(copied.kind === 'subgraph' ? copiedSubgraphText(copied.copy) : copiedText(copied.copy), copied.kind);
     ui.announce(`Copied ${copied.name}`);
   }
 
@@ -647,7 +647,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       afterSave: (result) => {
         ui.fileTurned(which, id, result.text);
         const dir = id ? subgraphDir(result.text, id) : baseDir(result.text);
-        if (turned) ui.toast(`Direction ${dir} written to the file.`);
+        if (turned) ui.toast(`The direction ${dir} was written to the file.`);
         ui.announce(`${which === 'rotate' ? 'Rotated' : 'Flipped'} ${what} in the file, direction ${dir}`);
       },
     });
@@ -683,7 +683,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       const { id } = selection();
       const link = links.get(id);
       const script = writtenScript(shownText, id);
-      const does = link ? `links to: ${link}` : script ? `calls ${script.call}.` : null;
+      const does = link ? `links to ${link}.` : script ? `calls ${script.call}.` : null;
       if (!does) return;
       ui.notice(`This node ${does}`, 'info');
     },
@@ -766,7 +766,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   // A handler for every action and an action for every handler: a typo in either would otherwise only show as a
   // menu item that does nothing.
   const actions = new Set(Object.values(MENUS).flat().filter((i) => !i.submenu).map((i) => i.action));
-  for (const a of actions) if (!handlers[a]) throw new Error(`No handler for the menu action ${a}`);
+  for (const a of actions) if (!handlers[a]) throw new Error(`There is no handler for the menu action ${a}.`);
   for (const a of Object.keys(handlers)) if (!actions.has(a)) throw new Error(`No menu item runs ${a}`);
 
   const themeChoices = createChoices({
@@ -966,10 +966,10 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     const answer = window.prompt(`Edit the ${name} of this diagram, read by screen readers. Leave the box empty to remove it.`, now?.value ?? '');
     if (answer === null || answer.trim() === (now?.value ?? '')) return;
     const removed = !answer.trim();
-    const told = `${name[0].toUpperCase()}${name.slice(1)} ${removed ? 'removed' : 'saved'}`;
+    const done = removed ? 'removed' : 'saved';
     edit((text) => ({ text: setAccText(text, which, answer) }), {
       after: () => (selected ? { item: selected } : null),
-      afterSave: () => { ui.toast(told); ui.announce(told); },
+      afterSave: () => { ui.toast(`The ${name} was ${done}.`); ui.announce(`${name[0].toUpperCase()}${name.slice(1)} ${done}`); },
     });
   }
 
@@ -1810,7 +1810,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
   }
   const VIEW_KEYS = ['f', 'shift+f', 'escape', '+', '=', '-', '0',
     ...['up', 'down', 'left', 'right'].flatMap((d) => [`arrow${d}`, `ctrl+arrow${d}`, `shift+arrow${d}`])];
-  for (const k of Object.keys(GLOBAL_KEYS)) if (!keys[k]) throw new Error(`No handler for the key ${k}`);
+  for (const k of Object.keys(GLOBAL_KEYS)) if (!keys[k]) throw new Error(`There is no handler for the key ${k}.`);
   const editLabelOrTitle = (/** @type {Item} */ sel) => (sel.kind === 'subgraph' ? editTitle(sel) : openLabelBox(sel));
 
   /**
@@ -2566,7 +2566,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
       // Put back the view from before the add once the smaller diagram is drawn: a fit now would fit it with the node.
       if (!added.moved) viewBack = { text: added.entry.before, view: added.view };
       await display(added.entry.before);
-      ui.announce('Add cancelled');
+      ui.announce('Add canceled');
     });
   }
 

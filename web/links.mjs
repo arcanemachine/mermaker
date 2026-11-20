@@ -1,6 +1,6 @@
 // A node's link (`click A href "…"`), as Mermaid reads it: what Open link does with it, or why it does nothing. No DOM.
 
-export const NO_LINK = 'No link on this node.';
+export const NO_LINK = 'There is no link on this node.';
 /** A `javascript:` link, which Mermaid's sanitizer turns into about:blank. */
 export const SCRIPT_LINK = 'This link runs a script. Mermaker does not run it.';
 /** A callback (`click A charge`): a script for Run script, not a link. */

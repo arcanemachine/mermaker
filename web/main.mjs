@@ -171,7 +171,7 @@ function pruneTurn(/** @type {string} */ text, /** @type {import('./collapse.mjs
   keepTurn();
 }
 
-// A short status message that fades out. Short messages ("Copied!") start fading after 1 s; longer ones stay up
+// A short status message that fades out. Short messages ("The link was copied.") start fading after 1 s; longer ones stay up
 // ~70 ms a character, capped at 8 s. Then a 0.6 s fade.
 /** @type {ReturnType<typeof setTimeout> | undefined} */
 let toastTimer;
@@ -325,9 +325,9 @@ const ui = {
    * A node was copied: its Mermaid text goes on the system clipboard too, where the browser lets it (the page's own
    * copy does not depend on it), and the toast says so.
    */
-  copied(/** @type {string} */ text) {
+  copied(/** @type {string} */ text, /** @type {'node' | 'subgraph'} */ kind) {
     copyText(text).catch(() => {});
-    toast('Copied!');
+    toast(`This ${kind} was copied.`);
   },
   /**
    * Call function `name` of the user's script file with `args` (strings, as Mermaid passes them), awaiting it: whether
@@ -336,7 +336,7 @@ const ui = {
   runScript: async (/** @type {string} */ name, /** @type {string[]} */ args, /** @type {string} */ call) =>
     runExport(await userScript, name, args, call),
   /** Put a link on the system clipboard, the whole of what is copied: whether the browser let it, saying so if not. */
-  copyLink: (/** @type {string} */ text) => copyText(text).then(() => { toast('Copied!'); return true; },
+  copyLink: (/** @type {string} */ text) => copyText(text).then(() => { toast('The link was copied.'); return true; },
     () => { ui.notice('The browser refused to copy the link.', 'error'); return false; }),
   /**
    * The address of a node, with the part shown, or of a subgraph as the part, naming the file by its host path when
@@ -477,7 +477,7 @@ async function draw(/** @type {string} */ written) {
       turn = { rotate: false, flip: false, base: null, subs: [] };
       keepTurn();
       shownTurned = text;
-      warning = "Couldn't collapse or turn the diagram: showing the file as written.";
+      warning = "The diagram couldn't be collapsed or turned, so the file is shown as written.";
     }
   }
   if (!shown.ok) {
@@ -656,13 +656,13 @@ for (const id of ['path', 'host']) {
     const text = el(id).dataset.copy;
     if (!text) return;
     try { await copyText(text); } catch { ui.notice('The browser refused to copy the path.', 'error'); return; }
-    toast('Copied!');
+    toast('The path was copied.');
   });
 }
 // Copy in the code panel: what the panel shows, a draft while one is being edited. Copied straight from the click, as
 // the fallback off a secure context needs the click's gesture.
 el('code-copy').addEventListener('click', () => {
-  copyText(/** @type {HTMLTextAreaElement} */ (el('code')).value).then(() => toast('Copied!'),
+  copyText(/** @type {HTMLTextAreaElement} */ (el('code')).value).then(() => toast('The code was copied.'),
     () => ui.notice('The browser refused to copy the code.', 'error'));
 });
 
@@ -729,15 +729,15 @@ const exports = {
     const markup = viewer.svgMarkup();
     if (!markup) return;
     try { await copyText(markup); } catch { ui.notice('The browser refused to copy the SVG. Use Download SVG instead.', 'error'); return; }
-    toast('SVG copied!');
+    toast('The SVG was copied.');
   },
   'download-svg': () => {
     const markup = viewer.svgMarkup();
-    if (markup) download(markup, 'image/svg+xml', '.svg', 'SVG downloaded');
+    if (markup) download(markup, 'image/svg+xml', '.svg', 'The SVG was downloaded.');
   },
   'download-mermaid': () => {
     const text = source.snapshot().text;
-    if (text !== null) download(text, 'text/plain', '.mmd', 'Mermaid downloaded');
+    if (text !== null) download(text, 'text/plain', '.mmd', 'The Mermaid file was downloaded.');
   },
 };
 /** Save `content` as the file's name with `ext` in place of `.mmd`. */

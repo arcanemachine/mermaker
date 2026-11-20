@@ -287,7 +287,7 @@ export function createCodePanel(els, hooks) {
   /** @type {{ base: { text: string, version: string } } | null} */
   let editing = null;
   let shown = '';     // the file's latest text; while editing, the draft stands in its place in the field
-  const READ_TITLE = 'Enter or F2 edits; Escape goes to the panel; ` goes to the diagram';
+  const READ_TITLE = 'Enter or F2 edits, Escape goes to the panel, ` goes to the diagram';
   code.title = READ_TITLE;
 
   /** Show the header's buttons and status for editing or not. */
@@ -297,7 +297,7 @@ export function createCodePanel(els, hooks) {
     edit.hidden = Boolean(next);
     save.hidden = !next;
     cancel.hidden = !next;
-    code.title = next ? 'Ctrl+Enter (⌘+Enter on a Mac) saves; Escape goes to the panel' : READ_TITLE;
+    code.title = next ? 'Ctrl+Enter (⌘+Enter on a Mac) saves, Escape goes to the panel' : READ_TITLE;
     markChanged();
   }
   function markChanged() {

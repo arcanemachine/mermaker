@@ -591,7 +591,7 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 
 - An edit that worked shows no message: the redrawn diagram shows what it did (screen readers hear a line for it:
   Accessibility).
-- A toast is only for a result you cannot see on screen ("Copied!", "SVG downloaded"), and fades; it never says what
+- A toast is only for a result you cannot see on screen ("The link was copied.", "The SVG was downloaded."), and fades; it never says what
   to do. A notice says what to do next, or why something was not done, and stays. An error is never a toast.
 - A message on screen names the selected item as "this node", "this edge" or "this subgraph", never by its label: the
   selection shows which, and a quoted label makes the message long. Any other item is named by its label as drawn, in
@@ -606,8 +606,13 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   reader hears it as the diagram's description.
 - A message is written the way a person would write it: plain words, and what to do in the imperative mood,
   addressed to the reader.
-- A message is made of full sentences, as a person would say them: it names what it is about and says
-  what happened, rather than a clipped label or a verb with nothing in front of it.
+- A message is made of complete sentences, each with a subject and a verb (or an instruction in the imperative), as a
+  person would say them: it names what it is about and says what happened, rather than a clipped label or a verb with
+  nothing in front of it ("There is no link on this node.", not "No link on this node."). A message is anything the page says in words: a notice, a
+  grayed item's reason, a prompt, the modes strip, a toast, the welcome. A label or a readout is not a message and
+  stays short: a menu item, a picker's "Current: …", find's count, the code panel's status, "updated" with its time,
+  and a key hint in a tooltip, written as the label box's is ("Enter saves, Shift+Enter starts a new line, Escape
+  cancels"). `test/messages.test.mjs` catches a message that opens "No …" with no verb.
 - A message never says "it" for something the message has not named ("This node is already in this
   subgraph.", not "It is already in this subgraph."). A message is read on its own, and what you just did is not on
   the screen to point back to. Once the message has named the thing, "it" is fine ("This subgraph is collapsed.
@@ -662,6 +667,9 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
     away or Escape that lets go of one;
   - each edit that worked is read out as a line, since the redraw cannot be heard ('Connected "Take order" to "Order
     log"');
+  - what is heard is short, the core words rather than full sentences ("Nothing selected", "Accessible title saved"):
+    listening takes longer than reading, so a word spared is time given back. What is seen is written in full
+    sentences (Messages);
   - an error is heard at once, interrupting (an `alert`), and the other messages when the reader is free (a `status`),
     so pressing a grayed item's key over and over does not keep cutting in. This follows "something tried that
     failed", not the color, so re-sorting info and warning moves nothing here.
