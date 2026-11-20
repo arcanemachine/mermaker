@@ -144,14 +144,16 @@ function keepTurn() {
     if (isOn(turn) || turn.subs.length) sessionStorage.setItem(turnKey(), JSON.stringify(turn));
     else sessionStorage.removeItem(turnKey());
   } catch { /* storage unavailable: the turn just is not kept */ }
-  drawModes();
 }
 /** Make every turn left on from the directions `text` has, as if turned now. */
 function rebaseTurn(/** @type {string} */ text) {
   if (isOn(turn)) turn.base = baseDir(text);
   turn.subs = turn.subs.map(([k, t]) => [k, { ...t, base: subgraphDir(text, k) }]);
 }
-/** The modes strip, under the diagram: one row per page-only turn, hidden with none (modes.mjs). */
+/**
+ * The modes strip, under the diagram: one row per page-only turn, hidden with none (modes.mjs). Drawn with the drawing
+ * it describes, never before: the strip resizes the diagram area, which would refit the old drawing a moment ahead.
+ */
 function drawModes() {
   const subs = turn.subs.map(([id, t]) => ({ ...t, title: t.title ?? shownSubs.find((s) => s.id === id)?.title ?? id }));
   const rows = modeRows(turn, subs, document.documentElement.dataset.os ?? 'pc');
@@ -492,6 +494,7 @@ async function draw(/** @type {string} */ written) {
   if (!shownOnce) { shownOnce = true; restoreView(); }
   el('status').textContent = 'updated ' + new Date().toLocaleTimeString();
   shownSubs = subs;
+  drawModes();
   // A drawing turned another way (Rotate, an undo of Rotate in the file, someone else's save) is laid out anew, so
   // the view kept from before shows nothing in particular: fit it, before the editor shows the selection in it.
   const dirs = drawnDirs(shownTurned);
@@ -616,6 +619,8 @@ function showFile(/** @type {ReturnType<typeof createSource>} */ s, /** @type {s
   // Before the stage is cleared: the editor lets go of what is selected while it is still drawn.
   editor?.switchFile(s, f);
   viewer.clear();
+  // The new file's turns, even when its drawing fails: the old file's strip must not stay over it.
+  drawModes();
   welcome(false);
   codePanel.setFile();
   showHeader();
