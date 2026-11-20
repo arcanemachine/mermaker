@@ -619,6 +619,11 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
   Expand it first (H)."). `test/messages.test.mjs` catches the usual shapes of the mistake.
 - One thought, one sentence. Two clauses become two sentences, never joined by a colon, semicolon or dash. Text
   Mermaker did not write, such as Mermaid's parse error, goes on a line of its own under the message, as it came.
+- A message that ends with a value you may copy or must read exactly (an address, a path, an id, a script call, a host
+  name), written without quotes, puts it after a colon with no period ("This node links to: https://example.com/"), so
+  the period is not read as part of it. A label in quotes keeps its period, since the quotes show where it ends, and a
+  number is written as in a sentence. A colon that introduces a value joins no clauses, so this fits "one thought, one
+  sentence". A value in the middle of a message is reworded so that it ends its line.
 - Everyday words, the ones a person would say aloud. The passive voice is fine where it reads more naturally.
 - Mermaker refuses only what it cannot write correctly, or what would break the file; a legal edit that
   Mermaid draws badly is yours to make, with Undo as the net (a legal edit is not Mermaker's to refuse). A subgraph

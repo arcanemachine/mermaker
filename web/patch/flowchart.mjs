@@ -478,7 +478,7 @@ function nameSubgraph(/** @type {string} */ text, /** @type {Subgraph} */ sg, /*
 export function giveSubgraphId(/** @type {string} */ text, /** @type {string} */ id, /** @type {string} */ name) {
   const sg = subgraphBlock(text, id);
   if (!sg) throw new Error('That subgraph is not in the file.');
-  if (sg.written) throw new Error(`This subgraph already has an id: ${id}.`);
+  if (sg.written) throw new Error(`This subgraph already has an id: ${id}`);
   const why = idRefusal(text, name);
   if (why) throw new Error(why);
   return nameSubgraph(text, sg, null, name);
@@ -949,7 +949,7 @@ export function setColor(/** @type {string} */ text, /** @type {string} */ id, /
     if (!sg) throw new Error('That subgraph is not in the file.');
     if (!sg.written) ({ text, id } = nameSubgraph(text, sg));
   }
-  if (key !== 'none' && !PRESETS[key]) throw new Error(`There is no color ${key}.`);
+  if (key !== 'none' && !PRESETS[key]) throw new Error(`There is no color: ${key}`);
   const name = key === 'none' ? null : presetClass(key, kind);
   const all = classesOf(text, id);
   const mine = all.filter((c) => c.ids && presetOf(c.name));

@@ -107,7 +107,7 @@ export async function runExport(loaded, name, args, call) {
   if (!loaded) return { none: true };
   if ('error' in loaded) return { why: `The script file did not load: ${loaded.error}`, kind: 'error' };
   const fn = Object.hasOwn(loaded.module, name) ? loaded.module[name] : undefined;
-  if (typeof fn !== 'function') return { why: `The script file has no function named ${name}.`, kind: 'warning' };
+  if (typeof fn !== 'function') return { why: `The script file has no function named: ${name}`, kind: 'warning' };
   try {
     await fn(...args);
     return { ran: true };

@@ -66,7 +66,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
   async function handle(/** @type {Request} */ req, /** @type {Response} */ res) {
     res.setHeader('X-Mermaker-Build', build.id());
     if (!allowedHosts.has(hostName(req.headers.host).toLowerCase())) {
-      return send(res, 403, `This server does not answer to the host ${req.headers.host || '(none)'}.`);
+      return send(res, 403, `This server does not answer to the host: ${req.headers.host || '(none)'}`);
     }
     const url = new URL(/** @type {string} */ (req.url), 'http://localhost');   // set on a server's requests
     const asked = url.searchParams.get('f') || '';
@@ -87,7 +87,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     if (url.pathname === '/source') {
       if (!files.allowed(f)) return send(res, 403, notServed(files, f));
       const text = files.read(f);
-      if (text === null) return send(res, 404, `There is no file at ${f}.`);
+      if (text === null) return send(res, 404, `There is no file at: ${f}`);
       const etag = version(text);
       if (req.headers['if-none-match'] === etag) {
         res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-store' });
@@ -134,7 +134,7 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
     }
 
     const result = files.writeIfVersion(f, base, text);
-    if (result === 'missing') return send(res, 404, `There is no file at ${f}.`);
+    if (result === 'missing') return send(res, 404, `There is no file at: ${f}`);
     if (result === 'conflict') {
       return send(res, 409, 'The file changed since the page read it. Reload and edit again.', 'text/plain',
         { ETag: version(files.read(f) ?? '') });
@@ -148,8 +148,8 @@ export function createServer({ files, script, hosts = LOOPBACK_HOSTS, web = WEB,
 /** Why a file is refused, and how to start Mermaker so that it is served. */
 function notServed(/** @type {ReturnType<typeof import('./files.js').createFiles>} */ files, /** @type {string | null} */ f) {
   if (!f) return 'No file was given. Open the page as /?f=<absolute path to a .mmd file>.';
-  return `This server does not serve ${f}. This server serves only .mmd files in or at ${files.roots.join(', ')}.\n` +
-    `To open this file, run mermaker ${shellQuote(f)}`;
+  return `This server does not serve this file: ${f}\nThis server serves only .mmd files in or at: ${files.roots.join(', ')}\n` +
+    `To open this file, run: mermaker ${shellQuote(f)}`;
 }
 
 /** `s` as one shell word: as it is when it has nothing a shell would split or expand, else in single quotes. */

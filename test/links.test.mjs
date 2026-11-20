@@ -85,9 +85,9 @@ test("Run script calls only a function the script file exports itself, with exac
   const module = { charge: (...a) => { called.push(a); }, other: 1 };
   assert.deepEqual(await runExport({ module }, 'charge', ['eu', '3'], 'charge("eu", 3)'), { ran: true });
   assert.deepEqual(called, [['eu', '3']]);
-  const none = { why: 'The script file has no function named toString.', kind: 'warning' };
+  const none = { why: 'The script file has no function named: toString', kind: 'warning' };
   assert.deepEqual(await runExport({ module }, 'toString', [], 'toString'), none);
-  assert.deepEqual(await runExport({ module }, 'other', [], 'other'), { ...none, why: 'The script file has no function named other.' });
+  assert.deepEqual(await runExport({ module }, 'other', [], 'other'), { ...none, why: 'The script file has no function named: other' });
   assert.deepEqual(await runExport(null, 'charge', [], 'charge'), { none: true });
   assert.deepEqual(await runExport({ error: 'Unexpected token' }, 'charge', [], 'charge'),
     { why: 'The script file did not load: Unexpected token', kind: 'error' });

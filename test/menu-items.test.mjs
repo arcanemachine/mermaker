@@ -10,7 +10,7 @@ import { NODE_SHAPES } from '../web/shapes.mjs';
 
 const STATES = [
   { edgesOk: true, selfLoop: true },
-  { edgesOk: false, selfLoop: false, idWhy: 'This subgraph already has an id: pay.', collapseWhy: 'No subgraph match' },
+  { edgesOk: false, selfLoop: false, idWhy: 'This subgraph already has an id: pay', collapseWhy: 'No subgraph match' },
 ];
 const ALL_MENUS = { ...MENUS, export: EXPORT_MENU, accessibility: ACCESSIBILITY };
 const items = Object.entries(ALL_MENUS).flatMap(([menu, list]) => list.map((item) => ({ menu, item })));
@@ -409,7 +409,7 @@ test('Give subgraph an id (Alt+I) in the subgraph and box menus: grayed, saying 
     assert.equal(item.key, 'alt+i', menu);
     const base = { edgesOk: true, selfLoop: false };
     assert.equal(applies(item, { ...base, idWhy: null }), true, menu);
-    assert.equal(whyNot(item, { ...base, idWhy: 'This subgraph already has an id: pay.' }), 'This subgraph already has an id: pay.', menu);
+    assert.equal(whyNot(item, { ...base, idWhy: 'This subgraph already has an id: pay' }), 'This subgraph already has an id: pay', menu);
   }
   assert.deepEqual(GLOBAL_KEYS['alt+i'], ['give-subgraph-id']);
 });

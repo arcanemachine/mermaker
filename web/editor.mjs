@@ -811,7 +811,7 @@ export function createEditor({ source, file, viewer, parse, limits, display, ui,
     return {
       edgesOk,
       selfLoop: selected?.kind === 'edge' && shownEdge(selected.id)?.from === shownEdge(selected.id)?.to,
-      idWhy: selected?.kind === 'subgraph' && !drawnOnly(selected.id) ? `This subgraph already has an id: ${selected.id}.` : null,
+      idWhy: selected?.kind === 'subgraph' && !drawnOnly(selected.id) ? `This subgraph already has an id: ${selected.id}` : null,
       collapseWhy: selected?.kind === 'subgraph' && !collapse.subs.some((s) => s.id === selected?.id) ? NO_SUBGRAPH_MATCH : null,
       turn: ui.turned(selectedSubgraph()),
       turnWhy: selected?.kind === 'subgraph' ? turnWhy(selected.id) : null,
