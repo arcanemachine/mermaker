@@ -37,12 +37,14 @@ the page, each with its reason. What does not: what each control does (`docs/gui
   Mermaid ignores (a subgraph linked outside itself) refits too.
   Rotate in the file and Flip in the file (Alt+R, Alt+Shift+R) write a turn, the same text the page draws, so the
   turn in the page and the one in the file are one idea. Each touches only its own turn: with the page turned that
-  way, the page's turn goes as the file takes it and nothing moves. Undo is the file's alone, never the page's turns,
+  way, the page's turn goes as the file takes it and the drawing does not turn (a view you have not touched refits as
+  the strip's band goes, since the diagram area grows). Undo is the file's alone, never the page's turns,
   which are modes: turned on and off, never undone.
-- **The modes strip**, a line above the footer's buttons for each page-only state that lasts (today the turns): what
-  it is, how to undo it, how to write it. It takes room from the diagram rather than covering its bottom, and it is
-  plain text, not a live region: the act that changes it is announced already, and two live regions would talk over
-  each other.
+- **The modes strip**, a band above the footer's buttons with a line for each page-only state that lasts (today the
+  turns): what it is, how to undo it, how to write it. It is an info notice for a state that lasts, so it has the info
+  notice's look, with a line under it to keep it apart from the buttons. It takes room from the diagram rather than
+  covering its bottom, and it is plain text, not a live region: the act that changes it is announced already, and two
+  live regions would talk over each other.
 - No edit moves an edge: `linkStyle N` styles the Nth edge in the file, so moving one restyles others. The one exception
   is a move of an edge's end (Reassign end… and Reassign start…, and Merge into…, which moves each of the node's edges so) on
   an edge written inside a subgraph block when its new end is named outside that block: an edge line pulls both its ends
@@ -668,7 +670,8 @@ colors. "Page theme", not "Theme": Mermaid's theme is the file's to set.
 
 - One look, one meaning: a style used for one role (the small note after a Help heading says what the section is
   limited to, "Editing flowcharts") is not reused for another (a usage note gets a look of its own). Two roles in one
-  look tell the reader they are the same kind of thing.
+  look tell the reader they are the same kind of thing. The modes strip has the info notice's look because it is one:
+  an info notice for a state that lasts.
 
 - Like things share one component: one menu, one picker for arrow types, shapes and colors. A new kind of choice uses them
   rather than a look of its own.

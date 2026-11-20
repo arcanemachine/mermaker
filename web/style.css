@@ -126,13 +126,15 @@ header .status { color: var(--text-muted); white-space: nowrap; }
 #welcome[data-titled] { top: calc(50% + 2.5em); transform: translateX(-50%); }
 #welcome p { margin: 0 0 1em; }
 #welcome p:last-child { margin-bottom: 0; }
-footer { grid-row: 4; padding: 12px 16px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: center;
-         font-size: 13px; }
-/* The modes strip: a row of its own above the buttons, taking room from the diagram rather than covering it. */
-#modes { flex-basis: 100%; margin: -4px 0 10px; color: var(--text); text-align: center; }
+footer { grid-row: 4; border-top: 1px solid var(--border); display: flex; flex-direction: column; font-size: 13px; }
+/* The modes strip: an info notice for a state that lasts, in a band of its own above the buttons, taking room from the
+   diagram rather than covering it; the line under it keeps it apart from the buttons. */
+#modes { padding: 8px 16px; background: var(--info-bg); color: var(--info-fg); line-height: 16px;
+         border-bottom: 1px solid var(--border); }
 #modes p { margin: 0; }
 /* One width for every button, the widest label's: equal columns in a grid only as wide as its content. */
-footer .buttons { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+footer .buttons { align-self: center; max-width: 100%; box-sizing: border-box; padding: 12px 16px; display: grid;
+                  grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 footer button { font: inherit; padding: 6px 12px; border: 1px solid var(--frame-border); border-radius: 6px;
                 background: var(--control-bg); color: var(--text); cursor: pointer; }
 footer button:hover { background: var(--control-hover); }
@@ -426,8 +428,8 @@ main:has(#find:not([hidden])) #notice { display: none; }
   #find .find-buttons { margin-left: auto; }
   /* Equal columns would not fit a phone without wrapping a label: here each button is as wide as its own, and they
      wrap onto a second row when they do not fit one. */
-  footer { padding: 12px 8px; }
-  footer .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  #modes { padding: 8px; }
+  footer .buttons { padding: 12px 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
   footer button { padding: 6px 8px; white-space: nowrap; }
   .box-picker .picker-grid { --columns: 5 !important; }
   /* The longest names take two lines at this width: room for both, so the shape picker keeps its height. */

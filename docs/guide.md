@@ -330,13 +330,13 @@ this submenu.
 **Rotate back** or **Flip back** while it is on. For fitting a wide or a tall window: the file is not changed, the page
 fits the diagram after, and a reload keeps it for this tab. Every subgraph's own `direction` turns with it. A change to
 the file's own direction (someone else's save) drops the turn. R and Shift+R do this with nothing selected; on an edge,
-R reverses it; on a subgraph, they turn just its inside (below). While a turn is on, the strip above the footer's
+R reverses it; on a subgraph, they turn just its inside (below). While a turn is on, the blue strip above the footer's
 buttons says so, one line for each, with the keys to undo it or write it.
 
 **Rotate in the file** (Alt+R; Option+R on a Mac) and **Flip in the file** (Alt+Shift+R) write the turn into the file
 instead: the header's direction and every subgraph's own `direction` line, as Rotate draws them (`flowchart TD` becomes
-`flowchart LR`). With the page already turned that way, the page's turn is dropped as the file takes it, so nothing
-moves and a toast says what was written. Undo takes back the file's change only, so the diagram then turns back and
+`flowchart LR`). With the page already turned that way, the page's turn is dropped as the file takes it, so the
+drawing does not turn and a toast says what was written. Undo takes back the file's change only, so the diagram then turns back and
 the page fits it; R turns the page again. With a turn of the page left on, the file's new direction keeps it.
 
 ## The node panel
